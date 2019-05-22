@@ -37,7 +37,7 @@
 #include <stddef.h>
 #include <stdint.h>
 
-#include "common/int-util.h"
+#include "int-util.h"
 #include "warnings.h"
 
 static inline void *padd(void *p, size_t i) {
@@ -79,7 +79,7 @@ enum {
 };
 
 void cn_fast_hash(const void *data, size_t length, char *hash);
-void cn_slow_hash(const void *data, size_t length, char *hash, int light, int variant, int prehashed);
+void cn_slow_hash(const void *data, size_t length, char *hash, int light, int variant, int prehashed, uint64_t height);
 
 void hash_extra_blake(const void *data, size_t length, char *hash);
 void hash_extra_groestl(const void *data, size_t length, char *hash);

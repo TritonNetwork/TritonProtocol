@@ -1,4 +1,4 @@
-// Copyright (c) 2017-2018, The Monero Project
+// Copyright (c) 2017-2019, The Monero Project
 // 
 // All rights reserved.
 // 
@@ -47,6 +47,7 @@
 #include "crypto/crypto.h"
 #include "crypto/chacha.h"
 #include "ringct/rctTypes.h"
+#include "cryptonote_config.h"
 
 
 #ifndef USE_DEVICE_LEDGER
@@ -68,6 +69,8 @@ namespace cryptonote
     struct account_public_address;
     struct account_keys;
     struct subaddress_index;
+    struct tx_destination_entry;
+    struct keypair;
 }
 
 namespace hw {
@@ -79,13 +82,28 @@ namespace hw {
            return false;
     }
 
+    class device_progress {
+    public:
+      virtual double progress() const { return 0; }
+      virtual bool indeterminate() const { return false; }
+    };
+
+    class i_device_callback {
+    public:
+        virtual void on_button_request(uint64_t code=0) {}
+        virtual boost::optional<epee::wipeable_string> on_pin_request() { return boost::none; }
+        virtual boost::optional<epee::wipeable_string> on_passphrase_request(bool on_device) { return boost::none; }
+        virtual void on_progress(const device_progress& event) {}
+        virtual ~i_device_callback() = default;
+    };
+
     class device {
     protected:
         std::string  name;
 
     public:
 
-        device()  {}
+        device(): mode(NONE)  {}
         device(const device &hwdev) {}
         virtual ~device()   {}
 
@@ -99,9 +117,16 @@ namespace hw {
         enum device_type
         {
           SOFTWARE = 0,
-          LEDGER = 1
+          LEDGER = 1,
+          TREZOR = 2
         };
 
+
+        enum device_protocol_t {
+            PROTOCOL_DEFAULT,
+            PROTOCOL_PROXY,     // Originally defined by Ledger
+            PROTOCOL_COLD,      // Originally defined by Trezor
+        };
 
         /* ======================================================================= */
         /*                              SETUP/TEARDOWN                             */
@@ -115,10 +140,17 @@ namespace hw {
         virtual bool connect(void) = 0;
         virtual bool disconnect(void) = 0;
 
-        virtual bool set_mode(device_mode mode) = 0;
+        virtual bool set_mode(device_mode mode) { this->mode = mode; return true; }
+        virtual device_mode get_mode() const { return mode; }
 
         virtual device_type get_type() const = 0;
 
+        virtual device_protocol_t device_protocol() const { return PROTOCOL_DEFAULT; };
+        virtual void set_callback(i_device_callback * callback) {};
+        virtual void set_derivation_path(const std::string &derivation_path) {};
+
+        virtual void set_pin(const epee::wipeable_string & pin) {}
+        virtual void set_passphrase(const epee::wipeable_string & passphrase) {}
 
         /* ======================================================================= */
         /*  LOCKER                                                                 */
@@ -188,12 +220,15 @@ namespace hw {
             return encrypt_payment_id(payment_id, public_key, secret_key);
         }
 
-        virtual bool  ecdhEncode(rct::ecdhTuple & unmasked, const rct::key & sharedSec) = 0;
-        virtual bool  ecdhDecode(rct::ecdhTuple & masked, const rct::key & sharedSec) = 0;
+        virtual bool  ecdhEncode(rct::ecdhTuple & unmasked, const rct::key & sharedSec, bool short_amount) = 0;
+        virtual bool  ecdhDecode(rct::ecdhTuple & masked, const rct::key & sharedSec, bool short_amount) = 0;
 
-        virtual bool  add_output_key_mapping(const crypto::public_key &Aout, const crypto::public_key &Bout, const bool is_subaddress, const size_t real_output_index,
-                                             const rct::key &amount_key,  const crypto::public_key &out_eph_public_key) = 0;
-
+        virtual bool  generate_output_ephemeral_keys(const size_t tx_version, const cryptonote::account_keys &sender_account_keys, const crypto::public_key &txkey_pub,  const crypto::secret_key &tx_key,
+                                                     const cryptonote::tx_destination_entry &dst_entr, const boost::optional<cryptonote::account_public_address> &change_addr, const size_t output_index,
+                                                     const bool &need_additional_txkeys, const std::vector<crypto::secret_key> &additional_tx_keys,
+                                                     std::vector<crypto::public_key> &additional_tx_public_keys,
+                                                     std::vector<rct::key> &amount_keys,
+                                                     crypto::public_key &out_eph_public_key) = 0;
 
         virtual bool  mlsag_prehash(const std::string &blob, size_t inputs_size, size_t outputs_size, const rct::keyV &hashes, const rct::ctkeyV &outPk, rct::key &prehash) = 0;
         virtual bool  mlsag_prepare(const rct::key &H, const rct::key &xx, rct::key &a, rct::key &aG, rct::key &aHP, rct::key &rvII) = 0;
@@ -202,6 +237,16 @@ namespace hw {
         virtual bool  mlsag_sign(const rct::key &c, const rct::keyV &xx, const rct::keyV &alpha, const size_t rows, const size_t dsRows, rct::keyV &ss) = 0;
 
         virtual bool  close_tx(void) = 0;
+
+        virtual bool  has_ki_cold_sync(void) const { return false; }
+        virtual bool  has_tx_cold_sign(void) const { return false; }
+        virtual bool  has_ki_live_refresh(void) const { return true; }
+        virtual bool  compute_key_image(const cryptonote::account_keys& ack, const crypto::public_key& out_key, const crypto::key_derivation& recv_derivation, size_t real_output_index, const cryptonote::subaddress_index& received_index, cryptonote::keypair& in_ephemeral, crypto::key_image& ki) { return false; }
+        virtual void  computing_key_images(bool started) {};
+        virtual void  set_network_type(cryptonote::network_type network_type) { }
+
+    protected:
+        device_mode mode;
     } ;
 
     struct reset_mode {

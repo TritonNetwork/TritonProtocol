@@ -139,9 +139,11 @@ namespace cryptonote
 
   struct tx_destination_entry
   {
+    std::string original;
     uint64_t amount;                    //money
     account_public_address addr;        //destination address
     bool is_subaddress;
+    bool is_integrated;
 
     tx_destination_entry() : amount(0), addr(AUTO_VAL_INIT(addr)), is_subaddress(false) { }
     tx_destination_entry(uint64_t a, const account_public_address &ad, bool is_subaddress) : amount(a), addr(ad), is_subaddress(is_subaddress) { }
@@ -151,14 +153,16 @@ namespace cryptonote
    }
 
     BEGIN_SERIALIZE_OBJECT()
+      FIELD(original)
       VARINT_FIELD(amount)
       FIELD(addr)
       FIELD(is_subaddress)
+      FIELD(is_integrated)
     END_SERIALIZE()
   };
 
   //---------------------------------------------------------------
-  
+
   crypto::public_key get_destination_view_key_pub(const std::vector<tx_destination_entry> &destinations, const boost::optional<cryptonote::tx_destination_entry>& change_addr);
   bool construct_tx(const account_keys& sender_account_keys, std::vector<tx_source_entry> &sources, const std::vector<tx_destination_entry>& destinations, const boost::optional<cryptonote::tx_destination_entry>& change_addr, std::vector<uint8_t> extra, transaction& tx, uint64_t unlock_time, bool is_staking = false, bool per_output_unlock = false);
   bool construct_tx_with_tx_key(const account_keys& sender_account_keys, const std::unordered_map<crypto::public_key, subaddress_index>& subaddresses, std::vector<tx_source_entry>& sources, std::vector<tx_destination_entry>& destinations, const boost::optional<cryptonote::tx_destination_entry>& change_addr, std::vector<uint8_t> extra, transaction& tx, uint64_t unlock_time, const crypto::secret_key &tx_key, const std::vector<crypto::secret_key> &additional_tx_keys, bool rct = false, rct::RangeProofType range_proof_type = rct::RangeProofBorromean, rct::multisig_out *msout = NULL, bool per_output_unlock = false, bool shuffle_outs = true);
@@ -173,7 +177,7 @@ namespace cryptonote
 }
 
 BOOST_CLASS_VERSION(cryptonote::tx_source_entry, 1)
-BOOST_CLASS_VERSION(cryptonote::tx_destination_entry, 1)
+BOOST_CLASS_VERSION(cryptonote::tx_destination_entry, 2)
 
 namespace boost
 {
@@ -203,6 +207,13 @@ namespace boost
       if (ver < 1)
         return;
       a & x.is_subaddress;
+      if (ver < 2)
+      {
+        x.is_integrated = false;
+        return;
+      }
+      a & x.original;
+      a & x.is_integrated;
     }
   }
 }

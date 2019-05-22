@@ -1,5 +1,5 @@
 ---
-name: "monero-win-0.14"
+name: "triton-win-3.1"
 enable_cache: true
 suites:
 - "bionic"
@@ -119,7 +119,7 @@ script: |
   export PATH=${WRAP_DIR}:${PATH}
 
   ORIGPATH="$PATH"
-  # Run cmake and make, for each create a new build/ directory, 
+  # Run cmake and make, for each create a new build/ directory,
   # compile from there, archive, export and delete the archive again
   for i in ${HOSTS}; do
     export PATH=${BASEPREFIX}/${i}/native/bin:${ORIGPATH}
@@ -131,4 +131,3 @@ script: |
     find ${DISTNAME}/ | sort | zip -X@ ${OUTDIR}/${DISTNAME}.zip
     cd .. && rm -rf build
   done
-

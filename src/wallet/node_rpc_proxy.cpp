@@ -1,4 +1,4 @@
-// Copyright (c) 2017-2018, The Monero Project
+// Copyright (c) 2017-2019, The Monero Project
 // 
 // All rights reserved.
 // 
@@ -28,7 +28,6 @@
 
 #include "node_rpc_proxy.h"
 #include "rpc/core_rpc_server_commands_defs.h"
-#include "common/json_util.h"
 #include "storages/http_abstract_invoke.h"
 
 using namespace epee;

@@ -1,4 +1,4 @@
-// Copyright (c) 2014-2018, The Monero Project
+// Copyright (c) 2014-2019, The Monero Project
 // 
 // All rights reserved.
 // 
@@ -38,11 +38,6 @@
 #include "math_helper.h"
 #ifdef _WIN32
 #include <windows.h>
-#elif defined(__linux__)
-#include <unistd.h>
-#include <sys/resource.h>
-#include <sys/times.h>
-#include <time.h>
 #endif
 
 namespace cryptonote
@@ -66,7 +61,7 @@ namespace cryptonote
     ~miner();
     bool init(const boost::program_options::variables_map& vm, network_type nettype);
     static void init_options(boost::program_options::options_description& desc);
-    bool set_block_template(const block& bl, const difficulty_type& diffic, uint64_t height);
+    bool set_block_template(const block& bl, const difficulty_type& diffic, uint64_t height, uint64_t block_reward);
     bool on_block_chain_update();
     bool start(const account_public_address& adr, size_t threads_count, const boost::thread::attributes& attrs, bool do_background = false, bool ignore_battery = false);
     uint64_t get_speed() const;
@@ -90,6 +85,7 @@ namespace cryptonote
     bool set_idle_threshold(uint8_t idle_threshold);
     uint8_t get_mining_target() const;
     bool set_mining_target(uint8_t mining_target);
+    uint64_t get_block_reward() const { return m_block_reward; }
 
     static constexpr uint8_t  BACKGROUND_MINING_DEFAULT_IDLE_THRESHOLD_PERCENTAGE       = 90;
     static constexpr uint8_t  BACKGROUND_MINING_MIN_IDLE_THRESHOLD_PERCENTAGE           = 50;
@@ -108,6 +104,7 @@ namespace cryptonote
     bool worker_thread();
     bool request_block_template();
     void  merge_hr();
+    void  update_autodetection();
     
     struct miner_config
     {
@@ -137,16 +134,20 @@ namespace cryptonote
     account_public_address m_mine_address;
     epee::math_helper::once_a_time_seconds<5> m_update_block_template_interval;
     epee::math_helper::once_a_time_seconds<2> m_update_merge_hr_interval;
+    epee::math_helper::once_a_time_seconds<1> m_autodetect_interval;
     std::vector<blobdata> m_extra_messages;
     miner_config m_config;
     std::string m_config_folder_path;    
     std::atomic<uint64_t> m_last_hr_merge_time;
     std::atomic<uint64_t> m_hashes;
+    std::atomic<uint64_t> m_total_hashes;
     std::atomic<uint64_t> m_current_hash_rate;
     epee::critical_section m_last_hash_rates_lock;
     std::list<uint64_t> m_last_hash_rates;
     bool m_do_print_hashrate;
     bool m_do_mining;
+    std::vector<std::pair<uint64_t, uint64_t>> m_threads_autodetect;
+    boost::thread::attributes m_attrs;
 
     // background mining stuffs ..
 
@@ -169,5 +170,6 @@ namespace cryptonote
     static bool get_process_time(uint64_t& total_time);
     static uint8_t get_percent_of_total(uint64_t some_time, uint64_t total_time);
     static boost::logic::tribool on_battery_power();
+    std::atomic<uint64_t> m_block_reward;
   };
 }

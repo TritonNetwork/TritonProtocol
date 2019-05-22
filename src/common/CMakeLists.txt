@@ -1,4 +1,4 @@
-# Copyright (c) 2014-2018, The Monero Project
+# Copyright (c) 2014-2019, The Monero Project
 #
 # All rights reserved.
 #
@@ -41,14 +41,21 @@ set(common_sources
   notify.cpp
   password.cpp
   perf_timer.cpp
+  pruning.cpp
   spawn.cpp
   rules.cpp
   threadpool.cpp
   updates.cpp
-  aligned.c)
+  aligned.c
+  timings.cc
+  combinator.cpp)
 
 if (STACK_TRACE)
   list(APPEND common_sources stack_trace.cpp)
+endif()
+
+if (BACKCOMPAT)
+  list(APPEND common_sources compat/glibc_compat.cpp)
 endif()
 
 set(common_headers)
@@ -65,9 +72,9 @@ set(common_private_headers
   expect.h
   exp2.h
   http_connection.h
-  int-util.h
   notify.h
   pod-class.h
+  pruning.h
   rpc_client.h
   scoped_message_writer.h
   unordered_containers_boost_serialization.h
@@ -81,7 +88,9 @@ set(common_private_headers
   stack_trace.h
   threadpool.h
   updates.h
-  aligned.h)
+  aligned.h
+  timings.h
+  combinator.h)
 
 monero_private_headers(common
   ${common_private_headers})

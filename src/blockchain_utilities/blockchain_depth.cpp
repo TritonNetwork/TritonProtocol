@@ -1,4 +1,4 @@
-// Copyright (c) 2014-2018, The Monero Project
+// Copyright (c) 2014-2019, The Monero Project
 //
 // All rights reserved.
 //
@@ -199,17 +199,17 @@ int main(int argc, char* argv[])
   }
   else
   {
-	  const cryptonote::blobdata bd = db->get_block_blob_from_height(opt_height);
-	  cryptonote::block b;
-	  if (!cryptonote::parse_and_validate_block_from_blob(bd, b))
-	  {
-		  LOG_PRINT_L0("Bad block from db");
-		  return 1;
-	  }
-	  for (const crypto::hash &txid : b.tx_hashes)
-		  start_txids.push_back(txid);
-	  if (opt_include_coinbase)
-		  start_txids.push_back(cryptonote::get_transaction_hash(b.miner_tx));
+    const cryptonote::blobdata bd = db->get_block_blob_from_height(opt_height);
+    cryptonote::block b;
+    if (!cryptonote::parse_and_validate_block_from_blob(bd, b))
+    {
+      LOG_PRINT_L0("Bad block from db");
+      return 1;
+    }
+    for (const crypto::hash &txid: b.tx_hashes)
+      start_txids.push_back(txid);
+    if (opt_include_coinbase)
+      start_txids.push_back(cryptonote::get_transaction_hash(b.miner_tx));
   }
 
   if (start_txids.empty())
