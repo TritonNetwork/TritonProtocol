@@ -1,21 +1,21 @@
 // Copyright (c) 2017-2019, The Monero Project
-// 
+//
 // All rights reserved.
-// 
+//
 // Redistribution and use in source and binary forms, with or without modification, are
 // permitted provided that the following conditions are met:
-// 
+//
 // 1. Redistributions of source code must retain the above copyright notice, this list of
 //    conditions and the following disclaimer.
-// 
+//
 // 2. Redistributions in binary form must reproduce the above copyright notice, this list
 //    of conditions and the following disclaimer in the documentation and/or other
 //    materials provided with the distribution.
-// 
+//
 // 3. Neither the name of the copyright holder nor the names of its contributors may be
 //    used to endorse or promote products derived from this software without specific
 //    prior written permission.
-// 
+//
 // THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND ANY
 // EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF
 // MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL
@@ -58,25 +58,25 @@ namespace hw {
 
             bool connect(void) override;
             bool disconnect() override;
- 
+
             bool set_mode(device_mode mode) override;
 
             device_type get_type() const override {return device_type::SOFTWARE;};
 
             /* ======================================================================= */
             /*  LOCKER                                                                 */
-            /* ======================================================================= */ 
+            /* ======================================================================= */
             void lock(void)  override;
             void unlock(void) override;
             bool try_lock(void) override;
-            
+
             /* ======================================================================= */
             /*                             WALLET & ADDRESS                            */
             /* ======================================================================= */
             bool  get_public_address(cryptonote::account_public_address &pubkey) override;
             bool  get_secret_keys(crypto::secret_key &viewkey , crypto::secret_key &spendkey) override;
             bool  generate_chacha_key(const cryptonote::account_keys &keys, crypto::chacha_key &key, uint64_t kdf_rounds) override;
- 
+
             /* ======================================================================= */
             /*                               SUB ADDRESS                               */
             /* ======================================================================= */
@@ -114,8 +114,8 @@ namespace hw {
             bool  ecdhEncode(rct::ecdhTuple & unmasked, const rct::key & sharedSec, bool short_amount) override;
             bool  ecdhDecode(rct::ecdhTuple & masked, const rct::key & sharedSec, bool short_amount) override;
 
-            bool  generate_output_ephemeral_keys(const size_t tx_version, const cryptonote::account_keys &sender_account_keys, const crypto::public_key &txkey_pub,  const crypto::secret_key &tx_key,
-                                                 const cryptonote::tx_destination_entry &dst_entr, const boost::optional<cryptonote::account_public_address> &change_addr, const size_t output_index,
+            bool  generate_output_ephemeral_keys(const size_t tx_version, bool &this_dst_is_change_addr, const cryptonote::account_keys &sender_account_keys, const crypto::public_key &txkey_pub,  const crypto::secret_key &tx_key,
+                                                 const cryptonote::tx_destination_entry &dst_entr, const boost::optional<cryptonote::tx_destination_entry> &change_addr, const size_t output_index,
                                                  const bool &need_additional_txkeys, const std::vector<crypto::secret_key> &additional_tx_keys,
                                                  std::vector<crypto::public_key> &additional_tx_public_keys,
                                                  std::vector<rct::key> &amount_keys,
@@ -135,4 +135,3 @@ namespace hw {
 
 
 }
-

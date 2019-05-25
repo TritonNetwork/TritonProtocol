@@ -2068,10 +2068,17 @@ bool Blockchain::get_outs(const COMMAND_RPC_GET_OUTPUTS_BIN::request& req, COMMA
     offsets.reserve(req.outputs.size());
     for (const auto &i: req.outputs)
     {
-      // get tx_hash, tx_out_index from DB
-      const output_data_t od = m_db->get_output_key(i.amount, i.index);
-      tx_out_index toi = m_db->get_output_tx_and_index(i.amount, i.index);
-	  bool unlocked = is_output_spendtime_unlocked(od.unlock_time);
+      amounts.push_back(i.amount);
+      offsets.push_back(i.index);
+    }
+    m_db->get_output_key(epee::span<const uint64_t>(amounts.data(), amounts.size()), offsets, data);
+    if (data.size() != req.outputs.size())
+    {
+      MERROR("Unexpected output data size: expected " << req.outputs.size() << ", got " << data.size());
+      return false;
+    }
+    for (const auto &t: data)
+      res.outs.push_back({t.pubkey, t.commitment, is_output_spendtime_unlocked(t.unlock_time), t.height, crypto::null_hash});
 
     if (req.get_txid)
     {
@@ -4051,8 +4058,17 @@ leave:
   {
     LOG_ERROR("Blocks that failed verification should not reach here");
   }
-  for (BlockAddedHook* hook : m_block_added_hooks)
-   hook->block_added(bl, txs);
+
+	std::vector<transaction> tx_v;
+	std::transform(txs.begin(),
+					txs.end(),
+				   std::back_inserter(tx_v),
+				   [](const std::pair<transaction, blobdata>& p){return p.first;});
+
+
+
+   for (BlockAddedHook* hook : m_block_added_hooks)
+	hook->block_added(bl, tx_v);
   TIME_MEASURE_FINISH(addblock);
 
   // do this after updating the hard fork state since the weight limit may change due to fork
@@ -4086,7 +4102,7 @@ leave:
   // currently mining for, i.e. (new_height + 1). Otherwise peers will silently
   // drop connection from each other when they go around P2Ping votes.
   m_deregister_vote_pool.remove_expired_votes(new_height + 1);
-  m_deregister_vote_pool.remove_used_votes(txs);
+  m_deregister_vote_pool.remove_used_votes(tx_v);
   get_difficulty_for_next_block(); // just to cache it
   invalidate_block_template_cache();
 

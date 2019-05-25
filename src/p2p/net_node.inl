@@ -1785,6 +1785,20 @@ namespace nodetool
   }
   //-----------------------------------------------------------------------------------
   template<class t_payload_net_handler>
+  bool node_server<t_payload_net_handler>::relay_notify_to_all(int command, const epee::span<const uint8_t> data_buff, const epee::net_utils::connection_context_base& context)
+  {
+	  std::vector<std::pair<epee::net_utils::zone, boost::uuids::uuid>> connections;
+	  auto zone = m_network_zones.begin();
+	  zone->second.m_net_server.get_config_object().foreach_connection([&](const p2p_connection_context& cntxt)
+	  {
+		  if (cntxt.peer_id && context.m_connection_id != cntxt.m_connection_id)
+			  connections.push_back(std::make_pair(cntxt.m_remote_address.get_zone(), cntxt.m_connection_id));
+		  return true;
+	  });
+	  return relay_notify_to_list(command, data_buff, connections);
+  }
+  //-----------------------------------------------------------------------------------
+  template<class t_payload_net_handler>
   void node_server<t_payload_net_handler>::callback(p2p_connection_context& context)
   {
     m_payload_handler.on_callback(context);

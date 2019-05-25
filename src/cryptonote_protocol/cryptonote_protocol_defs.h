@@ -284,20 +284,21 @@ namespace cryptonote
   /************************************************************************/
   struct NOTIFY_REQUEST_FLUFFY_MISSING_TX
   {
-    const static int ID = BC_COMMANDS_POOL_BASE + 9;
+	  const static int ID = BC_COMMANDS_POOL_BASE + 9;
 
-    struct request_t
-    {
-      crypto::hash block_hash;
-      uint64_t current_blockchain_height;
-      std::vector<uint64_t> missing_tx_indices;
+	  struct request_t
+	  {
+		  crypto::hash block_hash;
+		  uint64_t current_blockchain_height;
+		  std::vector<uint64_t> missing_tx_indices;
 
-      BEGIN_KV_SERIALIZE_MAP()
-        KV_SERIALIZE_VAL_POD_AS_BLOB(block_hash)
-        KV_SERIALIZE(current_blockchain_height)
-        KV_SERIALIZE_CONTAINER_POD_AS_BLOB(missing_tx_indices)
-      END_KV_SERIALIZE_MAP()
-    };
+		  BEGIN_KV_SERIALIZE_MAP()
+			  KV_SERIALIZE_VAL_POD_AS_BLOB(block_hash)
+			  KV_SERIALIZE(current_blockchain_height)
+			  KV_SERIALIZE_CONTAINER_POD_AS_BLOB(missing_tx_indices)
+		  END_KV_SERIALIZE_MAP()
+	  };
+	  typedef epee::misc_utils::struct_init<request_t> request;
   };
   /************************************************************************/
    /*                                                                      */

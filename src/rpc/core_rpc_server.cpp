@@ -417,7 +417,7 @@ namespace cryptonote
     return true;
   }
   //------------------------------------------------------------------------------------------------------------------------------
-  bool core_rpc_server::on_get_random_outs(const COMMAND_RPC_GET_RANDOM_OUTPUTS_FOR_AMOUNTS::request& req, COMMAND_RPC_GET_RANDOM_OUTPUTS_FOR_AMOUNTS::response& res)
+  bool core_rpc_server::on_get_random_outs(const COMMAND_RPC_GET_RANDOM_OUTPUTS_FOR_AMOUNTS::request& req, COMMAND_RPC_GET_RANDOM_OUTPUTS_FOR_AMOUNTS::response& res, const connection_context *ctx)
   {
 	  PERF_TIMER(on_get_random_outs);
 	  bool r;
@@ -460,7 +460,7 @@ namespace cryptonote
 	  return true;
   }
   //------------------------------------------------------------------------------------------------------------------------------
-  bool core_rpc_server::on_get_random_rct_outs(const COMMAND_RPC_GET_RANDOM_RCT_OUTPUTS::request& req, COMMAND_RPC_GET_RANDOM_RCT_OUTPUTS::response& res)
+  bool core_rpc_server::on_get_random_rct_outs(const COMMAND_RPC_GET_RANDOM_RCT_OUTPUTS::request& req, COMMAND_RPC_GET_RANDOM_RCT_OUTPUTS::response& res, const connection_context *ctx)
   {
 	  PERF_TIMER(on_get_random_rct_outs);
 	  bool r;
@@ -860,54 +860,34 @@ namespace cryptonote
     {
 
 
-      const vote_verification_context &vvc = tvc.m_vote_ctx;
-	  res.status = "Failed";
-	  res.reason = print_tx_verification_context(tvc);
-	  res.reason += print_vote_verification_context(vvc);
+		const vote_verification_context &vvc = tvc.m_vote_ctx;
+		res.status = "Failed";
+		res.reason = print_tx_verification_context(tvc);
+		res.reason += print_vote_verification_context(vvc);
 
-	  res.low_mixin = tvc.m_low_mixin;
-	  res.double_spend = tvc.m_double_spend;
-	  res.invalid_input = tvc.m_invalid_input;
-	  res.invalid_output = tvc.m_invalid_output;
-	  res.too_big = tvc.m_too_big;
-	  res.overspend = tvc.m_overspend;
-	  res.fee_too_low = tvc.m_fee_too_low;
-	  res.not_rct = tvc.m_not_rct;
-	  res.invalid_block_height = vvc.m_invalid_block_height;
-	  res.duplicate_voters = vvc.m_duplicate_voters;
-	  res.voters_quorum_index_out_of_bounds = vvc.m_voters_quorum_index_out_of_bounds;
-	  res.service_node_index_out_of_bounds = vvc.m_service_node_index_out_of_bounds;
-	  res.signature_not_valid = vvc.m_signature_not_valid;
-	  res.not_enough_votes = vvc.m_not_enough_votes;
-      const std::string punctuation = res.reason.empty() ? "" : ": ";
-
-      res.status = "Failed";
-      std::string reason = "";
-      if ((res.low_mixin = tvc.m_low_mixin))
-        add_reason(reason, "bad ring size");
-      if ((res.double_spend = tvc.m_double_spend))
-        add_reason(reason, "double spend");
-      if ((res.invalid_input = tvc.m_invalid_input))
-        add_reason(reason, "invalid input");
-      if ((res.invalid_output = tvc.m_invalid_output))
-        add_reason(reason, "invalid output");
-      if ((res.too_big = tvc.m_too_big))
-        add_reason(reason, "too big");
-      if ((res.overspend = tvc.m_overspend))
-        add_reason(reason, "overspend");
-      if ((res.fee_too_low = tvc.m_fee_too_low))
-        add_reason(reason, "fee too low");
-      if ((res.not_rct = tvc.m_not_rct))
-        add_reason(reason, "tx is not ringct");
-      const std::string punctuation = reason.empty() ? "" : ": ";
-      if (tvc.m_verifivation_failed)
-      {
-        LOG_PRINT_L0("[on_send_raw_tx]: tx verification failed" << punctuation << reason);
-      }
-      else
-      {
-        LOG_PRINT_L0("[on_send_raw_tx]: Failed to process tx" << punctuation << reason);
-      }
+		res.low_mixin = tvc.m_low_mixin;
+		res.double_spend = tvc.m_double_spend;
+		res.invalid_input = tvc.m_invalid_input;
+		res.invalid_output = tvc.m_invalid_output;
+		res.too_big = tvc.m_too_big;
+		res.overspend = tvc.m_overspend;
+		res.fee_too_low = tvc.m_fee_too_low;
+		res.not_rct = tvc.m_not_rct;
+		res.invalid_block_height = vvc.m_invalid_block_height;
+		res.duplicate_voters = vvc.m_duplicate_voters;
+		res.voters_quorum_index_out_of_bounds = vvc.m_voters_quorum_index_out_of_bounds;
+		res.service_node_index_out_of_bounds = vvc.m_service_node_index_out_of_bounds;
+		res.signature_not_valid = vvc.m_signature_not_valid;
+		res.not_enough_votes = vvc.m_not_enough_votes;
+		const std::string punctuation = res.reason.empty() ? "" : ": ";
+		if (tvc.m_verifivation_failed)
+		{
+			LOG_PRINT_L0("[on_send_raw_tx]: tx verification failed" << punctuation << res.reason);
+		}
+		else
+		{
+			LOG_PRINT_L0("[on_send_raw_tx]: Failed to process tx" << punctuation << res.reason);
+		}
       return true;
     }
 
@@ -2244,7 +2224,7 @@ namespace cryptonote
     return true;
   }
   //------------------------------------------------------------------------------------------------------------------------------
-  bool core_rpc_server::on_get_quorum_state(const COMMAND_RPC_GET_QUORUM_STATE::request& req, COMMAND_RPC_GET_QUORUM_STATE::response& res, epee::json_rpc::error& error_resp)
+  bool core_rpc_server::on_get_quorum_state(const COMMAND_RPC_GET_QUORUM_STATE::request& req, COMMAND_RPC_GET_QUORUM_STATE::response& res, epee::json_rpc::error& error_resp, const connection_context *ctx)
   {
    PERF_TIMER(on_get_quorum_state);
    bool r;
@@ -2274,7 +2254,7 @@ namespace cryptonote
    return r;
  }
  //------------------------------------------------------------------------------------------------------------------------------
-  bool core_rpc_server::on_get_service_node_key(const COMMAND_RPC_GET_SERVICE_NODE_KEY::request& req, COMMAND_RPC_GET_SERVICE_NODE_KEY::response& res, epee::json_rpc::error &error_resp)
+  bool core_rpc_server::on_get_service_node_key(const COMMAND_RPC_GET_SERVICE_NODE_KEY::request& req, COMMAND_RPC_GET_SERVICE_NODE_KEY::response& res, epee::json_rpc::error &error_resp, const connection_context *ctx)
   {
 	  PERF_TIMER(on_get_service_node_key);
 
@@ -2296,7 +2276,6 @@ namespace cryptonote
 	  return result;
   }
   //------------------------------------------------------------------------------------------------------------------------------
-  bool core_rpc_server::on_relay_tx(const COMMAND_RPC_RELAY_TX::request& req, COMMAND_RPC_RELAY_TX::response& res, epee::json_rpc::error& error_resp)
   bool core_rpc_server::on_pop_blocks(const COMMAND_RPC_POP_BLOCKS::request& req, COMMAND_RPC_POP_BLOCKS::response& res, const connection_context *ctx)
   {
     PERF_TIMER(on_pop_blocks);
@@ -2480,31 +2459,31 @@ namespace cryptonote
   //------------------------------------------------------------------------------------------------------------------------------
   bool core_rpc_server::on_prune_blockchain(const COMMAND_RPC_PRUNE_BLOCKCHAIN::request& req, COMMAND_RPC_PRUNE_BLOCKCHAIN::response& res, epee::json_rpc::error& error_resp, const connection_context *ctx)
   {
-    try
-    {
-      if (!(req.check ? m_core.check_blockchain_pruning() : m_core.prune_blockchain()))
-      {
-        error_resp.code = CORE_RPC_ERROR_CODE_INTERNAL_ERROR;
-        error_resp.message = req.check ? "Failed to check blockchain pruning" : "Failed to prune blockchain";
-        return false;
-      }
-      res.pruning_seed = m_core.get_blockchain_pruning_seed();
-    }
-    catch (const std::exception &e)
-    {
-      error_resp.code = CORE_RPC_ERROR_CODE_INTERNAL_ERROR;
-      error_resp.message = "Failed to prune blockchain";
-      return false;
-    }
+	  try
+	  {
+		  if (!(req.check ? m_core.check_blockchain_pruning() : m_core.prune_blockchain()))
+		  {
+			  error_resp.code = CORE_RPC_ERROR_CODE_INTERNAL_ERROR;
+			  error_resp.message = req.check ? "Failed to check blockchain pruning" : "Failed to prune blockchain";
+			  return false;
+		  }
+		  res.pruning_seed = m_core.get_blockchain_pruning_seed();
+	  }
+	  catch (const std::exception &e)
+	  {
+		  error_resp.code = CORE_RPC_ERROR_CODE_INTERNAL_ERROR;
+		  error_resp.message = "Failed to prune blockchain";
+		  return false;
+	  }
 
-    res.status = CORE_RPC_STATUS_OK;
-    return true;
+	  res.status = CORE_RPC_STATUS_OK;
+	  return true;
   }
   //------------------------------------------------------------------------------------------------------------------------------
 
   bool core_rpc_server::on_get_service_node_registration_cmd(const COMMAND_RPC_GET_SERVICE_NODE_REGISTRATION_CMD::request& req,
                                                              COMMAND_RPC_GET_SERVICE_NODE_REGISTRATION_CMD::response& res,
-                                                             epee::json_rpc::error& error_resp)
+                                                             epee::json_rpc::error& error_resp, const connection_context *ctx)
   {
     PERF_TIMER(on_get_service_node_registration_cmd);
 
@@ -2528,7 +2507,7 @@ namespace cryptonote
     return true;
   }
   //------------------------------------------------------------------------------------------------------------------------------
-  bool core_rpc_server::on_get_service_nodes(const COMMAND_RPC_GET_SERVICE_NODES::request& req, COMMAND_RPC_GET_SERVICE_NODES::response& res, epee::json_rpc::error& error_resp)
+  bool core_rpc_server::on_get_service_nodes(const COMMAND_RPC_GET_SERVICE_NODES::request& req, COMMAND_RPC_GET_SERVICE_NODES::response& res, epee::json_rpc::error& error_resp, const connection_context *ctx)
   {
 	  PERF_TIMER(on_get_service_nodes);
 
@@ -2581,7 +2560,7 @@ namespace cryptonote
 	  return true;
   }
   //------------------------------------------------------------------------------------------------------------------------------
-  bool core_rpc_server::on_get_staking_requirement(const COMMAND_RPC_GET_STAKING_REQUIREMENT::request& req, COMMAND_RPC_GET_STAKING_REQUIREMENT::response& res, epee::json_rpc::error& error_resp)
+  bool core_rpc_server::on_get_staking_requirement(const COMMAND_RPC_GET_STAKING_REQUIREMENT::request& req, COMMAND_RPC_GET_STAKING_REQUIREMENT::response& res, epee::json_rpc::error& error_resp, const connection_context *ctx)
   {
 	  PERF_TIMER(on_get_staking_requirement);
 	  res.staking_requirement = service_nodes::get_staking_requirement(nettype(), req.height);

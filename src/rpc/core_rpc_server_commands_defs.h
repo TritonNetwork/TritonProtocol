@@ -934,63 +934,61 @@ namespace cryptonote
   //-----------------------------------------------
   struct COMMAND_RPC_SEND_RAW_TX
   {
-    struct request_t
-    {
-      std::string tx_as_hex;
-      bool do_not_relay;
+	  struct request
+	  {
+		  std::string tx_as_hex;
+		  bool do_not_relay;
 
-      BEGIN_KV_SERIALIZE_MAP()
-        KV_SERIALIZE(tx_as_hex)
-        KV_SERIALIZE_OPT(do_not_relay, false)
-      END_KV_SERIALIZE_MAP()
-    };
-    typedef epee::misc_utils::struct_init<request_t> request;
+		  BEGIN_KV_SERIALIZE_MAP()
+			  KV_SERIALIZE(tx_as_hex)
+			  KV_SERIALIZE_OPT(do_not_relay, false)
+		  END_KV_SERIALIZE_MAP()
+	  };
 
 
-    struct response_t
-    {
-      std::string status;
-      std::string reason;
-      bool not_relayed;
-      bool low_mixin;
-      bool double_spend;
-      bool invalid_input;
-      bool invalid_output;
-      bool too_big;
-      bool overspend;
-      bool fee_too_low;
-      bool not_rct;
-      bool untrusted;
+	  struct response
+	  {
+		  std::string status;
+		  std::string reason;
+		  bool not_relayed;
+		  bool low_mixin;
+		  bool double_spend;
+		  bool invalid_input;
+		  bool invalid_output;
+		  bool too_big;
+		  bool overspend;
+		  bool fee_too_low;
+		  bool not_rct;
+		  bool untrusted;
 
-      bool invalid_block_height;
-    bool voters_quorum_index_out_of_bounds;
-	bool duplicate_voters;
-    bool service_node_index_out_of_bounds;
-    bool signature_not_valid;
-    bool not_enough_votes;
+		  bool invalid_block_height;
+		  bool voters_quorum_index_out_of_bounds;
+		  bool duplicate_voters;
+		  bool service_node_index_out_of_bounds;
+		  bool signature_not_valid;
+		  bool not_enough_votes;
 
-      BEGIN_KV_SERIALIZE_MAP()
-        KV_SERIALIZE(status)
-        KV_SERIALIZE(reason)
-        KV_SERIALIZE(not_relayed)
-        KV_SERIALIZE(low_mixin)
-        KV_SERIALIZE(double_spend)
-        KV_SERIALIZE(invalid_input)
-        KV_SERIALIZE(invalid_output)
-        KV_SERIALIZE(too_big)
-        KV_SERIALIZE(overspend)
-        KV_SERIALIZE(fee_too_low)
-        KV_SERIALIZE(not_rct)
-        KV_SERIALIZE(untrusted)
-        KV_SERIALIZE(invalid_block_height)
-        KV_SERIALIZE(voters_quorum_index_out_of_bounds)
-		KV_SERIALIZE(duplicate_voters)
-        KV_SERIALIZE(service_node_index_out_of_bounds)
-        KV_SERIALIZE(signature_not_valid)
-        KV_SERIALIZE(not_enough_votes)
-      END_KV_SERIALIZE_MAP()
-    };
-    typedef epee::misc_utils::struct_init<response_t> response;
+		  BEGIN_KV_SERIALIZE_MAP()
+			  KV_SERIALIZE(status)
+			  KV_SERIALIZE(reason)
+			  KV_SERIALIZE(not_relayed)
+			  KV_SERIALIZE(low_mixin)
+			  KV_SERIALIZE(double_spend)
+			  KV_SERIALIZE(invalid_input)
+			  KV_SERIALIZE(invalid_output)
+			  KV_SERIALIZE(too_big)
+			  KV_SERIALIZE(overspend)
+			  KV_SERIALIZE(fee_too_low)
+			  KV_SERIALIZE(not_rct)
+			  KV_SERIALIZE(untrusted)
+			  KV_SERIALIZE(invalid_block_height)
+			  KV_SERIALIZE(voters_quorum_index_out_of_bounds)
+			  KV_SERIALIZE(duplicate_voters)
+			  KV_SERIALIZE(service_node_index_out_of_bounds)
+			  KV_SERIALIZE(signature_not_valid)
+			  KV_SERIALIZE(not_enough_votes)
+		  END_KV_SERIALIZE_MAP()
+	  };
   };
   //-----------------------------------------------
   struct COMMAND_RPC_START_MINING

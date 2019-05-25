@@ -32,6 +32,7 @@
 #include "common/command_line.h"
 #include "common/pruning.h"
 #include "cryptonote_core/cryptonote_core.h"
+#include "blockchain_objects.h"
 #include "cryptonote_core/blockchain.h"
 #include "blockchain_db/blockchain_db.h"
 #include "blockchain_db/lmdb/db_lmdb.h"
@@ -543,16 +544,15 @@ int main(int argc, char* argv[])
   // because unlike blockchain_storage constructor, which takes a pointer to
   // tx_memory_pool, Blockchain's constructor takes tx_memory_pool object.
   MINFO("Initializing source blockchain (BlockchainDB)");
-  std::array<std::unique_ptr<Blockchain>, 2> core_storage;
-  Blockchain *blockchain = NULL;
-  tx_memory_pool m_mempool(*blockchain);
+  std::array<Blockchain *, 2> core_storage;
   boost::filesystem::path paths[2];
   bool already_pruned = false;
   for (size_t n = 0; n < core_storage.size(); ++n)
   {
-    core_storage[n].reset(new Blockchain(m_mempool));
+	  blockchain_objects_t *blockchain_objects = new blockchain_objects_t();
+	  core_storage[n] = &(blockchain_objects->m_blockchain);
 
-    BlockchainDB* db = new_db(db_type);
+	  BlockchainDB* db = new_db(db_type);
     if (db == NULL)
     {
       MERROR("Attempted to use non-existent database type: " << db_type);
@@ -631,9 +631,9 @@ int main(int argc, char* argv[])
     }
   }
   core_storage[0]->deinit();
-  core_storage[0].reset(NULL);
+  delete core_storage[0];
   core_storage[1]->deinit();
-  core_storage[1].reset(NULL);
+  delete core_storage[1];
 
   MINFO("Pruning...");
   MDB_env *env0 = NULL, *env1 = NULL;

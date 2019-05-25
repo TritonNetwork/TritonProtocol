@@ -1103,9 +1103,14 @@ void add_tx_secret_key_to_tx_extra(std::vector<uint8_t>& tx_extra, const crypto:
 	  return buf;
   }
   //---------------------------------------------------------------
+  void get_blob_hash(const epee::span<const char>& blob, crypto::hash& res)
+  {
+	  cn_fast_hash(blob.data(), blob.size(), res);
+  }
+  //---------------------------------------------------------------
   void get_blob_hash(const blobdata& blob, crypto::hash& res)
   {
-    cn_fast_hash(blob.data(), blob.size(), res);
+	  cn_fast_hash(blob.data(), blob.size(), res);
   }
   //---------------------------------------------------------------
   void set_default_decimal_point(unsigned int decimal_point)

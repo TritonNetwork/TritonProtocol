@@ -787,156 +787,81 @@ namespace cryptonote
    return 1;
  }
  //------------------------------------------------------------------------------------------------------------------------
- template<class t_core>
+  template<class t_core>
   int t_cryptonote_protocol_handler<t_core>::handle_request_fluffy_missing_tx(int command, NOTIFY_REQUEST_FLUFFY_MISSING_TX::request& arg, cryptonote_connection_context& context)
   {
-    MLOG_P2P_MESSAGE("Received NOTIFY_REQUEST_FLUFFY_MISSING_TX (" << arg.missing_tx_indices.size() << " txes), block hash " << arg.block_hash);
+	  MLOG_P2P_MESSAGE("Received NOTIFY_REQUEST_FLUFFY_MISSING_TX (" << arg.missing_tx_indices.size() << " txes), block hash " << arg.block_hash);
 
-    std::vector<std::pair<cryptonote::blobdata, block>> local_blocks;
-    std::vector<cryptonote::blobdata> local_txs;
+	  std::vector<std::pair<cryptonote::blobdata, block>> local_blocks;
+	  std::vector<cryptonote::blobdata> local_txs;
 
-    block b;
-    if (!m_core.get_block_by_hash(arg.block_hash, b))
-    {
-      LOG_ERROR_CCONTEXT("failed to find block: " << arg.block_hash << ", dropping connection");
-      drop_connection(context, false, false);
-      return 1;
-    }
+	  block b;
+	  if (!m_core.get_block_by_hash(arg.block_hash, b))
+	  {
+		  LOG_ERROR_CCONTEXT("failed to find block: " << arg.block_hash << ", dropping connection");
+		  drop_connection(context, false, false);
+		  return 1;
+	  }
 
-    std::vector<crypto::hash> txids;
-    NOTIFY_NEW_FLUFFY_BLOCK::request fluffy_response;
-    fluffy_response.b.block = t_serializable_object_to_blob(b);
-    fluffy_response.current_blockchain_height = arg.current_blockchain_height;
-    for(auto& tx_idx: arg.missing_tx_indices)
-    {
-      if(tx_idx < b.tx_hashes.size())
-      {
-        MDEBUG("  tx " << b.tx_hashes[tx_idx]);
-        txids.push_back(b.tx_hashes[tx_idx]);
-      }
-      else
-      {
-        LOG_ERROR_CCONTEXT
-        (
-          "Failed to handle request NOTIFY_REQUEST_FLUFFY_MISSING_TX"
-          << ", request is asking for a tx whose index is out of bounds "
-          << ", tx index = " << tx_idx << ", block tx count " << b.tx_hashes.size()
-          << ", block_height = " << arg.current_blockchain_height
-          << ", dropping connection"
-        );
+	  std::vector<crypto::hash> txids;
+	  NOTIFY_NEW_FLUFFY_BLOCK::request fluffy_response;
+	  fluffy_response.b.block = t_serializable_object_to_blob(b);
+	  fluffy_response.current_blockchain_height = arg.current_blockchain_height;
+	  for (auto& tx_idx : arg.missing_tx_indices)
+	  {
+		  if (tx_idx < b.tx_hashes.size())
+		  {
+			  MDEBUG("  tx " << b.tx_hashes[tx_idx]);
+			  txids.push_back(b.tx_hashes[tx_idx]);
+		  }
+		  else
+		  {
+			  LOG_ERROR_CCONTEXT
+			  (
+				  "Failed to handle request NOTIFY_REQUEST_FLUFFY_MISSING_TX"
+				  << ", request is asking for a tx whose index is out of bounds "
+				  << ", tx index = " << tx_idx << ", block tx count " << b.tx_hashes.size()
+				  << ", block_height = " << arg.current_blockchain_height
+				  << ", dropping connection"
+			  );
 
-        drop_connection(context, false, false);
-        return 1;
-      }
-    }
+			  drop_connection(context, false, false);
+			  return 1;
+		  }
+	  }
 
-    std::vector<cryptonote::transaction> txs;
-    std::vector<crypto::hash> missed;
-    if (!m_core.get_transactions(txids, txs, missed))
-    {
-      LOG_ERROR_CCONTEXT("Failed to handle request NOTIFY_REQUEST_FLUFFY_MISSING_TX, "
-        << "failed to get requested transactions");
-      drop_connection(context, false, false);
-      return 1;
-    }
-    if (!missed.empty() || txs.size() != txids.size())
-    {
-      LOG_ERROR_CCONTEXT("Failed to handle request NOTIFY_REQUEST_FLUFFY_MISSING_TX, "
-        << missed.size() << " requested transactions not found" << ", dropping connection");
-      drop_connection(context, false, false);
-      return 1;
-    }
+	  std::vector<cryptonote::transaction> txs;
+	  std::vector<crypto::hash> missed;
+	  if (!m_core.get_transactions(txids, txs, missed))
+	  {
+		  LOG_ERROR_CCONTEXT("Failed to handle request NOTIFY_REQUEST_FLUFFY_MISSING_TX, "
+			  << "failed to get requested transactions");
+		  drop_connection(context, false, false);
+		  return 1;
+	  }
+	  if (!missed.empty() || txs.size() != txids.size())
+	  {
+		  LOG_ERROR_CCONTEXT("Failed to handle request NOTIFY_REQUEST_FLUFFY_MISSING_TX, "
+			  << missed.size() << " requested transactions not found" << ", dropping connection");
+		  drop_connection(context, false, false);
+		  return 1;
+	  }
 
-    for(auto& tx: txs)
-    {
-      fluffy_response.b.txs.push_back(t_serializable_object_to_blob(tx));
-    }
+	  for (auto& tx : txs)
+	  {
+		  fluffy_response.b.txs.push_back(t_serializable_object_to_blob(tx));
+	  }
 
-    LOG_PRINT_CCONTEXT_L2
-    (
-        "-->>NOTIFY_RESPONSE_FLUFFY_MISSING_TX: "
-        << ", txs.size()=" << fluffy_response.b.txs.size()
-        << ", rsp.current_blockchain_height=" << fluffy_response.current_blockchain_height
-    );
+	  MLOG_P2P_MESSAGE
+	  (
+		  "-->>NOTIFY_RESPONSE_FLUFFY_MISSING_TX: "
+		  << ", txs.size()=" << fluffy_response.b.txs.size()
+		  << ", rsp.current_blockchain_height=" << fluffy_response.current_blockchain_height
+	  );
 
-    post_notify<NOTIFY_NEW_FLUFFY_BLOCK>(fluffy_response, context);
-    return 1;
+	  post_notify<NOTIFY_NEW_FLUFFY_BLOCK>(fluffy_response, context);
+	  return 1;
   }
- int t_cryptonote_protocol_handler<t_core>::handle_request_fluffy_missing_tx(int command, NOTIFY_REQUEST_FLUFFY_MISSING_TX::request& arg, cryptonote_connection_context& context)
- {
-   MLOG_P2P_MESSAGE("Received NOTIFY_REQUEST_FLUFFY_MISSING_TX (" << arg.missing_tx_indices.size() << " txes), block hash " << arg.block_hash);
-
-   std::vector<std::pair<cryptonote::blobdata, block>> local_blocks;
-   std::vector<cryptonote::blobdata> local_txs;
-
-   block b;
-   if (!m_core.get_block_by_hash(arg.block_hash, b))
-   {
-     LOG_ERROR_CCONTEXT("failed to find block: " << arg.block_hash << ", dropping connection");
-     drop_connection(context, false, false);
-     return 1;
-   }
-
-   std::vector<crypto::hash> txids;
-   NOTIFY_NEW_FLUFFY_BLOCK::request fluffy_response;
-   fluffy_response.b.block = t_serializable_object_to_blob(b);
-   fluffy_response.current_blockchain_height = arg.current_blockchain_height;
-   for(auto& tx_idx: arg.missing_tx_indices)
-   {
-     if(tx_idx < b.tx_hashes.size())
-     {
-       MDEBUG("  tx " << b.tx_hashes[tx_idx]);
-       txids.push_back(b.tx_hashes[tx_idx]);
-     }
-     else
-     {
-       LOG_ERROR_CCONTEXT
-       (
-         "Failed to handle request NOTIFY_REQUEST_FLUFFY_MISSING_TX"
-         << ", request is asking for a tx whose index is out of bounds "
-         << ", tx index = " << tx_idx << ", block tx count " << b.tx_hashes.size()
-         << ", block_height = " << arg.current_blockchain_height
-         << ", dropping connection"
-       );
-
-       drop_connection(context, false, false);
-       return 1;
-     }
-   }
-
-   std::vector<cryptonote::transaction> txs;
-   std::vector<crypto::hash> missed;
-   if (!m_core.get_transactions(txids, txs, missed))
-   {
-     LOG_ERROR_CCONTEXT("Failed to handle request NOTIFY_REQUEST_FLUFFY_MISSING_TX, "
-       << "failed to get requested transactions");
-     drop_connection(context, false, false);
-     return 1;
-   }
-   if (!missed.empty() || txs.size() != txids.size())
-   {
-     LOG_ERROR_CCONTEXT("Failed to handle request NOTIFY_REQUEST_FLUFFY_MISSING_TX, "
-       << missed.size() << " requested transactions not found" << ", dropping connection");
-     drop_connection(context, false, false);
-     return 1;
-   }
-
-   for(auto& tx: txs)
-   {
-     fluffy_response.b.txs.push_back(t_serializable_object_to_blob(tx));
-   }
-
-   MLOG_P2P_MESSAGE
-   (
-       "-->>NOTIFY_RESPONSE_FLUFFY_MISSING_TX: "
-       << ", txs.size()=" << fluffy_response.b.txs.size()
-       << ", rsp.current_blockchain_height=" << fluffy_response.current_blockchain_height
-   );
-
-   post_notify<NOTIFY_NEW_FLUFFY_BLOCK>(fluffy_response, context);
-   return 1;
- }
-
   //------------------------------------------------------------------------------------------------------------------------
   template<class t_core>
   int t_cryptonote_protocol_handler<t_core>::handle_notify_new_deregister_vote(int command, NOTIFY_NEW_DEREGISTER_VOTE::request& arg, cryptonote_connection_context& context)

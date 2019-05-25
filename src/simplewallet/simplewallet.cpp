@@ -70,7 +70,7 @@
 #include "wallet/wallet_args.h"
 #include "version.h"
 #include <stdexcept>
-#include "common/int-util.h"
+#include "int-util.h"
 #include "common/threadpool.h"
 #include "daemonizer/posix_fork.h"
 #ifndef WIN32
@@ -5324,7 +5324,7 @@ static bool locked_blocks_arg_valid(const std::string& arg, uint64_t& duration)
 }
 
 //----------------------------------------------------------------------------------------------------
-bool simple_wallet::transfer_main(int transfer_type, const std::vector<std::string> &args_)
+bool simple_wallet::transfer_main(int transfer_type, const std::vector<std::string> &args_, bool called_by_mms)
 {
 //  "transfer [index=<N1>[,<N2>,...]] [<priority>] [<ring_size>] <address> <amount> [<payment_id>]"
   if (!try_connect_to_daemon())
@@ -8200,20 +8200,38 @@ bool simple_wallet::check_reserve_proof(const std::vector<std::string> &args)
   return true;
 }
 //----------------------------------------------------------------------------------------------------
+static std::string get_human_readable_timestamp(uint64_t ts)
+{
+	char buffer[64];
+	if (ts < 1234567890)
+		return "<unknown>";
+	time_t tt = ts;
+	struct tm tm;
+#ifdef WIN32
+	gmtime_s(&tm, &tt);
+#else
+	gmtime_r(&tt, &tm);
+#endif
+	uint64_t now = time(NULL);
+	uint64_t diff = ts > now ? ts - now : now - ts;
+	strftime(buffer, sizeof(buffer), "%Y-%m-%d %H:%M:%S", &tm);
+	return std::string(buffer);
+}
+//----------------------------------------------------------------------------------------------------
 static std::string get_human_readable_timespan(std::chrono::seconds seconds)
 {
-  uint64_t ts = seconds.count();
-  if (ts < 60)
-    return std::to_string(ts) + sw::tr(" seconds");
-  if (ts < 3600)
-    return std::to_string((uint64_t)(ts / 60)) + sw::tr(" minutes");
-  if (ts < 3600 * 24)
-    return std::to_string((uint64_t)(ts / 3600)) + sw::tr(" hours");
-  if (ts < 3600 * 24 * 30.5)
-    return std::to_string((uint64_t)(ts / (3600 * 24))) + sw::tr(" days");
-  if (ts < 3600 * 24 * 365.25)
-    return std::to_string((uint64_t)(ts / (3600 * 24 * 30.5))) + sw::tr(" months");
-  return sw::tr("a long time");
+	uint64_t ts = seconds.count();
+	if (ts < 60)
+		return std::to_string(ts) + sw::tr(" seconds");
+	if (ts < 3600)
+		return std::to_string((uint64_t)(ts / 60)) + sw::tr(" minutes");
+	if (ts < 3600 * 24)
+		return std::to_string((uint64_t)(ts / 3600)) + sw::tr(" hours");
+	if (ts < 3600 * 24 * 30.5)
+		return std::to_string((uint64_t)(ts / (3600 * 24))) + sw::tr(" days");
+	if (ts < 3600 * 24 * 365.25)
+		return std::to_string((uint64_t)(ts / (3600 * 24 * 30.5))) + sw::tr(" months");
+	return sw::tr("a long time");
 }
 //----------------------------------------------------------------------------------------------------
 // mutates local_args as it parses and consumes arguments
@@ -8554,6 +8572,111 @@ bool simple_wallet::show_transfers(const std::vector<std::string> &args_)
 			% boost::algorithm::join(transfer.index | boost::adaptors::transformed([](uint32_t i) { return std::to_string(i); }), ", ")
 			% transfer.note;
 	}
+
+	return true;
+}
+//----------------------------------------------------------------------------------------------------
+bool simple_wallet::export_transfers(const std::vector<std::string>& args_)
+{
+	std::vector<std::string> local_args = args_;
+
+	if (local_args.size() > 5) {
+		fail_msg_writer() << tr("usage: export_transfers [in|out|all|pending|failed] [index=<N1>[,<N2>,...]] [<min_height> [<max_height>]] [output=<path>]");
+		return true;
+	}
+
+	LOCK_IDLE_SCOPE();
+
+	std::vector<transfer_view> all_transfers;
+
+	// might consumes arguments in local_args
+	if (!get_transfers(local_args, all_transfers))
+		return true;
+
+	// output filename
+	std::string filename = (boost::format("output%u.csv") % m_current_subaddress_account).str();
+	if (local_args.size() > 0 && local_args[0].substr(0, 7) == "output=")
+	{
+		filename = local_args[0].substr(7, -1);
+		local_args.erase(local_args.begin());
+	}
+
+	std::ofstream file(filename);
+
+	// header
+	file <<
+		boost::format("%8.8s,%9.9s,%8.8s,%16.16s,%20.20s,%20.20s,%64.64s,%16.16s,%14.14s,%100.100s,%20.20s,%s,%s") %
+		tr("block") % tr("type") % tr("lock") % tr("timestamp") % tr("amount") % tr("running balance") % tr("hash") % tr("payment ID") % tr("fee") % tr("destination") % tr("amount") % tr("index") % tr("note")
+		<< std::endl;
+
+	uint64_t running_balance = 0;
+	auto formatter = boost::format("%8.8llu,%9.9s,%8.8s,%16.16s,%20.20s,%20.20s,%64.64s,%16.16s,%14.14s,%100.100s,%20.20s,\"%s\",%s");
+
+	for (const auto& transfer : all_transfers)
+	{
+		// ignore unconfirmed transfers in running balance
+		if (transfer.confirmed)
+		{
+			switch (transfer.type)
+			{
+			case tools::pay_type::in:
+			case tools::pay_type::miner:
+			case tools::pay_type::service_node:
+				running_balance += transfer.amount;
+				break;
+			case tools::pay_type::stake:
+				running_balance -= transfer.fee;
+				break;
+			case tools::pay_type::out:
+				running_balance -= transfer.amount + transfer.fee;
+				break;
+			default:
+				fail_msg_writer() << tr("Warning: Unhandled pay type, this is most likely a developer error, please report it to the Loki developers.");
+				break;
+			}
+		}
+
+		char const UNLOCKED[] = "unlocked";
+		char const LOCKED[] = "locked";
+		char const *lock_str = (transfer.unlocked) ? UNLOCKED : LOCKED;
+
+		file << formatter
+			% transfer.block
+			% tools::pay_type_string(transfer.type)
+			% lock_str
+			% get_human_readable_timestamp(transfer.timestamp)
+			% print_money(transfer.amount)
+			% print_money(running_balance)
+			% string_tools::pod_to_hex(transfer.hash)
+			% transfer.payment_id
+			% print_money(transfer.fee)
+			% (transfer.outputs.size() ? transfer.outputs[0].wallet_addr : "-")
+			% (transfer.outputs.size() ? print_money(transfer.outputs[0].amount) : "")
+			% boost::algorithm::join(transfer.index | boost::adaptors::transformed([](uint32_t i) { return std::to_string(i); }), ", ")
+			% transfer.note
+			<< std::endl;
+
+		for (size_t i = 1; i < transfer.outputs.size(); ++i)
+		{
+			file << formatter
+				% ""
+				% ""
+				% ""
+				% ""
+				% ""
+				% ""
+				% ""
+				% ""
+				% transfer.outputs[i].wallet_addr
+				% print_money(transfer.outputs[i].amount)
+				% ""
+				% ""
+				<< std::endl;
+		}
+	}
+	file.close();
+
+	success_msg_writer() << tr("CSV exported to ") << filename;
 
 	return true;
 }

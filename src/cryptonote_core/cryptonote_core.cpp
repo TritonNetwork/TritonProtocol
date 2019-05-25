@@ -2097,6 +2097,7 @@ bool core::get_service_node_keys(crypto::public_key &pub_key, crypto::secret_key
     CHECK_AND_ASSERT_MES(r, "", tr("Failed to make registration command"));
     std::cout << registration << std::endl;
     return true;
+  }
   uint32_t core::get_blockchain_pruning_seed() const
   {
     return get_blockchain_storage().get_blockchain_pruning_seed();
