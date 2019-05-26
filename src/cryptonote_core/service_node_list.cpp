@@ -997,7 +997,6 @@ namespace service_nodes
 	}
 
 	/// validates the miner TX for the next block
-	//
 	bool service_node_list::validate_miner_tx(const crypto::hash& prev_id, const cryptonote::transaction& miner_tx, uint64_t height, int hard_fork_version, cryptonote::block_reward_parts const &reward_parts) const
 	{
 		std::lock_guard<boost::recursive_mutex> lock(m_sn_mutex);

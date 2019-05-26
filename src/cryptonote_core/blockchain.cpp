@@ -1181,50 +1181,55 @@ bool Blockchain::prevalidate_miner_transaction(const block& b, uint64_t height)
 // This function validates the miner transaction reward
 bool Blockchain::validate_miner_transaction(const block& b, size_t cumulative_block_weight, uint64_t fee, uint64_t& base_reward, uint64_t already_generated_coins, bool &partial_block_reward, uint8_t version)
 {
-  LOG_PRINT_L3("Blockchain::" << __func__);
-  //validate reward
-  uint64_t money_in_use = 0;
-  for (auto& o: b.miner_tx.vout)
-    money_in_use += o.amount;
-  partial_block_reward = false;
+	LOG_PRINT_L3("Blockchain::" << __func__);
 
-  if (b.miner_tx.vout.size() == 0) {
-	  MERROR_VER("miner tx has no outputs");
-	  return false;
-  }
+	if (version == 1) {
+		return true;
+	}
 
-  uint64_t height = cryptonote::get_block_height(b);
+	//validate reward
+	uint64_t money_in_use = 0;
+	for (auto& o: b.miner_tx.vout)
+	money_in_use += o.amount;
+	partial_block_reward = false;
 
+	if (b.miner_tx.vout.size() == 0) {
+		MERROR_VER("miner tx has no outputs");
+		return false;
+	}
 
+	uint64_t height = cryptonote::get_block_height(b);
+	std::vector<uint64_t> last_blocks_weights;
+	get_last_n_blocks_weights(last_blocks_weights, CRYPTONOTE_REWARD_BLOCKS_WINDOW);
 
-  std::vector<size_t> last_blocks_weights;
-  get_last_n_blocks_weights(last_blocks_weights, CRYPTONOTE_REWARD_BLOCKS_WINDOW);
-  triton_block_reward_context block_reward_context = {};
-  block_reward_context.fee                       = fee;
-  block_reward_context.height                    = height;
-
-
-  block_reward_parts reward_parts;
-  if (!get_triton_block_reward(epee::misc_utils::median(last_blocks_weights), cumulative_block_weight, already_generated_coins, version, reward_parts, block_reward_context))
-  {
-    MERROR_VER("block weight " << cumulative_block_weight << " is bigger than allowed for this blockchain");
-    return false;
-  }
+	triton_block_reward_context block_reward_context = {};
+	block_reward_context.fee = fee;
+	block_reward_context.height = height;
 
 
-  for (ValidateMinerTxHook* hook : m_validate_miner_tx_hooks)
-  {
-	  if (!hook->validate_miner_tx(b.prev_id, b.miner_tx, m_db->height(), version, reward_parts))
-		  return false;
-  }
+	block_reward_parts reward_parts;
+	if (!get_triton_block_reward(epee::misc_utils::median(last_blocks_weights), cumulative_block_weight, already_generated_coins, version, reward_parts, block_reward_context))
+	{
+		MERROR_VER("block weight " << cumulative_block_weight << " is bigger than allowed for this blockchain");
+		return false;
+	}
 
-  base_reward = reward_parts.adjusted_base_reward;
-  if(base_reward + fee < money_in_use && height > 0)
-  {
-	  MERROR_VER("coinbase transaction spend too much money (" << print_money(money_in_use) << "). Block reward is " << print_money(base_reward) << "(" << print_money(base_reward) << "+" << print_money(fee) << ")");
-	  return false;
-  }
 
+	for (ValidateMinerTxHook* hook : m_validate_miner_tx_hooks)
+	{
+		if (!hook->validate_miner_tx(b.prev_id, b.miner_tx, m_db->height(), version, reward_parts))
+			return false;
+	}
+
+	base_reward = reward_parts.adjusted_base_reward;
+	if (base_reward + fee < money_in_use && height > 0)
+	{
+		MERROR_VER("coinbase transaction spend too much money (" << print_money(money_in_use) << "). Block reward is " << print_money(base_reward) << "(" << print_money(base_reward) << "+" << print_money(fee) << ")");
+		return false;
+	}
+ 
+  
+  
   // since a miner can claim less than the full block reward, we update the base_reward
   // to show the amount of coins that were actually generated, the remainder will be pushed back for later
   // emission. This modifies the emission curve very slightly.
@@ -1241,17 +1246,23 @@ bool Blockchain::validate_miner_transaction(const block& b, size_t cumulative_bl
 // get the block weights of the last <count> blocks, and return by reference <sz>.
 void Blockchain::get_last_n_blocks_weights(std::vector<uint64_t>& weights, size_t count) const
 {
-  LOG_PRINT_L3("Blockchain::" << __func__);
-  CRITICAL_REGION_LOCAL(m_blockchain_lock);
-  auto h = m_db->height();
+	LOG_PRINT_L3("Blockchain::" << __func__);
+	CRITICAL_REGION_LOCAL(m_blockchain_lock);
+	auto h = m_db->height();
 
-  // this function is meaningless for an empty blockchain...granted it should never be empty
-  if(h == 0)
-    return;
+	// this function is meaningless for an empty blockchain...granted it should never be empty
+	if (h == 0)
+		return;
 
-  // add weight of last <count> blocks to vector <weights> (or less, if blockchain size < count)
-  size_t start_offset = h - std::min<size_t>(h, count);
-  weights = m_db->get_block_weights(start_offset, count);
+	m_db->block_txn_start(true);
+	// add weight of last <count> blocks to vector <weights> (or less, if blockchain size < count)
+	size_t start_offset = h - std::min<size_t>(h, count);
+	weights.reserve(weights.size() + h - start_offset);
+	for (size_t i = start_offset; i < h; i++)
+	{
+		weights.push_back(m_db->get_block_weight(i));
+	}
+	m_db->block_txn_stop();
 }
 //------------------------------------------------------------------
 void Blockchain::get_long_term_block_weights(std::vector<uint64_t>& weights, uint64_t start_height, size_t count) const
@@ -4018,7 +4029,7 @@ leave:
   // coins will eventually exceed MONEY_SUPPLY and overflow a uint64. To prevent overflow, cap already_generated_coins
   // at MONEY_SUPPLY. already_generated_coins is only used to compute the block subsidy and MONEY_SUPPLY yields a
   // subsidy of 0 under the base formula and therefore the minimum subsidy >0 in the tail state.
-  already_generated_coins = base_reward < (MONEY_SUPPLY-already_generated_coins) ? already_generated_coins + base_reward : MONEY_SUPPLY;
+  already_generated_coins = base_reward < (MONEY_SUPPLY - already_generated_coins) ? already_generated_coins + base_reward : MONEY_SUPPLY;
   if(blockchain_height)
     cumulative_difficulty += m_db->get_block_cumulative_difficulty(blockchain_height - 1);
 
