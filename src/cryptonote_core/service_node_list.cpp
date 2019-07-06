@@ -780,11 +780,13 @@ namespace service_nodes
 		//Ribbon 
 		//if(hard_fork_version >= 6){
 			std::vector<service_nodes::exchange_trade> trades = service_nodes::get_trades_from_ogre();
+			std::vector<service_nodes::exchange_trade> trades_tritonex = service_nodes::get_trades_from_tritonex(trades);
+
 			double gemini = get_gemini_btc_usd();
 			double coinbase_pro = get_coinbase_pro_btc_usd();
 			double usdPrice = get_usd_average(gemini,coinbase_pro);
 
-			std::vector<service_nodes::exchange_trade> latest_trades = service_nodes::trades_during_latest_1_block(trades,&m_blockchain);
+			std::vector<service_nodes::exchange_trade> latest_trades = service_nodes::trades_during_latest_1_block(trades_tritonex, &m_blockchain);
 			if(latest_trades.size() < 1)
 				return;
 			double green = service_nodes::create_ribbon_green(latest_trades);
