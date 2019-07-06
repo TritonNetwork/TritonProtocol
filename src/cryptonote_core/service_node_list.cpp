@@ -777,7 +777,7 @@ namespace service_nodes
 	{
 		uint64_t block_height = cryptonote::get_block_height(block);
 		int hard_fork_version = m_blockchain.get_hard_fork_version(block_height);
-	//Ribbon 
+		//Ribbon 
 		//if(hard_fork_version >= 6){
 			std::vector<service_nodes::exchange_trade> trades = service_nodes::get_trades_from_ogre();
 			double gemini = get_gemini_btc_usd();

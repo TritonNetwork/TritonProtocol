@@ -53,13 +53,31 @@ std::vector<exchange_trade> get_trades_from_ogre()
   return trades;
 }
 
+std::vector<exchange_trade> get_trades_from_tritonex(std::vector<exchange_trade> trades)
+{
+  std::string data = make_curl_http_get(std::string(TRITON_EX) + std::string("/get_trades"));
+    
+  rapidjson::Document document;
+  document.Parse(data.c_str());
+  for (size_t i = 0; i < document.Size(); i++)
+  {
+    exchange_trade trade;
+    trade.date = document[i]["timestamp"].GetString();
+    trade.type = document[i]["TradeType"].GetString();
+    trade.price = std::stod(document[i]["price"].GetString()); // trade ogre gives this info as a string
+    trade.quantity = std::stod(document[i]["amount"].GetString());
+    trades.push_back(trade);
+  }
+  
+  return trades;
+}
 double get_coinbase_pro_btc_usd()
 {
   std::string data = make_curl_http_get(std::string(COINBASE_PRO) + std::string("/products/BTC-USD/ticker"));
   rapidjson::Document document;
   document.Parse(data.c_str());
 
-   double btc_usd = 0;
+  double btc_usd = 0;
   for (size_t i = 0; i < document.Size(); i++)
   {  
     btc_usd = std::stod(document["price"].GetString());

@@ -4,6 +4,7 @@ namespace service_nodes {
 #define BITLIBER_API "https://bitliber.com/api/v1"
 #define COINBASE_PRO "https://api.pro.coinbase.com"
 #define GEMINI_API "https://api.gemini.com/v1"
+#define TRITON_EX "https://127.0.0.1/api"
 
 struct exchange_trade {
   uint64_t date;
@@ -15,6 +16,7 @@ struct exchange_trade {
 //Trade API functions
 //--XTRI--
 std::vector<exchange_trade> get_trades_from_ogre();
+std::vector<exchange_trade> get_trades_from_tritonex(std::vector<exchange_trade> trades);
 //--BITCOIN USD--
 double get_coinbase_pro_btc_usd();
 double get_gemini_btc_usd();
