@@ -33,13 +33,12 @@ std::string make_curl_http_get(std::string url)
   return read_buffer;
 }
 
-std::vector<exchange_trade> get_trades_from_ogre()
+bool get_trades_from_ogre(std::vector<exchange_trade> *trades)
 {
   std::string data = make_curl_http_get(std::string(TRADE_OGRE_API) + std::string("/history/BTC-XTRI"));
     
   rapidjson::Document document;
   document.Parse(data.c_str());
-  std::vector<exchange_trade> trades;
   for (size_t i = 0; i < document.Size(); i++)
   {
     exchange_trade trade;
@@ -50,10 +49,10 @@ std::vector<exchange_trade> get_trades_from_ogre()
     trades.push_back(trade);
   }
   
-  return trades;
+  return true;
 }
 
-std::vector<exchange_trade> get_trades_from_tritonex(std::vector<exchange_trade> trades)
+bool get_trades_from_tritonex(std::vector<exchange_trade> *trades)
 {
   std::string data = make_curl_http_get(std::string(TRITON_EX) + std::string("/get_trades"));
     
@@ -69,7 +68,7 @@ std::vector<exchange_trade> get_trades_from_tritonex(std::vector<exchange_trade>
     trades.push_back(trade);
   }
   
-  return trades;
+  return true;
 }
 double get_coinbase_pro_btc_usd()
 {

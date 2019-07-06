@@ -777,25 +777,28 @@ namespace service_nodes
 	{
 		uint64_t block_height = cryptonote::get_block_height(block);
 		int hard_fork_version = m_blockchain.get_hard_fork_version(block_height);
-		//Ribbon 
-		//if(hard_fork_version >= 6){
-			std::vector<service_nodes::exchange_trade> trades = service_nodes::get_trades_from_ogre();
-			std::vector<service_nodes::exchange_trade> trades_tritonex = service_nodes::get_trades_from_tritonex(trades);
 
-			double gemini = get_gemini_btc_usd();
-			double coinbase_pro = get_coinbase_pro_btc_usd();
-			double usdPrice = get_usd_average(gemini,coinbase_pro);
+		std::vector<service_nodes::exchange_trade> trades;
+		if(!service_nodes::get_trades_from_ogre(&trades))
+			MERROR("Error getting trades from Ogre");
 
-			std::vector<service_nodes::exchange_trade> latest_trades = service_nodes::trades_during_latest_1_block(trades_tritonex, &m_blockchain);
-			if(latest_trades.size() < 1)
-				return;
-			double green = service_nodes::create_ribbon_green(latest_trades);
-			double blue = service_nodes::create_ribbon_blue(latest_trades);
-			MGINFO_GREEN("RIBBON GREEN: " << std::fixed << green * usdPrice);
-			MGINFO_GREEN("RIBBON BLUE: " << std::fixed << blue * usdPrice);
-			MGINFO_GREEN("GEMINI BTC-USD Price: " << std::fixed << gemini);
-			MGINFO_GREEN("Coinbase PRO BTC-USD Price: " << std::fixed << coinbase_pro);
-			MGINFO_GREEN("Average BTC-USD Price: " << std::fixed << usdPrice);
+		if(!service_nodes::get_trades_from_tritonex(&trades))
+			MERROR("Error getting trades from TritonEX");
+
+		double gemini = get_gemini_btc_usd();
+		double coinbase_pro = get_coinbase_pro_btc_usd();
+		double usdPrice = get_usd_average(gemini, coinbase_pro);
+
+		std::vector<service_nodes::exchange_trade> latest_trades = service_nodes::trades_during_latest_1_block(trades, &m_blockchain);
+		if(latest_trades.size() < 1)
+			return;
+		double green = service_nodes::create_ribbon_green(latest_trades);
+		double blue = service_nodes::create_ribbon_blue(latest_trades);
+		MGINFO_GREEN("RIBBON GREEN: " << std::fixed << green * usdPrice);
+		MGINFO_GREEN("RIBBON BLUE: " << std::fixed << blue * usdPrice);
+		MGINFO_GREEN("GEMINI BTC-USD Price: " << std::fixed << gemini);
+		MGINFO_GREEN("Coinbase PRO BTC-USD Price: " << std::fixed << coinbase_pro);
+		MGINFO_GREEN("Average BTC-USD Price: " << std::fixed << usdPrice);
 			
 			
 	//	}

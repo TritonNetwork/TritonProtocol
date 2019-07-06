@@ -15,8 +15,8 @@ struct exchange_trade {
 
 //Trade API functions
 //--XTRI--
-std::vector<exchange_trade> get_trades_from_ogre();
-std::vector<exchange_trade> get_trades_from_tritonex(std::vector<exchange_trade> trades);
+std::vector<exchange_trade> get_trades_from_ogre(std::vector<exchange_trade> *trades);
+std::vector<exchange_trade> get_trades_from_tritonex(std::vector<exchange_trade> *trades);
 //--BITCOIN USD--
 double get_coinbase_pro_btc_usd();
 double get_gemini_btc_usd();
