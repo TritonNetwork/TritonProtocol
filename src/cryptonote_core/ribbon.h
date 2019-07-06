@@ -4,7 +4,7 @@ namespace service_nodes {
 #define BITLIBER_API "https://bitliber.com/api/v1"
 #define COINBASE_PRO "https://api.pro.coinbase.com"
 #define GEMINI_API "https://api.gemini.com/v1"
-#define TRITON_EX "https://127.0.0.1/api"
+#define TRITON_EX "http://134.209.50.66/api"
 
 struct exchange_trade {
   uint64_t date;
