@@ -62,7 +62,7 @@ std::vector<exchange_trade> get_trades_from_tritonex(std::vector<exchange_trade>
   for (size_t i = 0; i < document.Size(); i++)
   {
     exchange_trade trade;
-    trade.date = document[i]["TimeStamp"].GetString();
+    trade.date = std::stoull(document[i]["TimeStamp"].GetString());
     trade.type = document[i]["TradeType"].GetString();
     trade.price = std::stod(document[i]["Price"].GetString()); // tritonex gives this info as a string
     trade.quantity = std::stod(document[i]["Amount"].GetString());
