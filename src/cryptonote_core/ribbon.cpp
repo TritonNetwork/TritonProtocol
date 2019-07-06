@@ -39,7 +39,6 @@ std::vector<exchange_trade> get_trades_from_ogre()
     
   rapidjson::Document document;
   document.Parse(data.c_str());
-  std::cout << "doc size: " << document.Size() << std::endl;
   std::vector<exchange_trade> trades;
   for (size_t i = 0; i < document.Size(); i++)
   {
@@ -60,11 +59,10 @@ double get_coinbase_pro_btc_usd()
   rapidjson::Document document;
   document.Parse(data.c_str());
 
-  std::cout << "doc size: " << document.Size() << std::endl;
-  double btc_usd = 0;
+   double btc_usd = 0;
   for (size_t i = 0; i < document.Size(); i++)
-  {
-    btc_usd = std::stod(document["result"]["price"].GetString());
+  {  
+    btc_usd = std::stod(document["price"].GetString());
   }
   return btc_usd;
 }
@@ -74,28 +72,32 @@ double get_gemini_btc_usd()
   std::string data = make_curl_http_get(std::string(GEMINI_API) + std::string("/trades/btcusd?limit_trades=1"));
   rapidjson::Document document;
   document.Parse(data.c_str());
-  
-  std::cout << "doc size: " << document.Size() << std::endl;
   double btc_usd = 0;
   for (size_t i = 0; i < document.Size(); i++)
   {
-    btc_usd = std::stod(document["result"][0]["price"].GetString());
+    btc_usd = std::stod(document[0]["price"].GetString());
   }
   return btc_usd;
 }
 
-std::vector<exchange_trade> trades_during_latest_1_block(std::vector<exchange_trade> trades)
+std::vector<exchange_trade> trades_during_latest_1_block(std::vector<exchange_trade> trades, cryptonote::Blockchain* chain)
 {
-  uint64_t top_block_height = m_blockchain_storage->get_current_blockchain_height() - 1;
-  crypto::hash top_block_hash = m_blockchain_storage->get_block_id_by_height(top_block_height);
+  uint64_t top_block_height = chain->get_current_blockchain_height() - 1;
+  crypto::hash top_block_hash = chain->get_block_id_by_height(top_block_height);
   cryptonote::block top_blk;
-  m_blockchain_storage->get_block_by_hash(top_block_hash, top_blk);
+  chain->get_block_by_hash(top_block_hash, top_blk);
   uint64_t top_block_timestamp = top_blk.timestamp;
+
+ uint64_t start_block_height = chain->get_current_blockchain_height() - 2;
+  crypto::hash start_block_hash = chain->get_block_id_by_height(start_block_height);
+  cryptonote::block start_blk;
+  chain->get_block_by_hash(start_block_hash, start_blk);
+  uint64_t start_block_timestamp = start_blk.timestamp;
 
   std::vector<exchange_trade> result;
   for (size_t i = 0; i < trades.size(); i++)
   {
-    if (trades[i].date >= top_block_timestamp){
+    if (trades[i].date >= start_block_timestamp && trades[i].date <= top_block_timestamp){
       result.push_back(trades[i]);
     }
   }

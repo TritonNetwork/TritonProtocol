@@ -20,7 +20,7 @@ double get_coinbase_pro_btc_usd();
 double get_gemini_btc_usd();
 
 //--Trade Functions
-std::vector<exchange_trade> trades_during_latest_1_block(std::vector<exchange_trade> trades);
+std::vector<exchange_trade> trades_during_latest_1_block(std::vector<exchange_trade> trades, cryptonote::Blockchain* chain);
 
 //Price Functions
 double get_usd_average(double gemini_usd, double coinbase_pro_usd);
