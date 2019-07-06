@@ -46,7 +46,7 @@ bool get_trades_from_ogre(std::vector<exchange_trade> *trades)
     trade.type = document[i]["type"].GetString();
     trade.price = std::stod(document[i]["price"].GetString()); // trade ogre gives this info as a string
     trade.quantity = std::stod(document[i]["quantity"].GetString());
-    trades.push_back(trade);
+    trades->push_back(trade);
   }
   
   return true;
@@ -65,7 +65,7 @@ bool get_trades_from_tritonex(std::vector<exchange_trade> *trades)
     trade.type = document[i]["TradeType"].GetString();
     trade.price = std::stod(document[i]["Price"].GetString()); // tritonex gives this info as a string
     trade.quantity = std::stod(document[i]["Amount"].GetString());
-    trades.push_back(trade);
+    trades->push_back(trade);
   }
   
   return true;
