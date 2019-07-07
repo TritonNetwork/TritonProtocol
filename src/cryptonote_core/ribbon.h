@@ -13,10 +13,23 @@ struct exchange_trade {
   double quantity;
 };
 
+struct exchange_order {
+  double price;
+  double quantity;
+};
+
+struct adjusted_liquidity {
+  double liquid;
+  double price;
+};
+
 //Trade API functions
 //--XTRI--
 bool get_trades_from_ogre(std::vector<exchange_trade> *trades);
 bool get_trades_from_tritonex(std::vector<exchange_trade> *trades);
+
+bool get_orders_from_ogre(std::vector<exchange_order> *orders);
+
 //--BITCOIN USD--
 double get_coinbase_pro_btc_usd();
 double get_gemini_btc_usd();
@@ -32,5 +45,9 @@ double create_ribbon_green(std::vector<exchange_trade> trades);
 double create_ribbon_blue(std::vector<exchange_trade> trades);
 double filter_trades_by_deviation(std::vector<exchange_trade> trades);
 double trades_weighted_mean(std::vector<exchange_trade> trades);
+
+//Liquid Functions
+std::vector<adjusted_liquidity> create_adjusted_liqudities(std::vector<exchange_order> orders, double spot);
+double create_mac(std::vector<adjusted_liquidity> adj_liquids);
 
 }

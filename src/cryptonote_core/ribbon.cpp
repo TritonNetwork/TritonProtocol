@@ -3,6 +3,7 @@
 #include <iostream>
 #include <math.h>
 
+#include "int-util.h"
 #include "rapidjson/document.h"
 #include "blockchain.h"
 #include "ribbon.h"
@@ -70,6 +71,29 @@ bool get_trades_from_tritonex(std::vector<exchange_trade> *trades)
   
   return true;
 }
+
+bool get_orders_from_ogre(std::vector<exchange_order> *orders)
+{
+  std::string data = make_curl_http_get(std::string(TRADE_OGRE_API) + std::string("/orders/BTC-XTRI"));
+    
+  rapidjson::Document document;
+  document.Parse(data.c_str());
+
+  if(document.HasMember("buy")){
+    const rapidjson::Value& buyJson = document["buy"];
+    size_t get_top_25_orders = buyJson.Size() - 25;
+    for (rapidjson::Value::ConstMemberIterator iter = buyJson.MemberBegin() + get_top_25_orders; iter != buyJson.MemberEnd(); ++iter)
+    {
+      exchange_order order;
+      order.price = std::stod(iter->name.GetString());
+      order.quantity = std::stod(iter->value.GetString());
+      orders->push_back(order);
+    }
+  }  
+
+  return true;
+}
+
 double get_coinbase_pro_btc_usd()
 {
   std::string data = make_curl_http_get(std::string(COINBASE_PRO) + std::string("/products/BTC-USD/ticker"));
@@ -199,6 +223,33 @@ double trades_weighted_mean(std::vector<exchange_trade> trades)
   }
   
   return weighted_sum / XTRI_volume_sum;
+}
+
+std::vector<adjusted_liquidity> create_adjusted_liqudities(std::vector<exchange_order> orders, double spot){
+  std::vector<adjusted_liquidity> al;
+
+  for(size_t i = 0; i < orders.size();i++){
+      adjusted_liquidity this_al;
+      if(orders[i].price != spot){
+        this_al.price = orders[i].price;
+        double denom = (1 - std::abs(this_al.price - spot));
+        this_al.liquid = (orders[i].quantity) * (1 / denom);
+        al.push_back(this_al);
+      }
+  }
+
+  return al;
+}
+
+double create_mac(std::vector<adjusted_liquidity> adj_liquids){
+  double adj_liquid_sum = 0;
+  double price_weighted = 0;
+
+  for(size_t i = 0; i < adj_liquids.size(); i++){
+    adj_liquid_sum += adj_liquids[i].liquid;
+    price_weighted += (adj_liquids[i].liquid * adj_liquids[i].price);
+  }
+  return price_weighted * adj_liquid_sum;
 }
 
 }

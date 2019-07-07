@@ -794,11 +794,22 @@ namespace service_nodes
 			return;
 		double green = service_nodes::create_ribbon_green(latest_trades);
 		double blue = service_nodes::create_ribbon_blue(latest_trades);
+
+
+
 		MGINFO_GREEN("RIBBON GREEN: " << std::fixed << green * usdPrice);
 		MGINFO_GREEN("RIBBON BLUE: " << std::fixed << blue * usdPrice);
 		MGINFO_GREEN("GEMINI BTC-USD Price: " << std::fixed << gemini);
 		MGINFO_GREEN("Coinbase PRO BTC-USD Price: " << std::fixed << coinbase_pro);
 		MGINFO_GREEN("Average BTC-USD Price: " << std::fixed << usdPrice);
+		std::vector<exchange_order> orders;
+		if(!get_orders_from_ogre(&orders))
+			MERROR("Error getting orders from TritonEX");
+		
+		std::vector<adjusted_liquidity> adj_liquid = create_adjusted_liqudities(orders, blue);
+		double this_mac = create_mac(adj_liquid);
+
+		MGINFO_GREEN("MAC: " << std::fixed << this_mac << " XTRI");
 			
 			
 	//	}
