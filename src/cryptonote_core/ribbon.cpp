@@ -225,6 +225,18 @@ double trades_weighted_mean(std::vector<exchange_trade> trades)
   return weighted_sum / XTRI_volume_sum;
 }
 
+std::vector<exchange_trade> get_recent_trades()
+{
+  std::vector<service_nodes::exchange_trade> trades;
+  if(!service_nodes::get_trades_from_ogre(&trades))
+    MERROR("Error getting trades from Ogre");
+
+  if(!service_nodes::get_trades_from_tritonex(&trades))
+    MERROR("Error getting trades from TritonEX");
+
+  return trades;
+}
+
 std::vector<adjusted_liquidity> create_adjusted_liqudities(std::vector<exchange_order> orders, double spot){
   std::vector<adjusted_liquidity> al;
 

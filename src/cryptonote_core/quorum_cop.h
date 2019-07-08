@@ -56,6 +56,7 @@ namespace service_nodes
 		void blockchain_detached(uint64_t height) override;
 
 		bool handle_uptime_proof(const cryptonote::NOTIFY_UPTIME_PROOF::request &proof);
+		bool handle_ribbon_data_received(const cryptonote::NOTIFY_RIBBON_DATA::request &data);
 
 		static const uint64_t REORG_SAFETY_BUFFER_IN_BLOCKS = 20;
 		static_assert(REORG_SAFETY_BUFFER_IN_BLOCKS < triton::service_node_deregister::VOTE_LIFETIME_BY_HEIGHT,
@@ -63,6 +64,7 @@ namespace service_nodes
 		bool prune_uptime_proof();
 
 		uint64_t get_uptime_proof(const crypto::public_key &pubkey) const;
+		double get_ribbon_data(const crypto::public_key &pubkey) const;
 
 	private:
 
@@ -71,8 +73,10 @@ namespace service_nodes
 
 		using timestamp = uint64_t;
 		std::unordered_map<crypto::public_key, timestamp> m_uptime_proof_seen;
+		std::unordered_map<crypto::public_key, double> m_ribbon_data_received;
 		mutable epee::critical_section m_lock;
 	};
 	void generate_uptime_proof_request(const crypto::public_key& pubkey, const crypto::secret_key& seckey, cryptonote::NOTIFY_UPTIME_PROOF::request& req);
+    bool generate_ribbon_data_request(const crypto::public_key& pubkey, cryptonote::NOTIFY_RIBBON_DATA::request& req);
 
 }

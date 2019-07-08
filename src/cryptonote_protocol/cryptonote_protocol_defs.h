@@ -324,4 +324,26 @@ namespace cryptonote
       END_KV_SERIALIZE_MAP()
     };
   };
+   /************************************************************************/
+  /*                                                                      */
+  /************************************************************************/
+  struct NOTIFY_RIBBON_DATA
+  {
+    const static int ID = BC_COMMANDS_POOL_BASE + 12;
+
+    struct request
+    {
+      uint64_t timestamp;
+      double ribbon_green;
+      double ribbon_blue;
+      crypto::public_key pubkey;
+
+      BEGIN_KV_SERIALIZE_MAP()
+        KV_SERIALIZE(timestamp)
+        KV_SERIALIZE(ribbon_green)
+        KV_SERIALIZE(ribbon_blue)
+        KV_SERIALIZE_VAL_POD_AS_BLOB(pubkey)
+      END_KV_SERIALIZE_MAP()
+    };
+  };
 }

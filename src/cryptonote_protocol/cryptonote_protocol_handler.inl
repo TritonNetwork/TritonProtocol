@@ -692,6 +692,17 @@ namespace cryptonote
      relay_uptime_proof(arg, context);
    return 1;
  }
+  //------------------------------------------------------------------------------------------------------------------------
+ template<class t_core>
+ int t_cryptonote_protocol_handler<t_core>::handle_ribbon_data(int command, NOTIFY_RIBBON_DATA::request& arg, cryptonote_connection_context& context)
+ {
+   MLOG_P2P_MESSAGE("Received NOTIFY_RIBBON_DATA");
+   if(context.m_state != cryptonote_connection_context::state_normal)
+     return 1;
+   if (m_core.handle_ribbon_data(arg))
+     relay_ribbon_data(arg, context);
+   return 1;
+ }
  //------------------------------------------------------------------------------------------------------------------------
  template<class t_core>
   int t_cryptonote_protocol_handler<t_core>::handle_request_fluffy_missing_tx(int command, NOTIFY_REQUEST_FLUFFY_MISSING_TX::request& arg, cryptonote_connection_context& context)
@@ -1796,6 +1807,12 @@ skip:
  bool t_cryptonote_protocol_handler<t_core>::relay_uptime_proof(NOTIFY_UPTIME_PROOF::request& arg, cryptonote_connection_context& exclude_context)
  {
    return relay_post_notify<NOTIFY_UPTIME_PROOF>(arg, exclude_context);
+ }
+ //------------------------------------------------------------------------------------------------------------------------
+ template<class t_core>
+ bool t_cryptonote_protocol_handler<t_core>::relay_ribbon_data(NOTIFY_RIBBON_DATA::request& arg, cryptonote_connection_context& exclude_context)
+ {
+   return relay_post_notify<NOTIFY_RIBBON_DATA>(arg, exclude_context);
  }
  //------------------------------------------------------------------------------------------------------------------------
  template<class t_core>

@@ -27,8 +27,10 @@ struct adjusted_liquidity {
 //--XTRI--
 bool get_trades_from_ogre(std::vector<exchange_trade> *trades);
 bool get_trades_from_tritonex(std::vector<exchange_trade> *trades);
-
 bool get_orders_from_ogre(std::vector<exchange_order> *orders);
+
+std::vector<exchange_trade> get_recent_trades();
+
 
 //--BITCOIN USD--
 double get_coinbase_pro_btc_usd();

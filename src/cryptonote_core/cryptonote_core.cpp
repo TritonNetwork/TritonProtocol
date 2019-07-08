@@ -1267,6 +1267,28 @@ namespace cryptonote
 	  return m_quorum_cop.handle_uptime_proof(proof);
   }
   //-----------------------------------------------------------------------------------------------
+  bool core::submit_ribbon_data()
+  {
+    if (m_service_node)
+    {
+      cryptonote_connection_context fake_context = AUTO_VAL_INIT(fake_context);
+      NOTIFY_RIBBON_DATA::request r;
+      service_nodes::generate_ribbon_data_request(m_service_node_pubkey, r);
+      bool relayed = get_protocol()->relay_ribbon_data(r, fake_context);
+      if (!relayed)
+      {
+        MERROR("Failed to relay ribbon data");
+        return false;
+      }
+    }
+    return true;
+  }
+  //-----------------------------------------------------------------------------------------------
+  bool core::handle_ribbon_data(const NOTIFY_RIBBON_DATA::request &data)
+  {
+    return m_quorum_cop.handle_ribbon_data_received(data);
+  }
+  //-----------------------------------------------------------------------------------------------
   void core::on_transaction_relayed(const cryptonote::blobdata& tx_blob)
   {
     std::vector<std::pair<crypto::hash, cryptonote::blobdata>> txs;
@@ -1643,6 +1665,7 @@ namespace cryptonote
 	if (m_service_node && lifetime > DIFFICULTY_TARGET_V2) // Give us some time to connect to peers before sending uptimes
 	{
 		do_uptime_proof_call();
+		submit_ribbon_data();
 	}
 	m_uptime_proof_pruner.do_call(boost::bind(&service_nodes::quorum_cop::prune_uptime_proof, &m_quorum_cop));
     m_block_rate_interval.do_call(boost::bind(&core::check_block_rate, this));
