@@ -254,6 +254,18 @@ std::vector<exchange_trade> get_recent_trades()
   return trades;
 }
 
+
+std::vector<adjusted_liquidity> get_recent_liquids(double blue)
+{
+  std::vector<exchange_order> orders;
+  if(!get_orders_from_ogre(&orders))
+    MERROR("Error getting orders from TradeOgre");
+  //more exchanges below
+  std::vector<adjusted_liquidity> adj_liquid = create_adjusted_liqudities(orders, blue);
+  return orders;
+}
+
+
 std::vector<adjusted_liquidity> create_adjusted_liqudities(std::vector<exchange_order> orders, double spot){
   std::vector<adjusted_liquidity> al;
 

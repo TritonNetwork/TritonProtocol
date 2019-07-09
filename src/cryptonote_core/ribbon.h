@@ -31,6 +31,7 @@ bool get_trades_from_tritonex(std::vector<exchange_trade> *trades);
 bool get_orders_from_ogre(std::vector<exchange_order> *orders);
 
 std::vector<exchange_trade> get_recent_trades();
+std::vector<adjusted_liquidity> get_recent_liquids(double blue);
 
 
 //--BITCOIN USD--

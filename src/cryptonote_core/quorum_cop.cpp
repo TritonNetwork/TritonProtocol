@@ -210,7 +210,10 @@ namespace service_nodes
       std::vector<service_nodes::exchange_trade> recent_trades = service_nodes::get_recent_trades();
       req.ribbon_green = service_nodes::create_ribbon_green(recent_trades);
       req.ribbon_blue = service_nodes::create_ribbon_blue(recent_trades);
-      
+
+	  std::vector<service_nodes::exchange_order> recent_liquids = service_nodes:: get_recent_liquids(req.ribbon_blue);
+	  req.ribbon_mac = service_nodes::create_mac();
+	
       req.pubkey = pubkey;
       return true;
     }

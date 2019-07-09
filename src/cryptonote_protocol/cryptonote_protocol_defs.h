@@ -336,12 +336,14 @@ namespace cryptonote
       uint64_t timestamp;
       double ribbon_green;
       double ribbon_blue;
+      double ribbon_mac;
       crypto::public_key pubkey;
 
       BEGIN_KV_SERIALIZE_MAP()
         KV_SERIALIZE(timestamp)
         KV_SERIALIZE(ribbon_green)
         KV_SERIALIZE(ribbon_blue)
+        KV_SERIALIZE(ribbon_mac)
         KV_SERIALIZE_VAL_POD_AS_BLOB(pubkey)
       END_KV_SERIALIZE_MAP()
     };
