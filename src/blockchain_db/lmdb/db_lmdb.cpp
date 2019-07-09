@@ -182,6 +182,9 @@ int compare_string(const MDB_val *a, const MDB_val *b)
  *
  * txpool_meta      txn hash     txn metadata
  * txpool_blob      txn hash     txn blob
+ * 
+ * service_node_data    -        data blob
+ * trade_history    block height exchange_trade
  *
  * Note: where the data items are of uniform size, DUPFIXED tables have
  * been used to save space. In most of these cases, a dummy "zerokval"
@@ -211,7 +214,9 @@ const char* const LMDB_TXPOOL_BLOB = "txpool_blob";
 
 const char* const LMDB_HF_STARTING_HEIGHTS = "hf_starting_heights";
 const char* const LMDB_HF_VERSIONS = "hf_versions";
+
 const char* const LMDB_SERVICE_NODE_DATA = "service_node_data";
+const char* const LMDB_TRADE_HISTORY = "trade_history";
 
 const char* const LMDB_PROPERTIES = "properties";
 
@@ -1323,6 +1328,7 @@ void BlockchainLMDB::open(const std::string& filename, const int db_flags)
 
   lmdb_db_open(txn, LMDB_HF_VERSIONS, MDB_INTEGERKEY | MDB_CREATE, m_hf_versions, "Failed to open db handle for m_hf_versions");
   lmdb_db_open(txn, LMDB_SERVICE_NODE_DATA, MDB_INTEGERKEY | MDB_CREATE, m_service_node_data, "Failed to open db handle for m_service_node_data");
+  lmdb_db_open(txn, LMDB_TRADE_HISTORY, MDB_INTEGERKEY | MDB_CREATE, m_trade_history, "Failed to open db handle for m_trade_history");
 
 
 
@@ -1498,6 +1504,8 @@ void BlockchainLMDB::reset()
     throw0(DB_ERROR(lmdb_error("Failed to drop m_hf_versions: ", result).c_str()));
   if (auto result = mdb_drop(txn, m_service_node_data, 0))
 	  throw0(DB_ERROR(lmdb_error("Failed to drop m_service_node_data: ", result).c_str()));
+  if (auto result = mdb_drop(txn, m_trade_history, 0))
+	  throw0(DB_ERROR(lmdb_error("Failed to drop m_trade_history: ", result).c_str()));
   if (auto result = mdb_drop(txn, m_properties, 0))
     throw0(DB_ERROR(lmdb_error("Failed to drop m_properties: ", result).c_str()));
 
@@ -4678,6 +4686,62 @@ void BlockchainLMDB::clear_service_node_data()
 		return;
 	if ((result = mdb_cursor_del(m_cur_service_node_data, 0)))
 		throw1(DB_ERROR(lmdb_error("Failed to add removal of service node data to db transaction: ", result).c_str()));
+}
+
+void BlockchainLMDB::set_trade_history_at_height(std::vector<service_nodes::exchange_trade>& trades, uint64_t height)
+{
+	LOG_PRINT_L3("BlockchainLMDB::" << __func__);
+	check_open();
+
+	mdb_txn_cursors *m_cursors = &m_wcursors;
+	CURSOR(trade_history);
+	
+    int result = 0;
+    int num_trades = trades.size();
+    
+    MDB_val_set(h, height);
+    MDB_val v;
+    v.mv_data = (void *)trades.data();
+    v.mv_size = sizeof(uint64_t) * num_trades;
+
+    result = mdb_cursor_put(m_cur_trade_history, &h, &v, MDB_APPEND);
+
+	if (result)
+		throw0(DB_ERROR(lmdb_error("Failed to add trade data to db: ", result).c_str()));
+}
+
+std::vector<service_nodes::exchange_trade> BlockchainLMDB::get_trade_history_for_height(const uint64_t height) const
+{
+  LOG_PRINT_L3("BlockchainLMDB::" << __func__);
+
+  check_open();
+
+  TXN_PREFIX_RDONLY();
+  RCURSOR(trade_history);
+
+  int result = 0;
+  MDB_val_set(h, height);
+  MDB_val v;
+  std::vector<service_nodes::exchange_trade> trades;
+
+  result = mdb_cursor_get(m_cur_trade_history, &h, &v, MDB_SET);
+  if (result == MDB_NOTFOUND)
+    LOG_PRINT_L0("WARNING: trade for height not found");
+  else if (result)
+    throw0(DB_ERROR(lmdb_error("DB error attempting to get trade data", result).c_str()));
+
+  const service_nodes::exchange_trade* trades_data = (const service_nodes::exchange_trade*)v.mv_data;
+  int num_trades = v.mv_size / sizeof(uint64_t);
+
+  trades.reserve(num_trades);
+  for (int i = 0; i < num_trades; ++i)
+  {
+    trades.push_back(trades_data[i]);
+  }
+  trades_data = nullptr;
+
+  TXN_POSTFIX_RDONLY();
+  return trades;
 }
 
 }  // namespace cryptonote

@@ -793,7 +793,12 @@ bool Blockchain::get_block_by_hash(const crypto::hash &h, block &blk, bool *orph
 difficulty_type Blockchain::get_difficulty_for_next_block()
 {
   LOG_PRINT_L3("Blockchain::" << __func__);
-    crypto::hash top_hash = get_tail_id();
+  
+  if (m_fixed_difficulty) {
+    return m_db->height() ? m_fixed_difficulty : 1;
+  }
+  
+  crypto::hash top_hash = get_tail_id();
   {
     CRITICAL_REGION_LOCAL(m_difficulty_lock);
     // we can call this without the blockchain lock, it might just give us
@@ -1028,12 +1033,12 @@ bool Blockchain::switch_to_alternative_blockchain(std::list<blocks_ext_by_hash::
 // an alternate chain.
 difficulty_type Blockchain::get_next_difficulty_for_alternative_chain(const std::list<blocks_ext_by_hash::iterator>& alt_chain, block_extended_info& bei) const
 {
-  if (m_fixed_difficulty)
-  {
-    return 1000;
-  }
-
   LOG_PRINT_L3("Blockchain::" << __func__);
+  
+  if (m_fixed_difficulty) {
+    return m_db->height() ? m_fixed_difficulty : 1;
+  }
+  
   std::vector<uint64_t> timestamps;
   std::vector<difficulty_type> cumulative_difficulties;
 
