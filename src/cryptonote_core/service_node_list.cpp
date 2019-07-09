@@ -785,9 +785,7 @@ namespace service_nodes
 		if(!service_nodes::get_trades_from_tritonex(&trades))
 			MERROR("Error getting trades from TritonEX");
 
-		double gemini = get_gemini_btc_usd();
-		double coinbase_pro = get_coinbase_pro_btc_usd();
-		double usdPrice = get_usd_average(gemini, coinbase_pro);
+		double usdPrice = get_usd_average();
 
 		std::vector<service_nodes::exchange_trade> latest_trades = service_nodes::trades_during_latest_1_block(trades, &m_blockchain);
 		if(latest_trades.size() < 1)
@@ -799,8 +797,6 @@ namespace service_nodes
 
 		MGINFO_GREEN("RIBBON GREEN: " << std::fixed << green * usdPrice);
 		MGINFO_GREEN("RIBBON BLUE: " << std::fixed << blue * usdPrice);
-		MGINFO_GREEN("GEMINI BTC-USD Price: " << std::fixed << gemini);
-		MGINFO_GREEN("Coinbase PRO BTC-USD Price: " << std::fixed << coinbase_pro);
 		MGINFO_GREEN("Average BTC-USD Price: " << std::fixed << usdPrice);
 		std::vector<exchange_order> orders;
 		if(!get_orders_from_ogre(&orders))

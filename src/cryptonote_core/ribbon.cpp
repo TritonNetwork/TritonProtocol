@@ -121,6 +121,19 @@ double get_gemini_btc_usd()
   return btc_usd;
 }
 
+double get_bitfinex_btc_usd()
+{
+  std::string data = make_curl_http_get(std::string(BITFINEX_API) + std::string("/pubticker/btcusd"));
+  rapidjson::Document document;
+  document.Parse(data.c_str());
+  double btc_usd = 0;
+  for (size_t i = 0; i < document.Size(); i++)
+  {
+    btc_usd = std::stod(document["last_price"].GetString());
+  }
+  return btc_usd;
+}
+
 std::vector<exchange_trade> trades_during_latest_1_block(std::vector<exchange_trade> trades, cryptonote::Blockchain* chain)
 {
   uint64_t top_block_height = chain->get_current_blockchain_height() - 1;
@@ -146,8 +159,12 @@ std::vector<exchange_trade> trades_during_latest_1_block(std::vector<exchange_tr
 }
 
 
-double get_usd_average(double gemini_usd, double coinbase_pro_usd){
-  return (gemini_usd + coinbase_pro_usd) / 2;
+double get_usd_average(){
+  double gemini_usd = get_gemini_btc_usd();
+  double coinbase_pro_usd = get_coinbase_pro_btc_usd();
+  double bitfinex_usd = get_bitfinex_btc_usd();
+
+  return (gemini_usd + coinbase_pro_usd + bitfinex_usd) / 3;
 }
 
 double price_over_x_blocks(int blocks){
