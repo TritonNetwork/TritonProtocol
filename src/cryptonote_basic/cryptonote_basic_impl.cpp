@@ -87,6 +87,13 @@ namespace cryptonote {
   {
     return CRYPTONOTE_MAX_TX_SIZE;
   }
+  int get_emission_speed_factor(uint8_t version){
+    if(version >= 6){
+      return EMISSION_SPEED_FACTOR_PER_MINUTE + 1; /// halves
+    }else{
+      return EMISSION_SPEED_FACTOR_PER_MINUTE;
+    }
+  }
   //-----------------------------------------------------------------------------------------------
    bool get_block_reward(size_t median_weight, size_t current_block_weight, uint64_t already_generated_coins, uint64_t &reward, uint8_t version) {
 	    if (version == 0) {
@@ -110,7 +117,7 @@ namespace cryptonote {
       }
       
 	   const int target_minutes = target / 60;
-	   const int emission_speed_factor = EMISSION_SPEED_FACTOR_PER_MINUTE;
+	   const int emission_speed_factor = get_emission_speed_factor(version);
 	   uint64_t base_reward = (MONEY_SUPPLY - already_generated_coins) >> emission_speed_factor;
 
 	   uint64_t full_reward_zone = get_min_block_weight(version);
