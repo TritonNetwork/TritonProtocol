@@ -115,7 +115,7 @@ namespace cryptonote
      *
      * @return true if we haven't seen it before and thus need to relay.
      */
-	 bool handle_uptime_proof(const NOTIFY_UPTIME_PROOF::request &proof);
+     bool handle_uptime_proof(const NOTIFY_UPTIME_PROOF::request &proof);
     /**
      * @brief handles incoming ribbon data
      *
@@ -123,7 +123,23 @@ namespace cryptonote
      *
      * @return true if we haven't seen it before and thus need to relay.
      */
-	 bool handle_ribbon_data(const NOTIFY_RIBBON_DATA::request &data);
+     bool handle_ribbon_data(const NOTIFY_RIBBON_DATA::request &data);
+    /**
+     * @brief stores trade history in database
+     *
+     * Stores trade history for trades that happened within the time period of a certain block height in DB
+     *
+     * @return true if successful
+     */
+     bool store_trade_history_at_height(std::vector<service_nodes::exchange_trade>& trades, uint64_t height);
+    /**
+     * @brief fetches trade history from database
+     *
+     * Fetches trade history for trades that happened within the time period of a certain block height from DB
+     *
+     * @return true if successful
+     */
+     bool get_trade_history_for_height(std::vector<service_nodes::exchange_trade>& trades, const uint64_t height);
 	 /**
       * @brief handles an incoming transaction
       *

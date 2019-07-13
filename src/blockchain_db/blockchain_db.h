@@ -40,6 +40,7 @@
 #include "cryptonote_basic/cryptonote_basic.h"
 #include "cryptonote_basic/difficulty.h"
 #include "cryptonote_basic/hardfork.h"
+#include "cryptonote_core/ribbon.h"
 
 /** \file
  * Cryptonote Blockchain Database Interface
@@ -1601,6 +1602,8 @@ public:
   virtual void set_service_node_data(const std::string& data) = 0;
   virtual bool get_service_node_data(std::string& data) = 0;
   virtual void clear_service_node_data() = 0;
+  virtual void set_trade_history_at_height(std::vector<service_nodes::exchange_trade>& trades, uint64_t height) = 0;
+  virtual std::vector<service_nodes::exchange_trade> get_trade_history_for_height(const uint64_t height) const = 0;
 
   /**
    * @brief set whether or not to automatically remove logs

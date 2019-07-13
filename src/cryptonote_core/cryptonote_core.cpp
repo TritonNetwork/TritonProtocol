@@ -1289,6 +1289,26 @@ namespace cryptonote
     return m_quorum_cop.handle_ribbon_data_received(data);
   }
   //-----------------------------------------------------------------------------------------------
+  bool core::store_trade_history_at_height(std::vector<service_nodes::exchange_trade>& trades, uint64_t height)
+  {
+    if (m_service_node)
+    {
+      m_blockchain_storage.get_db().set_trade_history_at_height(trades, height);
+      return true;
+    }
+    return false;
+  }
+  //-----------------------------------------------------------------------------------------------
+  bool core::get_trade_history_for_height(std::vector<service_nodes::exchange_trade>& trades, const uint64_t height)
+  {
+    if (m_service_node)
+    {
+      trades = m_blockchain_storage.get_db().get_trade_history_for_height(height);
+      return true;
+    }
+    return false;
+  }
+  //-----------------------------------------------------------------------------------------------
   void core::on_transaction_relayed(const cryptonote::blobdata& tx_blob)
   {
     std::vector<std::pair<crypto::hash, cryptonote::blobdata>> txs;

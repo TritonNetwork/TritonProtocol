@@ -92,6 +92,10 @@ namespace service_nodes
 
 		if (m_last_height < execute_justice_from_height)
 			m_last_height = execute_justice_from_height;
+			
+		// store trades that have happened during this block to the DB
+		std::vector<service_nodes::exchange_trade> trades_during_block = service_nodes::trades_during_latest_1_block();
+		m_core.store_trade_history_at_height(trades_during_block, height);
 
 		for (; m_last_height < (height - REORG_SAFETY_BUFFER_IN_BLOCKS); m_last_height++)
 		{
@@ -118,8 +122,14 @@ namespace service_nodes
 				CRITICAL_REGION_LOCAL(m_lock);
 				bool uptime_proof_seen = (m_uptime_proof_seen.find(node_key) != m_uptime_proof_seen.end());
 				bool ribbon_data_seen = (m_ribbon_data_received.find(node_key) != m_ribbon_data_received.end());
+				
+				std::vector<service_nodes> trades_during_height;
+				m_core.get_trade_history_for_height(trades_during_height, m_last_height);
+				double my_ribbon_blue = create_ribbon_blue(trades_during_height);
+				
+				bool ribbon_data_agrees = (my_ribbon_blue == m_ribbon_data_received[node_key]);
 
-				if (uptime_proof_seen && ribbon_data_seen)
+				if (uptime_proof_seen && ribbon_data_seen && ribbon_data_agrees)
 					continue;
 
 				triton::service_node_deregister::vote vote = {};

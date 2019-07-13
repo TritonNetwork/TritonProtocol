@@ -1,3 +1,5 @@
+#pragma once
+
 namespace service_nodes {
 
 #define TRADE_OGRE_API "https://tradeogre.com/api/v1"
@@ -40,7 +42,7 @@ double get_gemini_btc_usd();
 double get_bitfinex_btc_usd();
 
 //--Trade Functions
-std::vector<exchange_trade> trades_during_latest_1_block(std::vector<exchange_trade> trades, cryptonote::Blockchain* chain);
+std::vector<exchange_trade> trades_during_latest_1_block();
 
 //Price Functions
 double get_usd_average();
