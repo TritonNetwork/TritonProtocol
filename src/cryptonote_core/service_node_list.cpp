@@ -63,8 +63,8 @@ namespace service_nodes
 		return result;
 	}
 
-	service_node_list::service_node_list(cryptonote::Blockchain& blockchain)
-		: m_blockchain(blockchain), m_hooks_registered(false), m_height(0), m_db(nullptr), m_service_node_pubkey(nullptr)
+	service_node_list::service_node_list(cryptonote::Blockchain& blockchain, service_nodes::quorum_cop &quorum_cop)
+		: m_blockchain(blockchain), m_quorum_cop(quorum_cop), m_hooks_registered(false), m_height(0), m_db(nullptr), m_service_node_pubkey(nullptr)
 	{
 	}
 
@@ -1017,14 +1017,20 @@ namespace service_nodes
 		std::lock_guard<boost::recursive_mutex> lock(m_sn_mutex);
 		auto oldest_waiting = std::pair<uint64_t, uint32_t>(std::numeric_limits<uint64_t>::max(), std::numeric_limits<uint32_t>::max());
 		crypto::public_key key = crypto::null_pkey;
+		uint64_t height = m_db->get_block_height(prev_id);
 		for (const auto& info : m_service_nodes_infos)
 			if (info.second.is_fully_funded())
 			{
 				auto waiting_since = std::make_pair(info.second.last_reward_block_height, info.second.last_reward_transaction_index);
 				if (waiting_since < oldest_waiting)
 				{
-					oldest_waiting = waiting_since;
-					key = info.first;
+					std::unordered_map<crypto::hash, double> ribbon_map = m_quorum_cop.get_all_ribbon_data();
+					double ribbon_data = m_quorum_cop.get_ribbon_data(key, height);
+					if (ribbon_data != 0)
+					{
+						oldest_waiting = waiting_since;
+						key = info.first;
+					}
 				}
 			}
 		return key;

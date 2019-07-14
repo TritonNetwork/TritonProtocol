@@ -143,7 +143,7 @@ namespace service_nodes
 		public cryptonote::Blockchain::ValidateMinerTxHook
 	{
 	public:
-		service_node_list(cryptonote::Blockchain& blockchain);
+		service_node_list(cryptonote::Blockchain& blockchain, service_nodes::quorum_cop &quorum_cop);
 		void block_added(const cryptonote::block& block, const std::vector<cryptonote::transaction>& txs) override;
 		void blockchain_detached(uint64_t height) override;
 		void register_hooks(service_nodes::quorum_cop &quorum_cop);
@@ -302,6 +302,7 @@ namespace service_nodes
 		crypto::public_key const *m_service_node_pubkey;
 
 		cryptonote::BlockchainDB* m_db;
+		service_nodes::quorum_cop &m_quorum_cop;
 
 		std::map<block_height, std::shared_ptr<const quorum_state>> m_quorum_states;
 	};

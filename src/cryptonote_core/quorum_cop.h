@@ -67,6 +67,7 @@ namespace service_nodes
 		double get_ribbon_data(const crypto::public_key &pubkey, uint64_t height);
 		crypto::hash make_ribbon_key_hash(crypto::public_key pubkey, uint64_t height);
 		bool generate_ribbon_data_request(const crypto::public_key& pubkey, const crypto::secret_key& seckey, cryptonote::NOTIFY_RIBBON_DATA::request& req);
+		std::unordered_map<crypto::hash, double> get_all_ribbon_data();
 		
 
 	private:

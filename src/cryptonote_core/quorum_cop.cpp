@@ -309,4 +309,10 @@ namespace service_nodes
 
       return (*it).second;
     }
+    
+	std::unordered_map<crypto::hash, double> quorum_cop::get_all_ribbon_data()
+	{
+		return m_ribbon_data_received;
+	}
+	
 }
