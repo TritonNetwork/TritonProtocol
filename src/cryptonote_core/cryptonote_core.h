@@ -892,7 +892,7 @@ namespace cryptonote
    *
    * @return 0 if no ribbon data found, otherwise the ribbon blue price
    */
-   double get_ribbon_data(const crypto::public_key &key) const;
+   double get_ribbon_data(const crypto::public_key &key, uint64_t height) const;
 
    private:
 

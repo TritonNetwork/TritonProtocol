@@ -1273,7 +1273,7 @@ namespace cryptonote
     {
       cryptonote_connection_context fake_context = AUTO_VAL_INIT(fake_context);
       NOTIFY_RIBBON_DATA::request r;
-      service_nodes::generate_ribbon_data_request(m_service_node_pubkey, r);
+      m_quorum_cop.generate_ribbon_data_request(m_service_node_pubkey, m_service_node_key, r);
       bool relayed = get_protocol()->relay_ribbon_data(r, fake_context);
       if (!relayed)
       {

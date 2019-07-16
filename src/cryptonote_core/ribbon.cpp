@@ -137,7 +137,7 @@ double get_bitfinex_btc_usd()
 std::vector<exchange_trade> trades_during_latest_1_block()
 {
   std::vector<exchange_trade> trades = get_recent_trades();
-  uint64_t top_block_height = m_blockchain_storage->get_current_blockchain_height() - 1;
+  uint64_t top_block_height = m_blockchain_storage->get_current_blockchain_height() - 2;
   crypto::hash top_block_hash = m_blockchain_storage->get_block_id_by_height(top_block_height);
 
   cryptonote::block top_blk;

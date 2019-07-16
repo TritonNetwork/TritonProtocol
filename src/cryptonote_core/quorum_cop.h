@@ -64,7 +64,10 @@ namespace service_nodes
 		bool prune_uptime_proof();
 
 		uint64_t get_uptime_proof(const crypto::public_key &pubkey) const;
-		double get_ribbon_data(const crypto::public_key &pubkey) const;
+		double get_ribbon_data(const crypto::public_key &pubkey, uint64_t height);
+		crypto::hash make_ribbon_key_hash(crypto::public_key pubkey, uint64_t height);
+		bool generate_ribbon_data_request(const crypto::public_key& pubkey, const crypto::secret_key& seckey, cryptonote::NOTIFY_RIBBON_DATA::request& req);
+		
 
 	private:
 
@@ -73,10 +76,9 @@ namespace service_nodes
 
 		using timestamp = uint64_t;
 		std::unordered_map<crypto::public_key, timestamp> m_uptime_proof_seen;
-		std::unordered_map<crypto::public_key, double> m_ribbon_data_received;
+		std::unordered_map<crypto::hash, double> m_ribbon_data_received; // use hash of pubkey + height as key
 		mutable epee::critical_section m_lock;
 	};
 	void generate_uptime_proof_request(const crypto::public_key& pubkey, const crypto::secret_key& seckey, cryptonote::NOTIFY_UPTIME_PROOF::request& req);
-    bool generate_ribbon_data_request(const crypto::public_key& pubkey, cryptonote::NOTIFY_RIBBON_DATA::request& req);
 
 }

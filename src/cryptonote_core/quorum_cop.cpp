@@ -121,13 +121,16 @@ namespace service_nodes
 
 				CRITICAL_REGION_LOCAL(m_lock);
 				bool uptime_proof_seen = (m_uptime_proof_seen.find(node_key) != m_uptime_proof_seen.end());
-				bool ribbon_data_seen = (m_ribbon_data_received.find(node_key) != m_ribbon_data_received.end());
+				crypto::hash pair_hash = make_ribbon_key_hash(node_key, m_last_height);
+				bool ribbon_data_seen = (m_ribbon_data_received.find(pair_hash) != m_ribbon_data_received.end());
 				
-				std::vector<service_nodes> trades_during_height;
+				std::vector<service_nodes::exchange_trade> trades_during_height;
 				m_core.get_trade_history_for_height(trades_during_height, m_last_height);
 				double my_ribbon_blue = create_ribbon_blue(trades_during_height);
 				
-				bool ribbon_data_agrees = (my_ribbon_blue == m_ribbon_data_received[node_key]);
+				bool ribbon_data_agrees = false;
+				if (my_ribbon_blue == m_ribbon_data_received[pair_hash])
+					ribbon_data_agrees = true;
 
 				if (uptime_proof_seen && ribbon_data_seen && ribbon_data_agrees)
 					continue;
@@ -155,6 +158,31 @@ namespace service_nodes
 		memcpy(buf + 4 + sizeof(pubkey), reinterpret_cast<const void *>(&timestamp), sizeof(timestamp));
 		crypto::cn_fast_hash(buf, sizeof(buf), result);
 
+		return result;
+	}
+	
+	crypto::hash make_ribbon_hash(uint64_t timestamp, uint64_t height, double ribbon_green, double ribbon_blue, crypto::public_key pubkey)
+	{
+		char buf[256] = "RIB";
+		
+		memcpy(buf + 4, reinterpret_cast<const void *>(&timestamp), sizeof(timestamp));
+		memcpy(buf + 4 + sizeof(timestamp), reinterpret_cast<const void *>(&height), sizeof(height));
+		memcpy(buf + 4 + sizeof(timestamp) + sizeof(height), reinterpret_cast<const void *>(&ribbon_green), sizeof(ribbon_green));
+		memcpy(buf + 4 + sizeof(timestamp) + sizeof(height) + sizeof(ribbon_green), reinterpret_cast<const void *>(&ribbon_blue), sizeof(ribbon_blue));
+		memcpy(buf + 4 + sizeof(timestamp) + sizeof(height) + sizeof(ribbon_green) + sizeof(ribbon_blue), reinterpret_cast<const void *>(&pubkey), sizeof(pubkey));
+		
+		crypto::hash result;
+		crypto::cn_fast_hash(buf, sizeof(buf), result);
+		return result;
+	}
+	
+	crypto::hash quorum_cop::make_ribbon_key_hash(crypto::public_key pubkey, uint64_t height)
+	{
+		char buf[64];
+		memcpy(buf, reinterpret_cast<const void *>(&pubkey), sizeof(pubkey));
+		memcpy(buf + 4 + sizeof(pubkey), reinterpret_cast<const void *>(&height), sizeof(height));
+		crypto::hash result;
+		crypto::cn_fast_hash(buf, sizeof(buf), result);
 		return result;
 	}
 
@@ -193,13 +221,19 @@ namespace service_nodes
 		return true;
 	}
 	
-    bool quorum_cop::handle_ribbon_data_received(const cryptonote::NOTIFY_RIBBON_DATA::request &data)
-    {
-      const crypto::public_key& pubkey = data.pubkey;
-      m_ribbon_data_received[pubkey] = data.ribbon_blue;
+	bool quorum_cop::handle_ribbon_data_received(const cryptonote::NOTIFY_RIBBON_DATA::request &data)
+	{
+		crypto::hash hash = make_ribbon_hash(data.timestamp, data.height, data.ribbon_green, data.ribbon_blue, data.pubkey);
+		if (!crypto::check_signature(hash, data.pubkey, data.sig))
+			return false;
+		
+		const crypto::public_key& pubkey = data.pubkey;
+		crypto::hash pair_hash = make_ribbon_key_hash(pubkey, data.height);
+		
+		m_ribbon_data_received[pair_hash] = data.ribbon_blue;
 
-      return true;
-    }
+		return true;
+	}
 
 	void generate_uptime_proof_request(const crypto::public_key& pubkey, const crypto::secret_key& seckey, cryptonote::NOTIFY_UPTIME_PROOF::request& req)
 	{
@@ -213,20 +247,23 @@ namespace service_nodes
 		crypto::generate_signature(hash, pubkey, seckey, req.sig);
 	}
 	
-    bool generate_ribbon_data_request(const crypto::public_key& pubkey, cryptonote::NOTIFY_RIBBON_DATA::request& req)
-    {
-      req.timestamp = time(nullptr);
+	bool quorum_cop::generate_ribbon_data_request(const crypto::public_key& pubkey, const crypto::secret_key& seckey, cryptonote::NOTIFY_RIBBON_DATA::request& req)
+	{
+		req.timestamp = time(nullptr);
+		req.height = m_core.get_current_blockchain_height() - 2;
       
-      std::vector<service_nodes::exchange_trade> recent_trades = service_nodes::get_recent_trades();
-      req.ribbon_green = service_nodes::create_ribbon_green(recent_trades);
-      req.ribbon_blue = service_nodes::create_ribbon_blue(recent_trades);
+		std::vector<service_nodes::exchange_trade> recent_trades = service_nodes::trades_during_latest_1_block();
+		req.ribbon_green = service_nodes::create_ribbon_green(recent_trades);
+		req.ribbon_blue = service_nodes::create_ribbon_blue(recent_trades);
+		std::vector<service_nodes::exchange_order> recent_liquids = service_nodes:: get_recent_liquids(req.ribbon_blue);
+	    req.ribbon_mac = service_nodes::create_mac();
+	    
+		req.pubkey = pubkey;
+		crypto::hash hash = make_ribbon_hash(req.timestamp, req.height, req.ribbon_green, req.ribbon_blue, req.pubkey);
+		crypto::generate_signature(hash, pubkey, seckey, req.sig);
+		return true;
+	}
 
-	  std::vector<service_nodes::exchange_order> recent_liquids = service_nodes:: get_recent_liquids(req.ribbon_blue);
-	  req.ribbon_mac = service_nodes::create_mac();
-	
-      req.pubkey = pubkey;
-      return true;
-    }
 
 	bool quorum_cop::prune_uptime_proof()
 	{
@@ -258,11 +295,13 @@ namespace service_nodes
 		return (*it).second;
 	}
 
-    double quorum_cop::get_ribbon_data(const crypto::public_key &pubkey) const
+    double quorum_cop::get_ribbon_data(const crypto::public_key &pubkey, uint64_t height)
     {
       CRITICAL_REGION_LOCAL(m_lock);
       
-      const auto& it = m_ribbon_data_received.find(pubkey);
+      crypto::hash pair_hash = make_ribbon_key_hash(pubkey, height);
+      
+      const auto& it = m_ribbon_data_received.find(pair_hash);
       if (it == m_ribbon_data_received.end())
       {
         return 0;
