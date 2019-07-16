@@ -189,6 +189,13 @@ double get_usd_average(){
   return (gemini_usd + coinbase_pro_usd + bitfinex_usd) / 3;
 }
 
+uint64_t convert_btc_to_usd(double btc)
+{
+	double usd_average = get_usd_average(get_gemini_btc_usd(), get_coinbase_pro_btc_usd());
+	double usd = usd_average * btc;
+	return static_cast<uint64_t>(usd * 100); // remove "cents" decimal place and convert to integer
+}
+
 double price_over_x_blocks(int blocks){
   double ribbon_blue_sum = 0;
   uint64_t top_block_height = m_blockchain_storage->get_current_blockchain_height() - 1;
@@ -215,14 +222,16 @@ double create_ribbon_red(){
   return (ma_960 + ma_480 + ma_240 + ma_120) / 4;
 }
 
-double create_ribbon_blue(std::vector<exchange_trade> trades)
+uint64_t create_ribbon_blue(std::vector<exchange_trade> trades)
 {
-  return filter_trades_by_deviation(trades);
+  double filtered_mean = filter_trades_by_deviation(trades);
+  return convert_btc_to_usd(filtered_mean);
 }
 
 //Volume Weighted Average
-double create_ribbon_green(std::vector<exchange_trade> trades){
-  return trades_weighted_mean(trades);
+uint64_t create_ribbon_green(std::vector<exchange_trade> trades){
+  double weighted_mean = trades_weighted_mean(trades);
+  return convert_btc_to_usd(weighted_mean);
 }
 
 //Volume Weighted Average with 2 STDEV trades removed

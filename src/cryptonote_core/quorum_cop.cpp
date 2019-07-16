@@ -161,7 +161,7 @@ namespace service_nodes
 		return result;
 	}
 	
-	crypto::hash make_ribbon_hash(uint64_t timestamp, uint64_t height, double ribbon_green, double ribbon_blue, crypto::public_key pubkey)
+	crypto::hash make_ribbon_hash(uint64_t timestamp, uint64_t height, uint64_t ribbon_green, uint64_t ribbon_blue, crypto::public_key pubkey)
 	{
 		char buf[256] = "RIB";
 		
@@ -295,7 +295,7 @@ namespace service_nodes
 		return (*it).second;
 	}
 
-    double quorum_cop::get_ribbon_data(const crypto::public_key &pubkey, uint64_t height)
+    uint64_t quorum_cop::get_ribbon_data(const crypto::public_key &pubkey, uint64_t height)
     {
       CRITICAL_REGION_LOCAL(m_lock);
       
@@ -310,7 +310,7 @@ namespace service_nodes
       return (*it).second;
     }
     
-	std::unordered_map<crypto::hash, double> quorum_cop::get_all_ribbon_data()
+	std::unordered_map<crypto::hash, uint64_t> quorum_cop::get_all_ribbon_data()
 	{
 		return m_ribbon_data_received;
 	}

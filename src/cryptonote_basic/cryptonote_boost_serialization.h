@@ -196,6 +196,11 @@ namespace boost
     a & b.timestamp;
     a & b.prev_id;
     a & b.nonce;
+    if (b.major_version > 6)
+    {
+      a & b.ribbon_blue;
+      a & b.ribbon_red;
+    }
     //------------------
     a & b.miner_tx;
     a & b.tx_hashes;

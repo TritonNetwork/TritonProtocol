@@ -151,6 +151,7 @@ namespace service_nodes
 		bool validate_miner_tx(const crypto::hash& prev_id, const cryptonote::transaction& miner_tx, uint64_t height, int hard_fork_version, cryptonote::block_reward_parts const &reward_parts) const override;
 		std::vector<std::pair<cryptonote::account_public_address, uint64_t>> get_winner_addresses_and_portions(const crypto::hash& prev_id) const;
 		crypto::public_key select_winner(const crypto::hash& prev_id) const;
+		uint64_t get_winner_ribbon_data(crypto::public_key pubkey, uint64_t height) const;
 
 		bool is_service_node(const crypto::public_key& pubkey) const;
 
