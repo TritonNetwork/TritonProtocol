@@ -200,7 +200,6 @@ namespace boost
     {
       a & b.ribbon_blue;
       a & b.ribbon_red;
-      a & b.ribbon_mac;
     }
     //------------------
     a & b.miner_tx;
