@@ -191,7 +191,7 @@ double get_usd_average(){
 
 uint64_t convert_btc_to_usd(double btc)
 {
-	double usd_average = get_usd_average(get_gemini_btc_usd(), get_coinbase_pro_btc_usd());
+	double usd_average = get_usd_average();
 	double usd = usd_average * btc;
 	return static_cast<uint64_t>(usd * 100); // remove "cents" decimal place and convert to integer
 }
