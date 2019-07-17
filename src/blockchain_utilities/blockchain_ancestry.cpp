@@ -39,6 +39,7 @@
 #include "cryptonote_core/tx_pool.h"
 #include "cryptonote_core/cryptonote_core.h"
 #include "cryptonote_core/blockchain.h"
+#include "cryptonote_core/quorum_cop.h"
 #include "blockchain_db/blockchain_db.h"
 #include "blockchain_db/db_types.h"
 #include "version.h"
@@ -345,14 +346,16 @@ int main(int argc, char* argv[])
   // This is done this way because of the circular constructors.
   struct BlockchainObjects
   {
-	  Blockchain m_blockchain;
+	   Blockchain m_blockchain;
 	  tx_memory_pool m_mempool;
 	  service_nodes::service_node_list m_service_node_list;
 	  triton::deregister_vote_pool m_deregister_vote_pool;
+	  service_nodes::quorum_cop m_quorum_cop;
 	  BlockchainObjects() :
 		  m_blockchain(m_mempool, m_service_node_list, m_deregister_vote_pool),
-		  m_service_node_list(m_blockchain),
-		  m_mempool(m_blockchain) { }
+		  m_service_node_list(m_blockchain, m_quorum_cop),
+		  m_mempool(m_blockchain),
+		  m_quorum_cop(m_quorum_cop) { }
   };
 
   BlockchainObjects *blockchain_objects = new BlockchainObjects();

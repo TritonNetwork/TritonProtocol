@@ -337,7 +337,7 @@ namespace cryptonote
       uint64_t height;
       uint64_t ribbon_green;
       uint64_t ribbon_blue;
-      double ribbon_mac;
+      uint64_t ribbon_mac;
       crypto::public_key pubkey;
       crypto::signature sig;
 

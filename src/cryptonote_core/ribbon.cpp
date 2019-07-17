@@ -139,21 +139,14 @@ std::vector<exchange_trade> trades_during_latest_1_block()
   std::vector<exchange_trade> trades = get_recent_trades();
   uint64_t top_block_height = m_blockchain_storage->get_current_blockchain_height() - 2;
   crypto::hash top_block_hash = m_blockchain_storage->get_block_id_by_height(top_block_height);
-
   cryptonote::block top_blk;
-  chain->get_block_by_hash(top_block_hash, top_blk);
+  m_blockchain_storage->get_block_by_hash(top_block_hash, top_blk);
   uint64_t top_block_timestamp = top_blk.timestamp;
-
- uint64_t start_block_height = chain->get_current_blockchain_height() - 2;
-  crypto::hash start_block_hash = chain->get_block_id_by_height(start_block_height);
-  cryptonote::block start_blk;
-  chain->get_block_by_hash(start_block_hash, start_blk);
-  uint64_t start_block_timestamp = start_blk.timestamp;
 
   std::vector<exchange_trade> result;
   for (size_t i = 0; i < trades.size(); i++)
   {
-    if (trades[i].date >= start_block_timestamp && trades[i].date <= top_block_timestamp){
+    if (trades[i].date >= top_block_timestamp){
       result.push_back(trades[i]);
     }
   }
@@ -293,7 +286,7 @@ std::vector<adjusted_liquidity> get_recent_liquids(double blue)
     MERROR("Error getting orders from TradeOgre");
   //more exchanges below
   std::vector<adjusted_liquidity> adj_liquid = create_adjusted_liqudities(orders, blue);
-  return orders;
+  return adj_liquid;
 }
 
 

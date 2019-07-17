@@ -777,38 +777,6 @@ namespace service_nodes
 	{
 		uint64_t block_height = cryptonote::get_block_height(block);
 		int hard_fork_version = m_blockchain.get_hard_fork_version(block_height);
-
-		std::vector<service_nodes::exchange_trade> trades;
-		if(!service_nodes::get_trades_from_ogre(&trades))
-			MERROR("Error getting trades from Ogre");
-
-		if(!service_nodes::get_trades_from_tritonex(&trades))
-			MERROR("Error getting trades from TritonEX");
-
-		double usdPrice = get_usd_average();
-
-		std::vector<service_nodes::exchange_trade> latest_trades = service_nodes::trades_during_latest_1_block(trades, &m_blockchain);
-		if(latest_trades.size() < 1)
-			return;
-		double green = service_nodes::create_ribbon_green(latest_trades);
-		double blue = service_nodes::create_ribbon_blue(latest_trades);
-
-
-
-		MGINFO_GREEN("RIBBON GREEN: " << std::fixed << green * usdPrice);
-		MGINFO_GREEN("RIBBON BLUE: " << std::fixed << blue * usdPrice);
-		MGINFO_GREEN("Average BTC-USD Price: " << std::fixed << usdPrice);
-		std::vector<exchange_order> orders;
-		if(!get_orders_from_ogre(&orders))
-			MERROR("Error getting orders from TritonEX");
-		
-		std::vector<adjusted_liquidity> adj_liquid = create_adjusted_liqudities(orders, blue);
-		double this_mac = create_mac(adj_liquid);
-
-		MGINFO_GREEN("MAC: " << std::fixed << this_mac << " XTRI");
-			
-			
-	//	}
 		if (hard_fork_version < 5)
 			return;
 
