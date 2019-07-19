@@ -189,7 +189,7 @@ uint64_t convert_btc_to_usd(double btc)
 	return static_cast<uint64_t>(usd * 100); // remove "cents" decimal place and convert to integer
 }
 
-double price_over_x_blocks(int blocks){
+double price_over_x_blocks(unsigned int blocks){
   double ribbon_blue_sum = 0;
   uint64_t top_block_height = m_blockchain_storage->get_current_blockchain_height() - 1;
 
@@ -206,13 +206,48 @@ double price_over_x_blocks(int blocks){
   return ribbon_blue_sum / blocks;
 }
 
-double create_ribbon_red(){
-  double ma_960 = price_over_x_blocks(960);
-  double ma_480 = price_over_x_blocks(480);
-  double ma_240 = price_over_x_blocks(240);
-  double ma_120 = price_over_x_blocks(120);
-
-  return (ma_960 + ma_480 + ma_240 + ma_120) / 4;
+uint64_t create_ribbon_red(uint64_t height){
+  uint64_t ma1_sum = 0;
+  for (size_t i = 1; i <= 960; i++)
+  {
+    cryptonote::block blk;
+    crypto::hash block_hash = m_blockchain_storage->get_block_id_by_height(height - i);
+    m_blockchain_storage->get_block_by_hash(block_hash, blk);
+    ma1_sum += blk.ribbon_blue;
+  }
+  uint64_t ma1 = ma1_sum / 960;
+  
+  uint64_t ma2_sum = 0;
+  for (size_t i = 1; i <= 480; i++)
+  {
+    cryptonote::block blk;
+    crypto::hash block_hash = m_blockchain_storage->get_block_id_by_height(height - i);
+    m_blockchain_storage->get_block_by_hash(block_hash, blk);
+    ma2_sum += blk.ribbon_blue;
+  }
+  uint64_t ma2 = ma2_sum / 480;
+  
+  uint64_t ma3_sum = 0;
+  for (size_t i = 1; i <= 240; i++)
+  {
+    cryptonote::block blk;
+    crypto::hash block_hash = m_blockchain_storage->get_block_id_by_height(height - i);
+    m_blockchain_storage->get_block_by_hash(block_hash, blk);
+    ma3_sum += blk.ribbon_blue;
+  }
+  uint64_t ma3 = ma3_sum / 240;
+  
+  uint64_t ma4_sum = 0;
+  for (size_t i = 1; i <= 120; i++)
+  {
+    cryptonote::block blk;
+    crypto::hash block_hash = m_blockchain_storage->get_block_id_by_height(height - i);
+    m_blockchain_storage->get_block_by_hash(block_hash, blk);
+    ma4_sum += blk.ribbon_blue;
+  }
+  uint64_t ma4 = ma4_sum / 120;
+  
+  return (ma1 + ma2 + ma3 + ma4) / 4;
 }
 
 uint64_t create_ribbon_blue(std::vector<exchange_trade> trades)

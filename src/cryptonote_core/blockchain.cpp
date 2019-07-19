@@ -41,6 +41,7 @@
 #include "blockchain_db/blockchain_db.h"
 #include "cryptonote_basic/cryptonote_boost_serialization.h"
 #include "cryptonote_core/service_node_deregister.h"
+#include "cryptonote_core/ribbon.h"
 #include "cryptonote_config.h"
 #include "cryptonote_basic/miner.h"
 #include "misc_language.h"
@@ -113,7 +114,7 @@ static const struct {
   { 3, 25, 0, 1472415034 },
   { 4, 50, 0, 1472415035 },
   { 5, 190, 0, 1551499880 },
-   {6, 240, 0, 1561538231 }
+  {6, 240, 0, 1561538231 }
 };
 static const uint64_t testnet_hard_fork_version_1_till = 10;
 
@@ -1297,6 +1298,7 @@ bool Blockchain::create_block_template(block& b, const account_public_address& m
   }
   
   b.ribbon_blue = m_service_node_list.get_winner_ribbon_data(m_service_node_list.select_winner(b.prev_id), height - 2);
+  b.ribbon_red = service_nodes::create_ribbon_red(height - 1);
 
   diffic = get_difficulty_for_next_block();
   CHECK_AND_ASSERT_MES(diffic, false, "difficulty overhead.");

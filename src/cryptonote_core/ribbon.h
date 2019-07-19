@@ -47,8 +47,8 @@ std::vector<exchange_trade> trades_during_latest_1_block();
 //Price Functions
 double get_usd_average();
 uint64_t convert_btc_to_usd(double btc);
-double price_over_x_blocks(int blocks);
-double create_ribbon_red();
+double price_over_x_blocks(unsigned int blocks);
+uint64_t create_ribbon_red(uint64_t height);
 uint64_t create_ribbon_green(std::vector<exchange_trade> trades);
 uint64_t create_ribbon_blue(std::vector<exchange_trade> trades);
 double filter_trades_by_deviation(std::vector<exchange_trade> trades);
