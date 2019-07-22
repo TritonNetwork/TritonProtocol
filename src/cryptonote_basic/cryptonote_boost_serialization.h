@@ -196,7 +196,7 @@ namespace boost
     a & b.timestamp;
     a & b.prev_id;
     a & b.nonce;
-    if (b.major_version > 6)
+    if (b.major_version > 5)
     {
       a & b.ribbon_blue;
       a & b.ribbon_red;

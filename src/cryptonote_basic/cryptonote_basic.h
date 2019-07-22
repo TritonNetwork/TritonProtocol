@@ -389,7 +389,6 @@ namespace cryptonote
     uint32_t nonce;
     uint64_t ribbon_blue;
     uint64_t ribbon_red;
-    uint64_t ribbon_mac;
 
     BEGIN_SERIALIZE()
       VARINT_FIELD(major_version)
@@ -397,11 +396,10 @@ namespace cryptonote
       VARINT_FIELD(timestamp)
       FIELD(prev_id)
       FIELD(nonce)
-      if (major_version > 6)
+      if (major_version > 5)
       {
         FIELD(ribbon_blue)
         FIELD(ribbon_red)
-        FIELD(ribbon_mac)
     END_SERIALIZE()
   };
 
