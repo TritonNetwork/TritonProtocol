@@ -400,6 +400,7 @@ namespace cryptonote
       {
         FIELD(ribbon_blue)
         FIELD(ribbon_red)
+      }
     END_SERIALIZE()
   };
 
