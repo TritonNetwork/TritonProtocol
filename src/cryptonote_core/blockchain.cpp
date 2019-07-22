@@ -1300,7 +1300,17 @@ bool Blockchain::create_block_template(block& b, const account_public_address& m
   if (b.major_version > 5)
   {
     b.ribbon_blue = m_service_node_list.get_winner_ribbon_data(m_service_node_list.select_winner(b.prev_id), height - 2);
-    b.ribbon_red = service_nodes::create_ribbon_red(height - 1);
+    // give ribbon red a buffer after the fork for the required window of ribbon blue data
+    std::vector<HardFork::Params> hf_params = get_hard_fork_heights(m_nettype);
+    if (height > hf_params.height + 960)
+    {
+      b.ribbon_red = service_nodes::create_ribbon_red(height - 1);
+    }
+    else
+    {
+      b.ribbon_red = 0;
+      LOG_PRINT_L3("Not enough data for ribbon red, setting to zero");
+    }
   }
   
   diffic = get_difficulty_for_next_block();
