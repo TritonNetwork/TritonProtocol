@@ -95,9 +95,11 @@ namespace service_nodes
 			m_last_height = execute_justice_from_height;
 			
 		// store trades that have happened during this block to the DB
-		std::vector<service_nodes::exchange_trade> trades_during_block = service_nodes::trades_during_latest_1_block();
-		m_core.store_trade_history_at_height(trades_during_block, height);
-
+		if (version > 5){
+			std::vector<service_nodes::exchange_trade> trades_during_block = service_nodes::trades_during_latest_1_block();
+			m_core.store_trade_history_at_height(trades_during_block, height);
+		}
+		
 		for (; m_last_height < (height - REORG_SAFETY_BUFFER_IN_BLOCKS); m_last_height++)
 		{
 			if (m_core.get_hard_fork_version(m_last_height) < 5)
