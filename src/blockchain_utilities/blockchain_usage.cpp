@@ -176,11 +176,13 @@ int main(int argc, char* argv[])
 	  service_nodes::service_node_list m_service_node_list;
 	  triton::deregister_vote_pool m_deregister_vote_pool;
 	  service_nodes::quorum_cop m_quorum_cop;
+	  cryptonote::core m_core;
 	  BlockchainObjects() :
+		  m_core(nullptr),
 		  m_blockchain(m_mempool, m_service_node_list, m_deregister_vote_pool),
-		  m_service_node_list(m_blockchain,m_quorum_cop),
+		  m_service_node_list(m_blockchain, m_quorum_cop),
 		  m_mempool(m_blockchain),
-		  m_quorum_cop(m_quorum_cop) { }
+		  m_quorum_cop(m_core) { }
   };
   BlockchainObjects* blockchain_objects = new BlockchainObjects();
   Blockchain* core_storage;
