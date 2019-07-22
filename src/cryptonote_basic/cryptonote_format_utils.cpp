@@ -420,6 +420,17 @@ namespace cryptonote
     return r;
   }
   //---------------------------------------------------------------
+  void get_burn_keys(crypto::public_key& burn_pubkey, crypto::secret_key& burn_seckey)
+  {
+    cryptonote::blobdata parse_blob;
+    
+    string_tools::parse_hexstr_to_binbuff(std::string(BURN_PUBKEY), parse_blob);
+    burn_pubkey = *reinterpret_cast<const crypto::public_key*>(parse_blob.data());
+    
+    string_tools::parse_hexstr_to_binbuff(std::string(BURN_SECKEY), parse_blob);
+    burn_seckey = *reinterpret_cast<const crypto::secret_key*>(parse_blob.data());
+  }
+  //---------------------------------------------------------------
   bool parse_tx_extra(const std::vector<uint8_t>& tx_extra, std::vector<tx_extra_field>& tx_extra_fields)
   {
     tx_extra_fields.clear();

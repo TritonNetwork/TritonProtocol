@@ -354,6 +354,7 @@ namespace cryptonote
     signatures.clear();
 	rct_signatures = {};
     rct_signatures.type = rct::RCTTypeNull;
+    mint_key = crypto::null_pkey;
     set_hash_valid(false);
     set_blob_size_valid(false);
   }

@@ -2760,12 +2760,9 @@ bool Blockchain::check_tx_outputs(const transaction& tx, tx_verification_context
   {
     if (tx.version == 4)
     {
-      cryptonote::blobdata parse_blob;
-      epee::string_tools::parse_hexstr_to_binbuff(std::string(BURN_SECKEY), parse_blob);
-      crypto::secret_key burn_seckey = *reinterpret_cast<const crypto::secret_key*>(parse_blob.data());
-      
-      epee::string_tools::parse_hexstr_to_binbuff(std::string(BURN_PUBKEY), parse_blob);
-      crypto::public_key burn_pubkey = *reinterpret_cast<const crypto::public_key*>(parse_blob.data());
+      crypto::public_key burn_pubkey;
+      crypto::secret_key burn_seckey;
+      get_burn_keys(burn_pubkey, burn_seckey);
       
       std::vector<tx_extra_field> tx_extra_fields;
       crypto::public_key txkey_pub_i_zero = get_tx_pub_key_from_extra(tx.extra, 0); // require index in transaction to be zero for simplicity
@@ -2785,6 +2782,13 @@ bool Blockchain::check_tx_outputs(const transaction& tx, tx_verification_context
       if (index_zero_pubkey != derived_pubkey)
       {
         MERROR_VER("Burn transaction output at index zero does not match expected derived public key");
+        tvc.m_invalid_output = true;
+        return false;
+      }
+      
+      if (!crypto::check_key(tx.mint_key))
+      {
+        MERROR_VER("Burn transaction's mint key is not a proper public key");
         tvc.m_invalid_output = true;
         return false;
       }
