@@ -1297,9 +1297,12 @@ bool Blockchain::create_block_template(block& b, const account_public_address& m
     b.timestamp = median_ts;
   }
   
-  b.ribbon_blue = m_service_node_list.get_winner_ribbon_data(m_service_node_list.select_winner(b.prev_id), height - 2);
-  b.ribbon_red = service_nodes::create_ribbon_red(height - 1);
-
+  if (b.major_version > 6)
+  {
+    b.ribbon_blue = m_service_node_list.get_winner_ribbon_data(m_service_node_list.select_winner(b.prev_id), height - 2);
+    b.ribbon_red = service_nodes::create_ribbon_red(height - 1);
+  }
+  
   diffic = get_difficulty_for_next_block();
   CHECK_AND_ASSERT_MES(diffic, false, "difficulty overhead.");
 

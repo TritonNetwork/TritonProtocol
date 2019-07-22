@@ -64,8 +64,9 @@ namespace service_nodes
 	void quorum_cop::block_added(const cryptonote::block& block, const std::vector<cryptonote::transaction>& txs)
 	{
 		uint64_t const height = cryptonote::get_block_height(block);
+		uint8_t version = m_core.get_hard_fork_version(height);
 
-		if (m_core.get_hard_fork_version(height) < 5)
+		if (version < 5)
 			return;
 
 		crypto::public_key my_pubkey;
@@ -121,19 +122,28 @@ namespace service_nodes
 
 				CRITICAL_REGION_LOCAL(m_lock);
 				bool uptime_proof_seen = (m_uptime_proof_seen.find(node_key) != m_uptime_proof_seen.end());
-				crypto::hash pair_hash = make_ribbon_key_hash(node_key, m_last_height);
-				bool ribbon_data_seen = (m_ribbon_data_received.find(pair_hash) != m_ribbon_data_received.end());
 				
-				std::vector<service_nodes::exchange_trade> trades_during_height;
-				m_core.get_trade_history_for_height(trades_during_height, m_last_height);
-				double my_ribbon_blue = create_ribbon_blue(trades_during_height);
+				if (version > 5)
+				{
+					crypto::hash pair_hash = make_ribbon_key_hash(node_key, m_last_height);
+					bool ribbon_data_seen = (m_ribbon_data_received.find(pair_hash) != m_ribbon_data_received.end());
 				
-				bool ribbon_data_agrees = false;
-				if (my_ribbon_blue == m_ribbon_data_received[pair_hash])
-					ribbon_data_agrees = true;
+					std::vector<service_nodes::exchange_trade> trades_during_height;
+					m_core.get_trade_history_for_height(trades_during_height, m_last_height);
+					double my_ribbon_blue = create_ribbon_blue(trades_during_height);
+				
+					bool ribbon_data_agrees = false;
+					if (my_ribbon_blue == m_ribbon_data_received[pair_hash])
+						ribbon_data_agrees = true;
 
-				if (uptime_proof_seen && ribbon_data_seen && ribbon_data_agrees)
-					continue;
+					if (uptime_proof_seen && ribbon_data_seen && ribbon_data_agrees)
+						continue;
+				}
+				else
+				{
+					if (uptime_proof_seen)
+						continue;
+				}
 
 				triton::service_node_deregister::vote vote = {};
 				vote.block_height = m_last_height;
@@ -202,9 +212,9 @@ namespace service_nodes
 		if (!m_core.is_service_node(pubkey))
 			return false;
 
-		if (!(proof.snode_version_major == 4 &&
+		if (!(proof.snode_version_major == 5 &&
 			proof.snode_version_minor == 0 &&
-			proof.snode_version_patch == 5))
+			proof.snode_version_patch == 0))
 		{
 			return false;
 		}
