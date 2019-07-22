@@ -344,18 +344,20 @@ int main(int argc, char* argv[])
   // tx_memory_pool, Blockchain's constructor takes tx_memory_pool object.
   LOG_PRINT_L0("Initializing source blockchain (BlockchainDB)");
   // This is done this way because of the circular constructors.
-  struct BlockchainObjects
+struct BlockchainObjects
   {
-	   Blockchain m_blockchain;
+	  Blockchain m_blockchain;
 	  tx_memory_pool m_mempool;
 	  service_nodes::service_node_list m_service_node_list;
 	  triton::deregister_vote_pool m_deregister_vote_pool;
 	  service_nodes::quorum_cop m_quorum_cop;
+	  cryptonote::core m_core;
 	  BlockchainObjects() :
+		  m_core(nullptr),
 		  m_blockchain(m_mempool, m_service_node_list, m_deregister_vote_pool),
 		  m_service_node_list(m_blockchain, m_quorum_cop),
 		  m_mempool(m_blockchain),
-		  m_quorum_cop(m_quorum_cop) { }
+		  m_quorum_cop(m_core) { }
   };
 
   BlockchainObjects *blockchain_objects = new BlockchainObjects();
