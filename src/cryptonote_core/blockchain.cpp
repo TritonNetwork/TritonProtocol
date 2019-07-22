@@ -2729,31 +2729,76 @@ bool Blockchain::check_tx_outputs(const transaction& tx, tx_verification_context
     }
   }
 
-  // from v8, allow bulletproofs
+  // from v5, allow bulletproofs
   if (hf_version < 4) {
     if (tx.version >= 2) {
       const bool bulletproof = rct::is_rct_bulletproof(tx.rct_signatures.type);
       if (bulletproof || !tx.rct_signatures.p.bulletproofs.empty())
       {
-        MERROR_VER("Bulletproofs are not allowed before v8");
+        MERROR_VER("Bulletproofs are not allowed before v5");
         tvc.m_invalid_output = true;
         return false;
       }
     }
   }
 
-  // from v9, forbid borromean range proofs
+  // from v6, forbid borromean range proofs
   if (hf_version > 5) {
     if (tx.version >= 2) {
       const bool borromean = rct::is_rct_borromean(tx.rct_signatures.type);
       if (borromean)
       {
-        MERROR_VER("Borromean range proofs are not allowed after v8");
+        MERROR_VER("Borromean range proofs are not allowed after v5");
         tvc.m_invalid_output = true;
         return false;
       }
     }
   }
+  
+  // from v7 allow burn transactions
+  if (hf_version > 6)
+  {
+    if (tx.version == 4)
+    {
+      cryptonote::blobdata parse_blob;
+      epee::string_tools::parse_hexstr_to_binbuff(std::string(BURN_SECKEY), parse_blob);
+      crypto::secret_key burn_seckey = *reinterpret_cast<const crypto::secret_key*>(parse_blob.data());
+      
+      epee::string_tools::parse_hexstr_to_binbuff(std::string(BURN_PUBKEY), parse_blob);
+      crypto::public_key burn_pubkey = *reinterpret_cast<const crypto::public_key*>(parse_blob.data());
+      
+      std::vector<tx_extra_field> tx_extra_fields;
+      crypto::public_key txkey_pub_i_zero = get_tx_pub_key_from_extra(tx.extra, 0); // require index in transaction to be zero for simplicity
+      crypto::public_key index_zero_pubkey = boost::get<txout_to_key>(tx.vout[0].target).key;
+      crypto::key_derivation derivation;
+      
+      if (crypto::generate_key_derivation(txkey_pub_i_zero, burn_seckey, derivation))
+      {
+        MERROR_VER("Failed to calculate burn transaction key derivation");
+        tvc.m_invalid_output = true;
+        return false;
+      }
+      
+      crypto::public_key derived_pubkey;
+      crypto::derive_public_key(derivation, 0, burn_pubkey, derived_pubkey);
+      
+      if (index_zero_pubkey != derived_pubkey)
+      {
+        MERROR_VER("Burn transaction output at index zero does not match expected derived public key");
+        tvc.m_invalid_output = true;
+        return false;
+      }
+    }
+  }
+  else
+  {
+    if (tx.version == 4)
+    {
+      MERROR_VER("Burn transactions (tx version 4) are not allowed until v7");
+      tvc.m_invalid_output = true;
+      return false;
+    }
+  }  
 
   return true;
 }
@@ -3239,7 +3284,7 @@ bool Blockchain::check_tx_inputs(transaction& tx, tx_verification_context &tvc, 
 				{
 					if (proof.V.size() > 1)
 					{
-						MERROR_VER("Multi output bulletproofs are invalid before v8");
+						MERROR_VER("Multi output bulletproofs are invalid before v5");
 						return false;
 					}
 				}

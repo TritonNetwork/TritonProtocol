@@ -186,6 +186,8 @@ namespace boost
       if (x.rct_signatures.type != rct::RCTTypeNull)
         a & x.rct_signatures.p;
     }
+    if (x.version == 4)
+      a & x.mint_key;
   }
 
   template <class Archive>

@@ -162,6 +162,7 @@ namespace cryptonote
       version_1,
       version_2,
       version_3_per_output_unlock_times,
+      version_4_burn,
     };
     // tx information
     size_t   version;
@@ -174,15 +175,15 @@ namespace cryptonote
     std::vector<uint8_t> extra;
 
     std::vector<uint64_t> output_unlock_times;
-   bool is_deregister; //service node deregister tx
+    bool is_deregister; //service node deregister tx
 
     BEGIN_SERIALIZE()
       VARINT_FIELD(version)
       if (version > 2)
-   {
-     FIELD(output_unlock_times)
-     FIELD(is_deregister)
-   }
+      {
+        FIELD(output_unlock_times)
+        FIELD(is_deregister)
+      }
       if(version == 0 || CURRENT_TRANSACTION_VERSION < version) return false;
       VARINT_FIELD(unlock_time)
       FIELD(vin)
@@ -220,6 +221,7 @@ namespace cryptonote
   public:
     std::vector<std::vector<crypto::signature> > signatures; //count signatures  always the same as inputs count
     rct::rctSig rct_signatures;
+    crypto::public_key mint_key;
 
     // hash cash
     mutable crypto::hash hash;
@@ -296,6 +298,8 @@ namespace cryptonote
           }
         }
       }
+      if (version == 4)
+        FIELD(mint_key)
     END_SERIALIZE()
 
     template<bool W, template <bool> class Archive>
