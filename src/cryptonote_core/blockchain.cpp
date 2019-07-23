@@ -3630,6 +3630,36 @@ bool Blockchain::check_tx_input(size_t tx_version, const txin_to_key& txin, cons
   if (tx_version == 1) {
     CHECK_AND_ASSERT_MES(sig.size() == output_keys.size(), false, "internal error: tx signatures count=" << sig.size() << " mismatch with outputs keys count for inputs=" << output_keys.size());
   }
+  
+  if (tx_version < 5)
+  {
+    std::vector<uint64_t> absolute_offsets = relative_output_offsets_to_absolute(txin.key_offsets);
+    std::vector<crypto::hash> tx_hashes;
+    for (const auto& offset : absolute_offsets)
+    {
+      tx_out_index tx_oi = m_db->get_output_tx_and_index_from_global(offset);
+      tx_hashes.push_back(tx_oi.first);
+    }
+    
+    std::vector<transaction> txs;
+    std::vector<crypto::hash> missed_txs;
+    get_transactions(tx_hashes, txs, missed_txs);
+    
+    if (missed_txs.size() != 0)
+    {
+      MERROR_VER("Could not find transaction from which a transaction input originates");
+      return false;
+    }
+    
+    for (size_t i = 0; i < txs.size(); i++)
+    {
+      if (txs[i].version == 4)
+      {
+        MERROR_VER("An input used in this transaction comes from a burn transaction, which cannot be spent");
+        return false;
+      }
+    }
+  }
   // rct_signatures will be expanded after this
   return true;
 }
