@@ -1685,7 +1685,9 @@ namespace cryptonote
 	if (m_service_node && lifetime > DIFFICULTY_TARGET_V2) // Give us some time to connect to peers before sending uptimes
 	{
 		do_uptime_proof_call();
-		submit_ribbon_data();
+    if(m_blockchain_storage.get_current_hard_fork_version() > 5){
+      submit_ribbon_data();
+    }
 	}
 	m_uptime_proof_pruner.do_call(boost::bind(&service_nodes::quorum_cop::prune_uptime_proof, &m_quorum_cop));
     m_block_rate_interval.do_call(boost::bind(&core::check_block_rate, this));
