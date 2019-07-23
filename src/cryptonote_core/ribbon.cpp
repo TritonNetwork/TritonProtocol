@@ -307,9 +307,6 @@ std::vector<exchange_trade> get_recent_trades()
   if(!service_nodes::get_trades_from_ogre(&trades))
     MERROR("Error getting trades from Ogre");
 
-  if(!service_nodes::get_trades_from_tritonex(&trades))
-    MERROR("Error getting trades from TritonEX");
-
   return trades;
 }
 
