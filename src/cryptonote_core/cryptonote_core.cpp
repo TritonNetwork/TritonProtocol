@@ -1279,6 +1279,10 @@ namespace cryptonote
       {
         MERROR("Failed to relay ribbon data");
         return false;
+      }else{
+		    MGINFO("Submitted ribbon-data for service node (yours): " << m_service_node_pubkey << std::endl << 
+        "Ribbon Green Price: " << r.ribbon_green << std::endl << 
+        "Ribbon Blue Price: " << r.ribbon_blue);
       }
     }
     return true;
