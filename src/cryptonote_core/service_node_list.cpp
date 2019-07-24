@@ -149,6 +149,21 @@ namespace service_nodes
 		});
 		return result;
 	}
+	
+	crypto::public_key service_node_list::get_random_service_node_pubkey()
+	{
+		std::vector<crypto::public_key> all_pubkeys = get_service_nodes_pubkeys();
+		std::vector<service_node_pubkey_info> pks_info = get_service_node_list_state(all_pubkeys);
+		
+		std::vector<crypto::public_key> registered_pubkeys;
+		for (const auto pk_info : pks_info)
+		{
+			if (pk_info.info.total_reserved == pk_info.info.staking_requirement)
+				registered_pubkeys.push_back(pk_info.pubkey);
+		}
+		
+		return registered_pubkeys[(std::rand() % registered_pubkeys.size())]; // TODO: there's definitely a better way to do this
+	}
 
 	const std::shared_ptr<const quorum_state> service_node_list::get_quorum_state(uint64_t height) const
 	{
