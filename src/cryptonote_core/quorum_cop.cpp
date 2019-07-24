@@ -267,9 +267,18 @@ namespace service_nodes
 		req.height = m_core.get_current_blockchain_height() - 2;
       
 		std::vector<service_nodes::exchange_trade> recent_trades = rp.trades_during_latest_1_block();
-		req.ribbon_green = service_nodes::create_ribbon_green(recent_trades);
-		req.ribbon_blue = service_nodes::create_ribbon_blue(recent_trades);
-	    
+
+		if(recent_trades.size() == 0){
+			cryptonote::block blk;
+			crypto::hash block_hash = m_core.get_block_id_by_height(req.height - 3);
+			m_core.get_block_by_hash(block_hash, blk);
+
+			req.ribbon_green = 0;
+			req.ribbon_blue = blk.ribbon_blue;
+		}else{
+			req.ribbon_green = service_nodes::create_ribbon_green(recent_trades);
+			req.ribbon_blue = service_nodes::create_ribbon_blue(recent_trades);
+		}
 		req.pubkey = pubkey;
 		crypto::hash hash = make_ribbon_hash(req.timestamp, req.height, req.ribbon_green, req.ribbon_blue, req.pubkey);
 		crypto::generate_signature(hash, pubkey, seckey, req.sig);
