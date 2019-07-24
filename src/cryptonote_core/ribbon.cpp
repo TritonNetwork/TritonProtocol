@@ -5,7 +5,6 @@
 
 #include "int-util.h"
 #include "rapidjson/document.h"
-#include "blockchain.h"
 #include "ribbon.h"
 
 namespace service_nodes {
@@ -33,74 +32,69 @@ std::string make_curl_http_get(std::string url)
   return read_buffer;
 }
 
-class ribbon_protocol {
+ribbon_protocol::ribbon_protocol(cryptonote::core& core) : m_core(core){};
 
+std::vector<exchange_trade> ribbon_protocol::trades_during_latest_1_block()
+{
+  std::vector<exchange_trade> trades = get_recent_trades();
+  uint64_t top_block_height = m_core.get_current_blockchain_height() - 2;
+  crypto::hash top_block_hash = m_core.get_block_id_by_height(top_block_height);
+  cryptonote::block top_blk;
+  m_core.get_block_by_hash(top_block_hash, top_blk);
+  uint64_t top_block_timestamp = top_blk.timestamp;
 
-  ribbon_protocol::ribbon_protocol(cryptonote::core& core) : m_core(core);
-
-  std::vector<exchange_trade> ribbon_protocol::trades_during_latest_1_block()
+  std::vector<exchange_trade> result;
+  for (size_t i = 0; i < trades.size(); i++)
   {
-    std::vector<exchange_trade> trades = get_recent_trades();
-    uint64_t top_block_height = m_core.get_current_blockchain_height() - 2;
-    crypto::hash top_block_hash = m_core.get_block_id_by_height(top_block_height);
-    cryptonote::block top_blk;
-    m_core.get_block_by_hash(top_block_hash, top_blk);
-    uint64_t top_block_timestamp = top_blk.timestamp;
-
-    std::vector<exchange_trade> result;
-    for (size_t i = 0; i < trades.size(); i++)
-    {
-      if (trades[i].date >= top_block_timestamp){
-        result.push_back(trades[i]);
-      }
+    if (trades[i].date >= top_block_timestamp){
+      result.push_back(trades[i]);
     }
-    return result;
   }
+  return result;
+}
 
-  uint64_t ribbon_protocol::create_ribbon_red(uint64_t height){
-    uint64_t ma1_sum = 0;
-    for (size_t i = 1; i <= 960; i++)
-    {
-      cryptonote::block blk;
-      crypto::hash block_hash = m_core->get_block_id_by_height(height - i);
-      m_core->get_block_by_hash(block_hash, blk);
-      ma1_sum += blk.ribbon_blue;
-    }
-    uint64_t ma1 = ma1_sum / 960;
-    
-    uint64_t ma2_sum = 0;
-    for (size_t i = 1; i <= 480; i++)
-    {
-      cryptonote::block blk;
-      crypto::hash block_hash = m_core.get_block_id_by_height(height - i);
-      m_core.get_block_by_hash(block_hash, blk);
-      ma2_sum += blk.ribbon_blue;
-    }
-    uint64_t ma2 = ma2_sum / 480;
-    
-    uint64_t ma3_sum = 0;
-    for (size_t i = 1; i <= 240; i++)
-    {
-      cryptonote::block blk;
-      crypto::hash block_hash = m_core.get_block_id_by_height(height - i);
-      m_core.get_block_by_hash(block_hash, blk);
-      ma3_sum += blk.ribbon_blue;
-    }
-    uint64_t ma3 = ma3_sum / 240;
-    
-    uint64_t ma4_sum = 0;
-    for (size_t i = 1; i <= 120; i++)
-    {
-      cryptonote::block blk;
-      crypto::hash block_hash = m_core.get_block_id_by_height(height - i);
-      m_core.get_block_by_hash(block_hash, blk);
-      ma4_sum += blk.ribbon_blue;
-    }
-    uint64_t ma4 = ma4_sum / 120;
-    
-    return (ma1 + ma2 + ma3 + ma4) / 4;
+uint64_t ribbon_protocol::create_ribbon_red(uint64_t height){
+  uint64_t ma1_sum = 0;
+  for (size_t i = 1; i <= 960; i++)
+  {
+    cryptonote::block blk;
+    crypto::hash block_hash = m_core->get_block_id_by_height(height - i);
+    m_core->get_block_by_hash(block_hash, blk);
+    ma1_sum += blk.ribbon_blue;
   }
-
+  uint64_t ma1 = ma1_sum / 960;
+  
+  uint64_t ma2_sum = 0;
+  for (size_t i = 1; i <= 480; i++)
+  {
+    cryptonote::block blk;
+    crypto::hash block_hash = m_core.get_block_id_by_height(height - i);
+    m_core.get_block_by_hash(block_hash, blk);
+    ma2_sum += blk.ribbon_blue;
+  }
+  uint64_t ma2 = ma2_sum / 480;
+  
+  uint64_t ma3_sum = 0;
+  for (size_t i = 1; i <= 240; i++)
+  {
+    cryptonote::block blk;
+    crypto::hash block_hash = m_core.get_block_id_by_height(height - i);
+    m_core.get_block_by_hash(block_hash, blk);
+    ma3_sum += blk.ribbon_blue;
+  }
+  uint64_t ma3 = ma3_sum / 240;
+  
+  uint64_t ma4_sum = 0;
+  for (size_t i = 1; i <= 120; i++)
+  {
+    cryptonote::block blk;
+    crypto::hash block_hash = m_core.get_block_id_by_height(height - i);
+    m_core.get_block_by_hash(block_hash, blk);
+    ma4_sum += blk.ribbon_blue;
+  }
+  uint64_t ma4 = ma4_sum / 120;
+  
+  return (ma1 + ma2 + ma3 + ma4) / 4;
 }
 
 

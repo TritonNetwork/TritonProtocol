@@ -74,7 +74,8 @@ namespace service_nodes
 
 		cryptonote::core& m_core;
 		uint64_t m_last_height;
-
+		ribbon_protocol& m_ribbon_protocol;
+		 
 		using timestamp = uint64_t;
 		std::unordered_map<crypto::public_key, timestamp> m_uptime_proof_seen;
 		std::unordered_map<crypto::hash, uint64_t> m_ribbon_data_received; // use hash of pubkey + height as key

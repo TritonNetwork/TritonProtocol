@@ -1,6 +1,4 @@
 #pragma once
-#include "blockchain.h"
-#include "cryptonote_protocol/cryptonote_protocol_handler_common.h"
 
 namespace cryptonote
 {

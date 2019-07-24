@@ -40,7 +40,7 @@
 namespace service_nodes
 {
 	quorum_cop::quorum_cop(cryptonote::core& core)
-		: m_core(core), m_last_height(0)
+		: m_core(core), m_last_height(0), m_ribbon_protocol(core)
 	{
 		init();
 	}
@@ -96,7 +96,7 @@ namespace service_nodes
 			
 		// store trades that have happened during this block to the DB
 		if (version > 5){
-			std::vector<service_nodes::exchange_trade> trades_during_block = service_nodes::trades_during_latest_1_block();
+			std::vector<service_nodes::exchange_trade> trades_during_block = m_ribbon_protocol.trades_during_latest_1_block();
 			m_core.store_trade_history_at_height(trades_during_block, height);
 		}
 		
@@ -264,7 +264,7 @@ namespace service_nodes
 		req.timestamp = time(nullptr);
 		req.height = m_core.get_current_blockchain_height() - 2;
       
-		std::vector<service_nodes::exchange_trade> recent_trades = service_nodes::trades_during_latest_1_block();
+		std::vector<service_nodes::exchange_trade> recent_trades = m_ribbon_protocol.trades_during_latest_1_block();
 		req.ribbon_green = service_nodes::create_ribbon_green(recent_trades);
 		req.ribbon_blue = service_nodes::create_ribbon_blue(recent_trades);
 	    
