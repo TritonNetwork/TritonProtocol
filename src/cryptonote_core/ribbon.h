@@ -12,7 +12,7 @@ namespace service_nodes {
 #define BITLIBER_API "https://bitliber.com/api/v1"
 #define COINBASE_PRO "https://api.pro.coinbase.com"
 #define GEMINI_API "https://api.gemini.com/v1"
-#define TRITON_EX "http://134.209.50.66/api"
+#define TRITON_EX "http://exchange.equilibria.network/api"
 #define BITFINEX_API "https://api.bitfinex.com/v1"
 
 struct exchange_trade {
