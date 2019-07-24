@@ -1345,7 +1345,7 @@ bool Blockchain::create_block_template(block& b, const account_public_address& m
   
   if (b.major_version > 5)
   {
-    b.ribbon_blue = m_service_node_list.get_winner_ribbon_data(m_service_node_list.select_winner(b.prev_id), height - 2);
+    b.ribbon_blue = m_service_node_list.get_ribbon_data(m_service_node_list.select_winner(b.prev_id), height - 2);
     // give ribbon red a buffer after the fork for the required window of ribbon blue data
     std::vector<HardFork::Params> hf_params = get_hard_fork_heights(m_nettype);
     if (height > hf_params[0].height + 960)

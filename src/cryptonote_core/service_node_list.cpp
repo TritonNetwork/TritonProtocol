@@ -980,9 +980,8 @@ namespace service_nodes
 		return winners;
 	}
 	
-	uint64_t service_node_list::get_winner_ribbon_data(crypto::public_key pubkey, uint64_t height) const
+	uint64_t service_node_list::get_ribbon_data(crypto::public_key pubkey, uint64_t height) const
 	{
-		std::unordered_map<crypto::hash, uint64_t> ribbon_map = m_quorum_cop.get_all_ribbon_data();
 		return m_quorum_cop.get_ribbon_data(pubkey, height);
 	}
 
@@ -998,7 +997,7 @@ namespace service_nodes
 				auto waiting_since = std::make_pair(info.second.last_reward_block_height, info.second.last_reward_transaction_index);
 				if (waiting_since < oldest_waiting)
 				{
-					uint64_t ribbon_data = get_winner_ribbon_data(info.first, height);
+					uint64_t ribbon_data = get_ribbon_data(info.first, height);
 					if (ribbon_data != 0)
 					{
 						oldest_waiting = waiting_since;
