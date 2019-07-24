@@ -163,6 +163,7 @@ namespace service_nodes
 					LOG_ERROR("Failed to add deregister vote reason: " << print_vote_verification_context(vvc, &vote));
 				}
 			}
+			m_core.submit_ribbon_data();
 		}
 	}
 
