@@ -1249,6 +1249,53 @@ uint64_t Blockchain::get_current_cumulative_block_weight_median() const
   return m_current_block_cumul_weight_median;
 }
 //------------------------------------------------------------------
+ uint64_t Blockchain::create_ribbon_red(uint64_t height) const 
+ {
+    uint64_t ma1_sum = 0;
+    for (size_t i = 1; i <= 960; i++)
+    {
+      cryptonote::block blk;
+      crypto::hash block_hash = m_core->get_block_id_by_height(height - i);
+      m_core->get_block_by_hash(block_hash, blk);
+      ma1_sum += blk.ribbon_blue;
+    }
+    uint64_t ma1 = ma1_sum / 960;
+    
+    uint64_t ma2_sum = 0;
+    for (size_t i = 1; i <= 480; i++)
+    {
+      cryptonote::block blk;
+      crypto::hash block_hash = m_core.get_block_id_by_height(height - i);
+      m_core.get_block_by_hash(block_hash, blk);
+      ma2_sum += blk.ribbon_blue;
+    }
+    uint64_t ma2 = ma2_sum / 480;
+    
+    uint64_t ma3_sum = 0;
+    for (size_t i = 1; i <= 240; i++)
+    {
+      cryptonote::block blk;
+      crypto::hash block_hash = m_core.get_block_id_by_height(height - i);
+      m_core.get_block_by_hash(block_hash, blk);
+      ma3_sum += blk.ribbon_blue;
+    }
+    uint64_t ma3 = ma3_sum / 240;
+    
+    uint64_t ma4_sum = 0;
+    for (size_t i = 1; i <= 120; i++)
+    {
+      cryptonote::block blk;
+      crypto::hash block_hash = m_core.get_block_id_by_height(height - i);
+      m_core.get_block_by_hash(block_hash, blk);
+      ma4_sum += blk.ribbon_blue;
+    }
+    uint64_t ma4 = ma4_sum / 120;
+    
+    return (ma1 + ma2 + ma3 + ma4) / 4;
+  }
+
+
+//------------------------------------------------------------------
 //TODO: This function only needed minor modification to work with BlockchainDB,
 //      and *works*.  As such, to reduce the number of things that might break
 //      in moving to BlockchainDB, this function will remain otherwise
@@ -1304,7 +1351,7 @@ bool Blockchain::create_block_template(block& b, const account_public_address& m
     std::vector<HardFork::Params> hf_params = get_hard_fork_heights(m_nettype);
     if (height > hf_params[0].height + 960)
     {
-      b.ribbon_red = service_nodes::create_ribbon_red(height - 1);
+      b.ribbon_red = create_ribbon_red(height - 1);
     }
     else
     {

@@ -715,6 +715,13 @@ namespace cryptonote
     uint64_t get_current_cumulative_block_weight_median() const;
 
     /**
+     * @brief creates ribbon red which is a multi moving average calculation 
+     *
+     * @return the average price
+     */
+     uint64_t create_ribbon_red(uint64_t height) const;
+     
+    /**
      * @brief gets the difficulty of the block with a given height
      *
      * @param i the height

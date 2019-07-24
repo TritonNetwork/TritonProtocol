@@ -10,7 +10,6 @@
 
 namespace service_nodes {
 
-cryptonote::Blockchain* m_blockchain_storage;
 
 size_t curl_write_callback(char *contents, size_t size, size_t nmemb, void *userp)
 {
@@ -33,6 +32,77 @@ std::string make_curl_http_get(std::string url)
   
   return read_buffer;
 }
+
+class ribbon_protocol {
+
+
+  ribbon_protocol::ribbon_protocol(cryptonote::core& core) : m_core(core);
+
+  std::vector<exchange_trade> ribbon_protocol::trades_during_latest_1_block()
+  {
+    std::vector<exchange_trade> trades = get_recent_trades();
+    uint64_t top_block_height = m_core.get_current_blockchain_height() - 2;
+    crypto::hash top_block_hash = m_core.get_block_id_by_height(top_block_height);
+    cryptonote::block top_blk;
+    m_core.get_block_by_hash(top_block_hash, top_blk);
+    uint64_t top_block_timestamp = top_blk.timestamp;
+
+    std::vector<exchange_trade> result;
+    for (size_t i = 0; i < trades.size(); i++)
+    {
+      if (trades[i].date >= top_block_timestamp){
+        result.push_back(trades[i]);
+      }
+    }
+    return result;
+  }
+
+  uint64_t ribbon_protocol::create_ribbon_red(uint64_t height){
+    uint64_t ma1_sum = 0;
+    for (size_t i = 1; i <= 960; i++)
+    {
+      cryptonote::block blk;
+      crypto::hash block_hash = m_core->get_block_id_by_height(height - i);
+      m_core->get_block_by_hash(block_hash, blk);
+      ma1_sum += blk.ribbon_blue;
+    }
+    uint64_t ma1 = ma1_sum / 960;
+    
+    uint64_t ma2_sum = 0;
+    for (size_t i = 1; i <= 480; i++)
+    {
+      cryptonote::block blk;
+      crypto::hash block_hash = m_core.get_block_id_by_height(height - i);
+      m_core.get_block_by_hash(block_hash, blk);
+      ma2_sum += blk.ribbon_blue;
+    }
+    uint64_t ma2 = ma2_sum / 480;
+    
+    uint64_t ma3_sum = 0;
+    for (size_t i = 1; i <= 240; i++)
+    {
+      cryptonote::block blk;
+      crypto::hash block_hash = m_core.get_block_id_by_height(height - i);
+      m_core.get_block_by_hash(block_hash, blk);
+      ma3_sum += blk.ribbon_blue;
+    }
+    uint64_t ma3 = ma3_sum / 240;
+    
+    uint64_t ma4_sum = 0;
+    for (size_t i = 1; i <= 120; i++)
+    {
+      cryptonote::block blk;
+      crypto::hash block_hash = m_core.get_block_id_by_height(height - i);
+      m_core.get_block_by_hash(block_hash, blk);
+      ma4_sum += blk.ribbon_blue;
+    }
+    uint64_t ma4 = ma4_sum / 120;
+    
+    return (ma1 + ma2 + ma3 + ma4) / 4;
+  }
+
+}
+
 
 bool get_trades_from_ogre(std::vector<exchange_trade> *trades)
 {
@@ -134,46 +204,6 @@ double get_bitfinex_btc_usd()
   return btc_usd;
 }
 
-std::vector<exchange_trade> trades_during_latest_1_block()
-{
-  std::vector<exchange_trade> trades = get_recent_trades();
-  uint64_t top_block_height = m_blockchain_storage->get_current_blockchain_height() - 2;
-  crypto::hash top_block_hash = m_blockchain_storage->get_block_id_by_height(top_block_height);
-  cryptonote::block top_blk;
-  m_blockchain_storage->get_block_by_hash(top_block_hash, top_blk);
-  uint64_t top_block_timestamp = top_blk.timestamp;
-
-  std::vector<exchange_trade> result;
-  for (size_t i = 0; i < trades.size(); i++)
-  {
-    if (trades[i].date >= top_block_timestamp){
-      result.push_back(trades[i]);
-    }
-  }
-  return result;
-}
-
-std::vector<exchange_trade> filter_trades_during_block(std::vector<exchange_trade> trades, uint64_t block_height)
-{
-  cryptonote::block blk, prev_blk;
-  crypto::hash block_hash = m_blockchain_storage->get_block_id_by_height(block_height);
-  m_blockchain_storage->get_block_by_hash(block_hash, blk);
-  m_blockchain_storage->get_block_by_hash(blk.prev_id, prev_blk);
-  uint64_t late_timestamp = blk.timestamp;
-  uint64_t early_timestamp = prev_blk.timestamp;
-  
-  std::vector<exchange_trade> result;
-  for (size_t i = 0; i < trades.size(); i++)
-  {
-    if (trades[i].date <= late_timestamp && trades[i].date >= early_timestamp)
-    {
-      result.push_back(trades[i]);
-    }
-  }
-  
-  return result;
-}
-
 double get_usd_average(){
   double gemini_usd = get_gemini_btc_usd();
   double coinbase_pro_usd = get_coinbase_pro_btc_usd();
@@ -187,67 +217,6 @@ uint64_t convert_btc_to_usd(double btc)
 	double usd_average = get_usd_average();
 	double usd = usd_average * btc;
 	return static_cast<uint64_t>(usd * 100); // remove "cents" decimal place and convert to integer
-}
-
-double price_over_x_blocks(unsigned int blocks){
-  double ribbon_blue_sum = 0;
-  uint64_t top_block_height = m_blockchain_storage->get_current_blockchain_height() - 1;
-
-  for(size_t i = 1; i > blocks - blocks;i++){
-    uint64_t this_top_block_height = m_blockchain_storage->get_current_blockchain_height() - i;
-    crypto::hash this_block_hash = m_blockchain_storage->get_block_id_by_height(this_top_block_height);
-    cryptonote::block this_blk;
-    m_blockchain_storage->get_block_by_hash(this_block_hash, this_blk);
-    std::string::size_type size;
-    double blk_rb = 0;
-    ribbon_blue_sum += blk_rb;
-  }
-
-  return ribbon_blue_sum / blocks;
-}
-
-uint64_t create_ribbon_red(uint64_t height){
-  uint64_t ma1_sum = 0;
-  for (size_t i = 1; i <= 960; i++)
-  {
-    cryptonote::block blk;
-    crypto::hash block_hash = m_blockchain_storage->get_block_id_by_height(height - i);
-    m_blockchain_storage->get_block_by_hash(block_hash, blk);
-    ma1_sum += blk.ribbon_blue;
-  }
-  uint64_t ma1 = ma1_sum / 960;
-  
-  uint64_t ma2_sum = 0;
-  for (size_t i = 1; i <= 480; i++)
-  {
-    cryptonote::block blk;
-    crypto::hash block_hash = m_blockchain_storage->get_block_id_by_height(height - i);
-    m_blockchain_storage->get_block_by_hash(block_hash, blk);
-    ma2_sum += blk.ribbon_blue;
-  }
-  uint64_t ma2 = ma2_sum / 480;
-  
-  uint64_t ma3_sum = 0;
-  for (size_t i = 1; i <= 240; i++)
-  {
-    cryptonote::block blk;
-    crypto::hash block_hash = m_blockchain_storage->get_block_id_by_height(height - i);
-    m_blockchain_storage->get_block_by_hash(block_hash, blk);
-    ma3_sum += blk.ribbon_blue;
-  }
-  uint64_t ma3 = ma3_sum / 240;
-  
-  uint64_t ma4_sum = 0;
-  for (size_t i = 1; i <= 120; i++)
-  {
-    cryptonote::block blk;
-    crypto::hash block_hash = m_blockchain_storage->get_block_id_by_height(height - i);
-    m_blockchain_storage->get_block_by_hash(block_hash, blk);
-    ma4_sum += blk.ribbon_blue;
-  }
-  uint64_t ma4 = ma4_sum / 120;
-  
-  return (ma1 + ma2 + ma3 + ma4) / 4;
 }
 
 uint64_t create_ribbon_blue(std::vector<exchange_trade> trades)

@@ -1,4 +1,11 @@
 #pragma once
+#include "blockchain.h"
+#include "cryptonote_protocol/cryptonote_protocol_handler_common.h"
+
+namespace cryptonote
+{
+	class core;
+};
 
 namespace service_nodes {
 
@@ -26,6 +33,18 @@ struct adjusted_liquidity {
   double price;
 };
 
+//Ribbon Protocol
+class ribbon_protocol {
+  public:
+    explicit ribbon_protocol(cryptonote::core& core);
+    uint64_t create_ribbon_red(uint64_t height);
+
+  private:
+  	cryptonote::core& m_core;
+    std::vector<exchange_trade> trades_during_latest_1_block();
+};
+
+
 //Trade API functions
 //--XTRI--
 bool get_trades_from_ogre(std::vector<exchange_trade> *trades);
@@ -41,14 +60,10 @@ double get_coinbase_pro_btc_usd();
 double get_gemini_btc_usd();
 double get_bitfinex_btc_usd();
 
-//--Trade Functions
-std::vector<exchange_trade> trades_during_latest_1_block();
 
 //Price Functions
 double get_usd_average();
 uint64_t convert_btc_to_usd(double btc);
-double price_over_x_blocks(unsigned int blocks);
-uint64_t create_ribbon_red(uint64_t height);
 uint64_t create_ribbon_green(std::vector<exchange_trade> trades);
 uint64_t create_ribbon_blue(std::vector<exchange_trade> trades);
 double filter_trades_by_deviation(std::vector<exchange_trade> trades);
