@@ -49,6 +49,7 @@ namespace service_nodes
 	{
 		m_last_height = 0;
 		m_uptime_proof_seen.clear();
+		m_ribbon_data_received.clear();
 	}
 
 	void quorum_cop::blockchain_detached(uint64_t height)
@@ -130,11 +131,13 @@ namespace service_nodes
 				{
 					crypto::hash pair_hash = make_ribbon_key_hash(node_key, m_last_height);
 					bool ribbon_data_seen = (m_ribbon_data_received.find(pair_hash) != m_ribbon_data_received.end());
-				
+					LOG_ERROR("Ribbon Data has not been seen! From: " << node_key);
+
 					std::vector<service_nodes::exchange_trade> trades_during_height;
 					m_core.get_trade_history_for_height(trades_during_height, m_last_height);
-					double my_ribbon_blue = create_ribbon_blue(trades_during_height);
-				
+					uint64_t my_ribbon_blue = convert_btc_to_usd(create_ribbon_blue(trades_during_height));
+					LOG_ERROR("My Ribbon Data: " << my_ribbon_blue);
+
 					bool ribbon_data_agrees = false;
 					if (my_ribbon_blue == m_ribbon_data_received[pair_hash])
 						ribbon_data_agrees = true;
