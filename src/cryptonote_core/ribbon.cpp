@@ -5,6 +5,7 @@
 
 #include "int-util.h"
 #include "rapidjson/document.h"
+#include "cryptonote_core.h"
 #include "ribbon.h"
 
 namespace service_nodes {
@@ -58,8 +59,8 @@ uint64_t ribbon_protocol::create_ribbon_red(uint64_t height){
   for (size_t i = 1; i <= 960; i++)
   {
     cryptonote::block blk;
-    crypto::hash block_hash = m_core->get_block_id_by_height(height - i);
-    m_core->get_block_by_hash(block_hash, blk);
+    crypto::hash block_hash = m_core.get_block_id_by_height(height - i);
+    m_core.get_block_by_hash(block_hash, blk);
     ma1_sum += blk.ribbon_blue;
   }
   uint64_t ma1 = ma1_sum / 960;

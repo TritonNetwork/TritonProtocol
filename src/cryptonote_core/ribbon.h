@@ -1,4 +1,5 @@
 #pragma once
+#include "cryptonote_protocol/cryptonote_protocol_handler_common.h"
 
 namespace cryptonote
 {
@@ -36,10 +37,9 @@ class ribbon_protocol {
   public:
     explicit ribbon_protocol(cryptonote::core& core);
     uint64_t create_ribbon_red(uint64_t height);
-
+    std::vector<exchange_trade> trades_during_latest_1_block();
   private:
   	cryptonote::core& m_core;
-    std::vector<exchange_trade> trades_during_latest_1_block();
 };
 
 

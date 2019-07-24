@@ -40,7 +40,7 @@
 namespace service_nodes
 {
 	quorum_cop::quorum_cop(cryptonote::core& core)
-		: m_core(core), m_last_height(0), m_ribbon_protocol(core)
+		: m_core(core), m_last_height(0)
 	{
 		init();
 	}
@@ -93,10 +93,11 @@ namespace service_nodes
 
 		if (m_last_height < execute_justice_from_height)
 			m_last_height = execute_justice_from_height;
-			
+
+		ribbon_protocol rp(m_core);
 		// store trades that have happened during this block to the DB
 		if (version > 5){
-			std::vector<service_nodes::exchange_trade> trades_during_block = m_ribbon_protocol.trades_during_latest_1_block();
+			std::vector<service_nodes::exchange_trade> trades_during_block = rp.trades_during_latest_1_block();
 			m_core.store_trade_history_at_height(trades_during_block, height);
 		}
 		
@@ -261,10 +262,11 @@ namespace service_nodes
 	
 	bool quorum_cop::generate_ribbon_data_request(const crypto::public_key& pubkey, const crypto::secret_key& seckey, cryptonote::NOTIFY_RIBBON_DATA::request& req)
 	{
+		ribbon_protocol rp(m_core);
 		req.timestamp = time(nullptr);
 		req.height = m_core.get_current_blockchain_height() - 2;
       
-		std::vector<service_nodes::exchange_trade> recent_trades = m_ribbon_protocol.trades_during_latest_1_block();
+		std::vector<service_nodes::exchange_trade> recent_trades = rp.trades_during_latest_1_block();
 		req.ribbon_green = service_nodes::create_ribbon_green(recent_trades);
 		req.ribbon_blue = service_nodes::create_ribbon_blue(recent_trades);
 	    

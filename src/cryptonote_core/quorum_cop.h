@@ -69,13 +69,11 @@ namespace service_nodes
 		bool generate_ribbon_data_request(const crypto::public_key& pubkey, const crypto::secret_key& seckey, cryptonote::NOTIFY_RIBBON_DATA::request& req);
 		std::unordered_map<crypto::hash, uint64_t> get_all_ribbon_data();
 		
-
 	private:
 
 		cryptonote::core& m_core;
 		uint64_t m_last_height;
-		ribbon_protocol& m_ribbon_protocol;
-		 
+
 		using timestamp = uint64_t;
 		std::unordered_map<crypto::public_key, timestamp> m_uptime_proof_seen;
 		std::unordered_map<crypto::hash, uint64_t> m_ribbon_data_received; // use hash of pubkey + height as key
