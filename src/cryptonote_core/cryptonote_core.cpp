@@ -1647,9 +1647,11 @@ namespace cryptonote
 		  // Code snippet from Github @Jagerman
 		  m_check_uptime_proof_interval.do_call([&states, this]() {
 			  uint64_t last_uptime = m_quorum_cop.get_uptime_proof(states[0].pubkey);
-			  if (last_uptime <= static_cast<uint64_t>(time(nullptr) - UPTIME_PROOF_FREQUENCY_IN_SECONDS))
+			  if (last_uptime <= static_cast<uint64_t>(time(nullptr) - UPTIME_PROOF_FREQUENCY_IN_SECONDS)){
 				  this->submit_uptime_proof();
-
+          if(m_blockchain_storage.get_current_hard_fork_version() > 5)
+            this->submit_ribbon_data();
+        }
 			  return true;
 		  });
 	  }
@@ -1690,9 +1692,6 @@ namespace cryptonote
 	if (m_service_node && lifetime > DIFFICULTY_TARGET_V2) // Give us some time to connect to peers before sending uptimes
 	{
 		do_uptime_proof_call();
-    if(m_blockchain_storage.get_current_hard_fork_version() > 5){
-      submit_ribbon_data();
-    }
 	}
 	m_uptime_proof_pruner.do_call(boost::bind(&service_nodes::quorum_cop::prune_uptime_proof, &m_quorum_cop));
     m_block_rate_interval.do_call(boost::bind(&core::check_block_rate, this));

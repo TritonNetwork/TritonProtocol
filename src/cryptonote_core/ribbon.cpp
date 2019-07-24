@@ -211,7 +211,7 @@ uint64_t convert_btc_to_usd(double btc)
 {
 	double usd_average = get_usd_average();
 	double usd = usd_average * btc;
-	return static_cast<uint64_t>(usd * 100); // remove "cents" decimal place and convert to integer
+	return static_cast<uint64_t>(usd * 1000); // remove "cents" decimal place and convert to integer
 }
 
 uint64_t create_ribbon_blue(std::vector<exchange_trade> trades)
@@ -270,7 +270,7 @@ std::vector<exchange_trade> get_recent_trades()
   std::vector<service_nodes::exchange_trade> trades;
   if(!service_nodes::get_trades_from_ogre(&trades))
     MERROR("Error getting trades from Ogre");
-    
+
   if(!service_nodes::get_trades_from_tritonex(&trades))
     MERROR("Error getting trades from TritonEX");
 
