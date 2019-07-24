@@ -1255,8 +1255,8 @@ uint64_t Blockchain::get_current_cumulative_block_weight_median() const
     for (size_t i = 1; i <= 960; i++)
     {
       cryptonote::block blk;
-      crypto::hash block_hash = m_core->get_block_id_by_height(height - i);
-      m_core->get_block_by_hash(block_hash, blk);
+      crypto::hash block_hash = get_block_id_by_height(height - i);
+      get_block_by_hash(block_hash, blk);
       ma1_sum += blk.ribbon_blue;
     }
     uint64_t ma1 = ma1_sum / 960;
@@ -1265,8 +1265,8 @@ uint64_t Blockchain::get_current_cumulative_block_weight_median() const
     for (size_t i = 1; i <= 480; i++)
     {
       cryptonote::block blk;
-      crypto::hash block_hash = m_core.get_block_id_by_height(height - i);
-      m_core.get_block_by_hash(block_hash, blk);
+      crypto::hash block_hash = get_block_id_by_height(height - i);
+      get_block_by_hash(block_hash, blk);
       ma2_sum += blk.ribbon_blue;
     }
     uint64_t ma2 = ma2_sum / 480;
@@ -1275,8 +1275,8 @@ uint64_t Blockchain::get_current_cumulative_block_weight_median() const
     for (size_t i = 1; i <= 240; i++)
     {
       cryptonote::block blk;
-      crypto::hash block_hash = m_core.get_block_id_by_height(height - i);
-      m_core.get_block_by_hash(block_hash, blk);
+      crypto::hash block_hash = get_block_id_by_height(height - i);
+      get_block_by_hash(block_hash, blk);
       ma3_sum += blk.ribbon_blue;
     }
     uint64_t ma3 = ma3_sum / 240;
@@ -1285,8 +1285,8 @@ uint64_t Blockchain::get_current_cumulative_block_weight_median() const
     for (size_t i = 1; i <= 120; i++)
     {
       cryptonote::block blk;
-      crypto::hash block_hash = m_core.get_block_id_by_height(height - i);
-      m_core.get_block_by_hash(block_hash, blk);
+      crypto::hash block_hash = get_block_id_by_height(height - i);
+      get_block_by_hash(block_hash, blk);
       ma4_sum += blk.ribbon_blue;
     }
     uint64_t ma4 = ma4_sum / 120;
