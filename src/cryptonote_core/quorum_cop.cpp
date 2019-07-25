@@ -100,6 +100,7 @@ namespace service_nodes
 		if (version > 5){
 			std::vector<service_nodes::exchange_trade> trades_during_block = rp.trades_during_latest_1_block();
 			m_core.store_trade_history_at_height(trades_during_block, height);
+			m_ribbon_data_received.clear();
 			m_core.submit_ribbon_data();
 		}
 		
@@ -164,6 +165,11 @@ namespace service_nodes
 					LOG_ERROR("Failed to add deregister vote reason: " << print_vote_verification_context(vvc, &vote));
 				}
 			}
+		}
+		if (version > 5)
+		{
+			m_ribbon_data_received.clear();
+			m_core.submit_ribbon_data();
 		}
 	}
 
