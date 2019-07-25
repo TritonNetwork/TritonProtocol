@@ -1012,12 +1012,8 @@ namespace service_nodes
 				auto waiting_since = std::make_pair(info.second.last_reward_block_height, info.second.last_reward_transaction_index);
 				if (waiting_since < oldest_waiting)
 				{
-					uint64_t ribbon_data = get_ribbon_data(info.first, height);
-					if (ribbon_data != 0)
-					{
 						oldest_waiting = waiting_since;
 						key = info.first;
-					}
 				}
 			}
 		return key;

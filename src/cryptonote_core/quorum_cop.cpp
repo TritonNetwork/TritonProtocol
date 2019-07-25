@@ -163,9 +163,12 @@ namespace service_nodes
 					LOG_ERROR("Failed to add deregister vote reason: " << print_vote_verification_context(vvc, &vote));
 				}
 			}
+			if(version > 5){
+				m_core.submit_ribbon_data();
+				//Clear old ribbon data, Not sure if I like this 
+				m_ribbon_data_received.clear();
+			}
 		}
-		if(version > 5)
-			m_core.submit_ribbon_data();
 	}
 
 	static crypto::hash make_hash(crypto::public_key const &pubkey, uint64_t timestamp)
@@ -249,7 +252,6 @@ namespace service_nodes
 		crypto::hash pair_hash = make_ribbon_key_hash(pubkey, data.height);
 		
 		m_ribbon_data_received[pair_hash] = data.ribbon_blue;
-
 		return true;
 	}
 
@@ -326,14 +328,14 @@ namespace service_nodes
       CRITICAL_REGION_LOCAL(m_lock);
       
       crypto::hash pair_hash = make_ribbon_key_hash(pubkey, height);
-      
+      std::cout << m_ribbon_data_received.size() << std::endl;
       const auto& it = m_ribbon_data_received.find(pair_hash);
       if (it == m_ribbon_data_received.end())
       {
         return 0;
       }
 
-      return (*it).second;
+      return 0;
     }
     
 	std::unordered_map<crypto::hash, uint64_t> quorum_cop::get_all_ribbon_data()

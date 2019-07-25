@@ -1346,6 +1346,7 @@ bool Blockchain::create_block_template(block& b, const account_public_address& m
   if (b.major_version > 5)
   {
     uint64_t last_winner_ribbon_data = m_service_node_list.get_ribbon_data(m_service_node_list.select_winner(b.prev_id), height - 3);
+     MDEBUG("winner ribbon data: "  << last_winner_ribbon_data);
     if (last_winner_ribbon_data == 0)
     {
       MDEBUG("Last ribbon data not found for last winner at height: " << height-3 << ", looking for info from other service nodes");
@@ -1465,7 +1466,7 @@ bool Blockchain::create_block_template(block& b, const account_public_address& m
   uint8_t hf_version = m_hardfork->get_current_version();
 
 
-  triton_miner_tx_context miner_tx_context(m_nettype,
+    triton_miner_tx_context miner_tx_context(m_nettype,
 	  m_service_node_list.select_winner(b.prev_id),
 	  m_service_node_list.get_winner_addresses_and_portions(b.prev_id));
 
