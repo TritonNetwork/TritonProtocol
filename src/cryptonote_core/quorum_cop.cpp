@@ -322,8 +322,8 @@ namespace service_nodes
     {
       CRITICAL_REGION_LOCAL(m_lock);
 
-	std::unordered_map<crypto::hash, uint64_t>::iterator it1 = make_ribbon_key_hash.begin();
-	while(it1 != make_ribbon_key_hash.end())
+	std::unordered_map<crypto::hash, uint64_t>::iterator it1 = m_ribbon_data_received.begin();
+	while(it1 != m_ribbon_data_received.end())
 	{
 	std::cout<<it1->first << " :: "<< it1->second<< std::endl;
 	it1++;
