@@ -1345,13 +1345,13 @@ bool Blockchain::create_block_template(block& b, const account_public_address& m
   
   if (b.major_version > 5)
   {
-    uint64_t last_winner_ribbon_data = m_service_node_list.get_ribbon_data(m_service_node_list.select_winner(b.prev_id), height - 2);
+    uint64_t last_winner_ribbon_data = m_service_node_list.get_ribbon_data(m_service_node_list.select_winner(b.prev_id), height - 1);
      MGINFO_GREEN("winner ribbon data: "  << last_winner_ribbon_data);
     if (last_winner_ribbon_data == 0)
     {
       MGINFO_GREEN("Last ribbon data not found for last winner at height: " << height-  1 << ", looking for info from other service nodes");
       crypto::public_key random_pubkey = m_service_node_list.get_random_service_node_pubkey();
-      uint64_t random_ribbon_data = m_service_node_list.get_ribbon_data(random_pubkey, height - 2);
+      uint64_t random_ribbon_data = m_service_node_list.get_ribbon_data(random_pubkey, height - 1);
       
       if (random_ribbon_data != 0)
         b.ribbon_blue = random_ribbon_data;
@@ -1360,11 +1360,11 @@ bool Blockchain::create_block_template(block& b, const account_public_address& m
         std::vector<crypto::public_key> all_sn_pubkeys = m_service_node_list.get_service_nodes_pubkeys();
         for (size_t i = 0; i < all_sn_pubkeys.size(); i++)
         {
-          uint64_t ribbon_data = m_service_node_list.get_ribbon_data(all_sn_pubkeys[i], height - 2);
+          uint64_t ribbon_data = m_service_node_list.get_ribbon_data(all_sn_pubkeys[i], height - 1);
           if (ribbon_data != 0)
             b.ribbon_blue = ribbon_data;
           else if (i == all_sn_pubkeys.size()-1)
-            MGINFO_GREEN("No ribbon data for height " << height - 2 << "could be found from any service node");
+            MGINFO_GREEN("No ribbon data for height " << height - 1 << "could be found from any service node");
         }
       }
     }
