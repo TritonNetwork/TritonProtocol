@@ -288,6 +288,7 @@ namespace service_nodes
 
 		crypto::hash hash = make_ribbon_hash(req.timestamp, req.height, req.ribbon_green, req.ribbon_blue, req.pubkey);
 		crypto::generate_signature(hash, pubkey, seckey, req.sig);
+		std::cout << "Created hash at Height: " << req.height << " with hash of: " << hash;  
 		return true;
 	}
 
@@ -326,7 +327,7 @@ namespace service_nodes
     {
       CRITICAL_REGION_LOCAL(m_lock);
 	  crypto::hash pair_hash = make_ribbon_key_hash(pubkey, height);
-		std::cout << pair_hash << "Height: " << height << std::endl;
+	  std::cout << pair_hash << "Height: " << height << std::endl;
 
 	std::unordered_map<crypto::hash, uint64_t>::iterator it1 = m_ribbon_data_received.begin();
 	while(it1 != m_ribbon_data_received.end())
