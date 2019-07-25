@@ -101,8 +101,6 @@ namespace service_nodes
 			std::vector<service_nodes::exchange_trade> trades_during_block = rp.trades_during_latest_1_block();
 			m_core.store_trade_history_at_height(trades_during_block, height);
 			m_core.submit_ribbon_data();
-			//Clear old ribbon data, Not sure if I like this 
-			m_ribbon_data_received.clear();
 		}
 		
 		for (; m_last_height < (height - REORG_SAFETY_BUFFER_IN_BLOCKS); m_last_height++)
@@ -274,8 +272,13 @@ namespace service_nodes
 		std::vector<service_nodes::exchange_trade> recent_trades = rp.trades_during_latest_1_block();
 
 		
-		req.ribbon_green = service_nodes::create_ribbon_green(recent_trades);
-		req.ribbon_blue = service_nodes::create_ribbon_blue(recent_trades);
+		if(recent_trades.size() == 0){
+			req.ribbon_green = 0;
+			req.ribbon_blue = 0;
+		}else{
+			req.ribbon_green = service_nodes::create_ribbon_green(recent_trades);
+			req.ribbon_blue = service_nodes::create_ribbon_blue(recent_trades);
+		}
 		req.pubkey = pubkey;
 
 		crypto::hash hash = make_ribbon_hash(req.timestamp, req.height, req.ribbon_green, req.ribbon_blue, req.pubkey);
