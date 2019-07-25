@@ -333,7 +333,7 @@ namespace service_nodes
 	std::unordered_map<crypto::hash, uint64_t>::iterator it1 = m_ribbon_data_received.begin();
 	while(it1 != m_ribbon_data_received.end())
 	{	
-		if(it->first == pair_hash)
+		if(it1->first == pair_hash)
 			std::cout << "Found ze winner ja" << std::endl;
 	std::cout<<it1->first << " :: "<< it1->second<< std::endl;
 	it1++;
