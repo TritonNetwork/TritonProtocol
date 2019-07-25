@@ -272,7 +272,7 @@ namespace service_nodes
 	{
 		ribbon_protocol rp(m_core);
 		req.timestamp = time(nullptr);
-		req.height = m_core.get_current_blockchain_height() - 1;
+		req.height = m_core.get_current_blockchain_height();
 
 		std::vector<service_nodes::exchange_trade> recent_trades = rp.trades_during_latest_1_block();
 
