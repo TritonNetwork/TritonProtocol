@@ -163,8 +163,9 @@ namespace service_nodes
 					LOG_ERROR("Failed to add deregister vote reason: " << print_vote_verification_context(vvc, &vote));
 				}
 			}
-			m_core.submit_ribbon_data();
 		}
+		if(version > 5)
+			m_core.submit_ribbon_data();
 	}
 
 	static crypto::hash make_hash(crypto::public_key const &pubkey, uint64_t timestamp)

@@ -1348,9 +1348,10 @@ bool Blockchain::create_block_template(block& b, const account_public_address& m
     uint64_t last_winner_ribbon_data = m_service_node_list.get_ribbon_data(m_service_node_list.select_winner(b.prev_id), height - 3);
     if (last_winner_ribbon_data == 0)
     {
-      LOG_PRINT_L2("Last ribbon data not found for last winner at height: " << height-3 << ", looking for info from other service nodes");
+      MDEBUG("Last ribbon data not found for last winner at height: " << height-3 << ", looking for info from other service nodes");
       crypto::public_key random_pubkey = m_service_node_list.get_random_service_node_pubkey();
       uint64_t random_ribbon_data = m_service_node_list.get_ribbon_data(random_pubkey, height - 3);
+      
       if (random_ribbon_data != 0)
         b.ribbon_blue = random_ribbon_data;
       else
@@ -1362,7 +1363,7 @@ bool Blockchain::create_block_template(block& b, const account_public_address& m
           if (ribbon_data != 0)
             b.ribbon_blue = ribbon_data;
           else if (i == all_sn_pubkeys.size()-1)
-            LOG_PRINT_L2("No ribbon data for height " << height-3 << "could be found from any service node");
+            MDEBUG("No ribbon data for height " << height-3 << "could be found from any service node");
         }
       }
     }
