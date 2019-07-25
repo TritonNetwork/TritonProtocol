@@ -14,6 +14,8 @@ namespace service_nodes {
 #define GEMINI_API "https://api.gemini.com/v1"
 #define TRITON_EX "http://exchange.equilibria.network/api"
 #define BITFINEX_API "https://api.bitfinex.com/v1"
+#define NANCE_API "https://api.binance.com/api/v1"
+#define STAMP_API "https://www.bitstamp.net/api/v2"
 
 struct exchange_trade {
   uint64_t date;
@@ -57,7 +59,8 @@ std::vector<adjusted_liquidity> get_recent_liquids(double blue);
 double get_coinbase_pro_btc_usd();
 double get_gemini_btc_usd();
 double get_bitfinex_btc_usd();
-
+double get_nance_btc_usd();
+double get_stamp_btc_usd();
 
 //Price Functions
 double get_usd_average();

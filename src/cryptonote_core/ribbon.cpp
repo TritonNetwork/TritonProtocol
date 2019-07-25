@@ -199,13 +199,47 @@ double get_bitfinex_btc_usd()
   return btc_usd;
 }
 
+double get_nance_btc_usd()
+{
+  std::string data = make_curl_http_get(std::string(NANCE_API) + std::string("/ticker/price?symbol=BTCUSDT"));
+  rapidjson::Document document;
+  document.Parse(data.c_str());
+  double btc_usd = 0;
+  for (size_t i = 0; i < document.Size(); i++)
+  {
+    btc_usd = std::stod(document["price"].GetString());
+  }
+  return btc_usd;
+}
+
+double get_stamp_btc_usd()
+{
+  std::string data = make_curl_http_get(std::string(STAMP_API) + std::string("/ticker/BTCUSD"));
+  rapidjson::Document document;
+  document.Parse(data.c_str());
+  double btc_usd = 0;
+  for (size_t i = 0; i < document.Size(); i++)
+  {
+    btc_usd = std::stod(document["last"].GetString());
+  }
+  return btc_usd;
+}
+
 double get_usd_average(){
   double gemini_usd = get_gemini_btc_usd();
   double coinbase_pro_usd = get_coinbase_pro_btc_usd();
   double bitfinex_usd = get_bitfinex_btc_usd();
+  double nance_usd = get_nance_btc_usd();
+  double stamp_usd = get_stamp_btc_usd();
 
-  return (gemini_usd + coinbase_pro_usd + bitfinex_usd) / 3;
+  //Sometimes coinbase pro returns 0? Need to look into this.
+  if(coinbase_pro_usd == 0)
+    return (gemini_usd + bitfinex_usd + nance_usd + stamp_usd) / 4;
+
+  return (gemini_usd + coinbase_pro_usd + bitfinex_usd + nance_usd + stamp_usd) / 5;
 }
+
+
 
 uint64_t convert_btc_to_usd(double btc)
 {
