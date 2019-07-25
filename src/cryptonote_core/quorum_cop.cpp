@@ -327,15 +327,18 @@ namespace service_nodes
     uint64_t quorum_cop::get_ribbon_data(const crypto::public_key &pubkey, uint64_t height)
     {
       CRITICAL_REGION_LOCAL(m_lock);
+	  crypto::hash pair_hash = make_ribbon_key_hash(pubkey, height);
+		std::cout << pair_hash << std::endl;
 
 	std::unordered_map<crypto::hash, uint64_t>::iterator it1 = m_ribbon_data_received.begin();
 	while(it1 != m_ribbon_data_received.end())
-	{
+	{	
+		if(it->first == pair_hash)
+			std::cout << "Found ze winner ja" << std::endl;
 	std::cout<<it1->first << " :: "<< it1->second<< std::endl;
 	it1++;
 	}
      
-	  crypto::hash pair_hash = make_ribbon_key_hash(pubkey, height);
       const auto& it = m_ribbon_data_received.find(pair_hash);
       if (it != m_ribbon_data_received.end())
       {
