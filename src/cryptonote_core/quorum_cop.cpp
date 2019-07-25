@@ -166,6 +166,7 @@ namespace service_nodes
 		}
 		if (version > 5)
 		{
+			std::cout << "Clearing and submitting" << std::endl;
 			m_ribbon_data_received.clear();
 			m_core.submit_ribbon_data();
 		}
@@ -287,7 +288,6 @@ namespace service_nodes
 
 		crypto::hash hash = make_ribbon_hash(req.timestamp, req.height, req.ribbon_green, req.ribbon_blue, req.pubkey);
 		crypto::generate_signature(hash, pubkey, seckey, req.sig);
-		bool r = handle_ribbon_data_received(req);
 		return true;
 	}
 
