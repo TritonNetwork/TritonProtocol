@@ -328,11 +328,10 @@ namespace service_nodes
       CRITICAL_REGION_LOCAL(m_lock);
       
       crypto::hash pair_hash = make_ribbon_key_hash(pubkey, height);
-      std::cout << m_ribbon_data_received.size() << std::endl;
       const auto& it = m_ribbon_data_received.find(pair_hash);
-      if (it == m_ribbon_data_received.end())
+      if (m_ribbon_data_received.size() > 0)
       {
-        return 0;
+        return it->second;
       }
 
       return 0;
