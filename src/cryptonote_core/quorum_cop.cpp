@@ -285,8 +285,6 @@ namespace service_nodes
 		crypto::hash hash = make_ribbon_hash(req.timestamp, req.height, req.ribbon_green, req.ribbon_blue, req.pubkey);
 		crypto::generate_signature(hash, pubkey, seckey, req.sig);
 		crypto::hash expected_hash = make_ribbon_key_hash(pubkey, req.height);
-		MINFO("Created hash at Height: " << req.height << " with hash of: " << expected_hash << " from pubkey: " << pubkey) ;  
-
 		return true;
 	}
 
@@ -345,7 +343,7 @@ namespace service_nodes
 	}
 
 	void quorum_cop::clear_ribbon_data(uint64_t clear_height){
-		const auto& it = m_ribbon_data_received.begin();
+		std::unordered_map<crypto::hash, ribbon_data>::iterator it = m_ribbon_data_received.begin();
 		while(it != m_ribbon_data_received.end())
 		{	
 
