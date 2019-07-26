@@ -1371,6 +1371,8 @@ bool Blockchain::create_block_template(block& b, const account_public_address& m
     else
       b.ribbon_blue = last_winner_ribbon_data;
     
+
+    m_service_node_list.clear_ribbon_data();
     // give ribbon red a buffer after the fork for the required window of ribbon blue data
     std::vector<HardFork::Params> hf_params = get_hard_fork_heights(m_nettype);
     if (height > hf_params[0].height + 960)
@@ -4045,7 +4047,7 @@ for (BlockAddedHook* hook : m_block_added_hooks)
 
   std::shared_ptr<tools::Notify> block_notify = m_block_notify;
   if(m_service_node_list.send_ribbon_data()){
-    m_service_node_list.clear_ribbon_data();
+    //idk
   }
 
   if (block_notify)
