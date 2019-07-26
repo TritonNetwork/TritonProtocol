@@ -327,7 +327,7 @@ namespace service_nodes
 	  crypto::hash pair_hash = make_ribbon_key_hash(pubkey, height);
 	  std::cout << pair_hash << "Height: " << height << std::endl;
 
-	std::unordered_map<crypto::hash, uint64_t>::iterator it1 = m_ribbon_data_received.begin();
+	std::unordered_map<crypto::hash, ribbon_data>::iterator it1 = m_ribbon_data_received.begin();
 	while(it1 != m_ribbon_data_received.end())
 	{	
 		if(it1->first == pair_hash)
@@ -355,14 +355,14 @@ namespace service_nodes
 	}
 
 	void quorum_cop::clear_ribbon_data(uint64_t clear_height){
-		std::unordered_map<crypto::hash, uint64_t>::iterator it = m_ribbon_data_received.begin();
+		std::unordered_map<crypto::hash, ribbon_data>::iterator it = m_ribbon_data_received.begin();
 		while(it != m_ribbon_data_received.end())
 		{	
 			if(it->second.height < clear_height){
 				it->erase(it);
 			}
-			
-			it1++;
+
+			it++;
 		}
 	}
 
