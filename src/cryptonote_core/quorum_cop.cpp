@@ -249,7 +249,7 @@ namespace service_nodes
 		ribbon_data rd = {data.height,data.ribbon_blue};
 
 		m_ribbon_data_received[pair_hash] = rd;
-		std::cout << "Adding ribbon to collection: " << pair_hash << " from pubkey: " << pubkey << std::endl;
+		std::cout << "Adding ribbon to collection at height" << ": " << height << " with hash: "<< pair_hash << " from pubkey: " << pubkey << std::endl;
 		return true;
 	}
 
