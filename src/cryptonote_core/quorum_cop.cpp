@@ -249,7 +249,7 @@ namespace service_nodes
 		ribbon_data rd = {data.height,data.ribbon_blue};
 
 		m_ribbon_data_received[pair_hash] = rd;
-		std::cout << "Adding ribbon to collection: " << pair_hash << std::endl;
+		std::cout << "Adding ribbon to collection: " << pair_hash << " from pubkey: " << pubkey << std::endl;
 		return true;
 	}
 
@@ -286,7 +286,7 @@ namespace service_nodes
 		crypto::hash hash = make_ribbon_hash(req.timestamp, req.height, req.ribbon_green, req.ribbon_blue, req.pubkey);
 		crypto::generate_signature(hash, pubkey, seckey, req.sig);
 		crypto::hash expected_hash = make_ribbon_key_hash(pubkey, req.height);
-		std::cout << "Created hash at Height: " << req.height << " with hash of: " << expected_hash << std::endl;  
+		std::cout << "Created hash at Height: " << req.height << " with hash of: " << expected_hash << " from pubkey: " << pubkey << std::endl ;  
 
 		return true;
 	}
