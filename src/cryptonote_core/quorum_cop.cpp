@@ -194,7 +194,7 @@ namespace service_nodes
 	
 	crypto::hash quorum_cop::make_ribbon_key_hash(crypto::public_key pubkey, uint64_t height)
 	{
-		char buf[64];
+		char buf[40];
 		memcpy(buf, reinterpret_cast<const void *>(&pubkey), sizeof(pubkey));
 		memcpy(buf + sizeof(pubkey), reinterpret_cast<const void *>(&height), sizeof(height));
 		crypto::hash result;
