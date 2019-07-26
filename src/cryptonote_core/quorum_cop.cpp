@@ -345,7 +345,7 @@ namespace service_nodes
       return 0;
     }
     
-	std::unordered_map<crypto::hash, uint64_t> quorum_cop::get_all_ribbon_data()
+	std::unordered_map<crypto::hash, ribbon_data> quorum_cop::get_all_ribbon_data()
 	{
 		return m_ribbon_data_received;
 	}
@@ -359,7 +359,7 @@ namespace service_nodes
 		while(it != m_ribbon_data_received.end())
 		{	
 			if(it->second.height < clear_height){
-				it.erase(it);
+				m_ribbon_data_received.erase(it);
 			}
 
 			it++;
