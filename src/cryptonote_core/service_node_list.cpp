@@ -1020,7 +1020,7 @@ namespace service_nodes
 	}
 
 	bool service_node_list::send_ribbon_data(){
-		return m_quorum_cop.send_ribbon_data();
+		return m_quorum_cop.send_out_ribbon();
 	}
 	void service_node_list::clear_ribbon_data(){
 		return m_quorum_cop.clear_ribbon_data();
