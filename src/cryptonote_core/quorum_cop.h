@@ -50,7 +50,7 @@ namespace service_nodes
 	struct ribbon_data {
 		uint64_t height;
 		uint64_t ribbon_blue;
-	}
+	};
 
 	class quorum_cop
 		: public cryptonote::Blockchain::BlockAddedHook,
