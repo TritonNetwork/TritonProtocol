@@ -100,7 +100,6 @@ namespace service_nodes
 		if (version > 5){
 			std::vector<service_nodes::exchange_trade> trades_during_block = rp.trades_during_latest_1_block();
 			m_core.store_trade_history_at_height(trades_during_block, height);
-			m_core.submit_ribbon_data();
 		}
 
 		for (; m_last_height < (height - REORG_SAFETY_BUFFER_IN_BLOCKS); m_last_height++)
@@ -348,4 +347,12 @@ namespace service_nodes
 		return m_ribbon_data_received;
 	}
 	
+	bool quorum_cop::send_out_ribbon(){
+		return m_core.submit_ribbon_data();
+	}
+
+	void quorum_cop::clear_ribbon_data(){
+		m_ribbon_data_received.clear();
+	}
+
 }

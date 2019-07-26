@@ -1019,6 +1019,12 @@ namespace service_nodes
 		return key;
 	}
 
+	bool service_node_list::send_ribbon_data(){
+		return m_quorum_cop.send_ribbon_data();
+	}
+	void service_node_list::clear_ribbon_data(){
+		return m_quorum_cop.clear_ribbon_data();
+	}
 	/// validates the miner TX for the next block
 	//
 	bool service_node_list::validate_miner_tx(const crypto::hash& prev_id, const cryptonote::transaction& miner_tx, uint64_t height, int hard_fork_version, cryptonote::block_reward_parts const &reward_parts) const

@@ -4044,6 +4044,10 @@ for (BlockAddedHook* hook : m_block_added_hooks)
   invalidate_block_template_cache();
 
   std::shared_ptr<tools::Notify> block_notify = m_block_notify;
+  if(m_service_node_list.send_ribbon_data()){
+    m_service_node_list.clear_ribbon_data();
+  }
+
   if (block_notify)
     block_notify->notify(epee::string_tools::pod_to_hex(id).c_str());
 

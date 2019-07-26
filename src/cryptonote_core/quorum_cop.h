@@ -65,6 +65,11 @@ namespace service_nodes
 
 		uint64_t get_uptime_proof(const crypto::public_key &pubkey) const;
 		uint64_t get_ribbon_data(const crypto::public_key &pubkey, uint64_t height);
+		void clear_ribbon_data();
+		bool send_out_ribbon();
+
+
+
 		crypto::hash make_ribbon_key_hash(crypto::public_key pubkey, uint64_t height);
 		bool generate_ribbon_data_request(const crypto::public_key& pubkey, const crypto::secret_key& seckey, cryptonote::NOTIFY_RIBBON_DATA::request& req);
 		std::unordered_map<crypto::hash, uint64_t> get_all_ribbon_data();
