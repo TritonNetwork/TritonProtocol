@@ -196,7 +196,7 @@ namespace service_nodes
 	{
 		char buf[64];
 		memcpy(buf, reinterpret_cast<const void *>(&pubkey), sizeof(pubkey));
-		memcpy(buf + 4 + sizeof(pubkey), reinterpret_cast<const void *>(&height), sizeof(height));
+		memcpy(buf + sizeof(pubkey), reinterpret_cast<const void *>(&height), sizeof(height));
 		crypto::hash result;
 		
 		crypto::cn_fast_hash(buf, sizeof(buf), result);
@@ -360,7 +360,7 @@ namespace service_nodes
 		while(it != m_ribbon_data_received.end())
 		{	
 			if(it->second.height < clear_height){
-				m_ribbon_data_received.erase(it);
+				m_ribbon_data_received.erase(it->first);
 			}
 
 			it++;
