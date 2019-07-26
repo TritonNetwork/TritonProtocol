@@ -284,7 +284,6 @@ namespace service_nodes
 
 		crypto::hash hash = make_ribbon_hash(req.timestamp, req.height, req.ribbon_green, req.ribbon_blue, req.pubkey);
 		crypto::generate_signature(hash, pubkey, seckey, req.sig);
-		crypto::hash expected_hash = make_ribbon_key_hash(pubkey, req.height);
 		return true;
 	}
 
