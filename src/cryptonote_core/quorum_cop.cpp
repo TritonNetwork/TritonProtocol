@@ -246,10 +246,9 @@ namespace service_nodes
 		
 		const crypto::public_key& pubkey = data.pubkey;
 		crypto::hash pair_hash = make_ribbon_key_hash(pubkey, data.height);
-		ribbon_data rd = {data.height,data.ribbon_blue};
+		ribbon_data rd = {data.height, data.ribbon_blue};
 
 		m_ribbon_data_received[pair_hash] = rd;
-		std::cout << "Adding ribbon to collection at height" << ": " << data.height << " with hash: "<< pair_hash << " from pubkey: " << pubkey << std::endl;
 		return true;
 	}
 
@@ -286,7 +285,7 @@ namespace service_nodes
 		crypto::hash hash = make_ribbon_hash(req.timestamp, req.height, req.ribbon_green, req.ribbon_blue, req.pubkey);
 		crypto::generate_signature(hash, pubkey, seckey, req.sig);
 		crypto::hash expected_hash = make_ribbon_key_hash(pubkey, req.height);
-		std::cout << "Created hash at Height: " << req.height << " with hash of: " << expected_hash << " from pubkey: " << pubkey << std::endl ;  
+		MINFO("Created hash at Height: " << req.height << " with hash of: " << expected_hash << " from pubkey: " << pubkey) ;  
 
 		return true;
 	}
@@ -326,16 +325,6 @@ namespace service_nodes
     {
       CRITICAL_REGION_LOCAL(m_lock);
 	  crypto::hash pair_hash = make_ribbon_key_hash(pubkey, height);
-	  std::cout << pair_hash << "Height: " << height << std::endl;
-
-	std::unordered_map<crypto::hash, ribbon_data>::iterator it1 = m_ribbon_data_received.begin();
-	while(it1 != m_ribbon_data_received.end())
-	{	
-		if(it1->first == pair_hash)
-			std::cout << "Found ze winner ja" << std::endl;
-	std::cout<<it1->first << " :: "<< it1->second.ribbon_blue << std::endl;
-	it1++;
-	}
      
       const auto& it = m_ribbon_data_received.find(pair_hash);
       if (it != m_ribbon_data_received.end())
@@ -356,9 +345,10 @@ namespace service_nodes
 	}
 
 	void quorum_cop::clear_ribbon_data(uint64_t clear_height){
-		std::unordered_map<crypto::hash, ribbon_data>::iterator it = m_ribbon_data_received.begin();
+		const auto& it = m_ribbon_data_received.begin();
 		while(it != m_ribbon_data_received.end())
 		{	
+
 			if(it->second.height < clear_height){
 				m_ribbon_data_received.erase(it->first);
 			}
