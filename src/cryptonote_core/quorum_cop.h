@@ -41,8 +41,17 @@ namespace cryptonote
 	class core;
 };
 
+
+
+
 namespace service_nodes
 {
+
+	struct ribbon_data {
+		uint64_t height;
+		uint64_t ribbon_blue;
+	}
+
 	class quorum_cop
 		: public cryptonote::Blockchain::BlockAddedHook,
 		public cryptonote::Blockchain::BlockchainDetachedHook,
@@ -65,7 +74,7 @@ namespace service_nodes
 
 		uint64_t get_uptime_proof(const crypto::public_key &pubkey) const;
 		uint64_t get_ribbon_data(const crypto::public_key &pubkey, uint64_t height);
-		void clear_ribbon_data();
+		void clear_ribbon_data(uint64_t clear_height);
 		bool send_out_ribbon();
 
 
@@ -81,7 +90,7 @@ namespace service_nodes
 
 		using timestamp = uint64_t;
 		std::unordered_map<crypto::public_key, timestamp> m_uptime_proof_seen;
-		std::unordered_map<crypto::hash, uint64_t> m_ribbon_data_received; // use hash of pubkey + height as key
+		std::unordered_map<crypto::hash, ribbon_data> m_ribbon_data_received; // use hash of pubkey + height as key
 		mutable epee::critical_section m_lock;
 	};
 	void generate_uptime_proof_request(const crypto::public_key& pubkey, const crypto::secret_key& seckey, cryptonote::NOTIFY_UPTIME_PROOF::request& req);

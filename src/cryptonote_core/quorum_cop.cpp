@@ -139,7 +139,7 @@ namespace service_nodes
 					LOG_ERROR("My Ribbon Data: " << my_ribbon_blue);
 
 					bool ribbon_data_agrees = false;
-					if (my_ribbon_blue == m_ribbon_data_received[pair_hash])
+					if (my_ribbon_blue == m_ribbon_data_received[pair_hash].ribbon_blue)
 						ribbon_data_agrees = true;
 
 					if (uptime_proof_seen && ribbon_data_seen && ribbon_data_agrees)
@@ -198,6 +198,7 @@ namespace service_nodes
 		memcpy(buf, reinterpret_cast<const void *>(&pubkey), sizeof(pubkey));
 		memcpy(buf + 4 + sizeof(pubkey), reinterpret_cast<const void *>(&height), sizeof(height));
 		crypto::hash result;
+		
 		crypto::cn_fast_hash(buf, sizeof(buf), result);
 		return result;
 	}
@@ -245,8 +246,9 @@ namespace service_nodes
 		
 		const crypto::public_key& pubkey = data.pubkey;
 		crypto::hash pair_hash = make_ribbon_key_hash(pubkey, data.height);
-		
-		m_ribbon_data_received[pair_hash] = data.ribbon_blue;
+		ribbon_data rd = {data.height,data.ribbon_blue};
+
+		m_ribbon_data_received[pair_hash] = rd;
 		return true;
 	}
 
@@ -284,6 +286,7 @@ namespace service_nodes
 		crypto::generate_signature(hash, pubkey, seckey, req.sig);
 		crypto::hash expected_hash = make_ribbon_key_hash(pubkey, req.height);
 		std::cout << "Created hash at Height: " << req.height << " with hash of: " << expected_hash << std::endl;  
+
 		return true;
 	}
 
@@ -329,14 +332,14 @@ namespace service_nodes
 	{	
 		if(it1->first == pair_hash)
 			std::cout << "Found ze winner ja" << std::endl;
-	std::cout<<it1->first << " :: "<< it1->second<< std::endl;
+	std::cout<<it1->first << " :: "<< it1->second.ribbon_blue << std::endl;
 	it1++;
 	}
      
       const auto& it = m_ribbon_data_received.find(pair_hash);
       if (it != m_ribbon_data_received.end())
       {
-        return it->second;
+        return it->second.ribbon_blue;
       }
 
       return 0;
@@ -351,8 +354,16 @@ namespace service_nodes
 		return m_core.submit_ribbon_data();
 	}
 
-	void quorum_cop::clear_ribbon_data(){
-		m_ribbon_data_received.clear();
+	void quorum_cop::clear_ribbon_data(uint64_t clear_height){
+		std::unordered_map<crypto::hash, uint64_t>::iterator it = m_ribbon_data_received.begin();
+		while(it != m_ribbon_data_received.end())
+		{	
+			if(it->second.height < clear_height){
+				it->erase(it);
+			}
+			
+			it1++;
+		}
 	}
 
 }

@@ -152,7 +152,7 @@ namespace service_nodes
 		std::vector<std::pair<cryptonote::account_public_address, uint64_t>> get_winner_addresses_and_portions(const crypto::hash& prev_id) const;
 		crypto::public_key select_winner(const crypto::hash& prev_id) const;
 		uint64_t get_ribbon_data(crypto::public_key pubkey, uint64_t height) const;
-		void clear_ribbon_data();
+		void clear_ribbon_data(uint64_t clear_height);
 		bool send_ribbon_data();
 
 		bool is_service_node(const crypto::public_key& pubkey) const;

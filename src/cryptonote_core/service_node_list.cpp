@@ -1022,8 +1022,8 @@ namespace service_nodes
 	bool service_node_list::send_ribbon_data(){
 		return m_quorum_cop.send_out_ribbon();
 	}
-	void service_node_list::clear_ribbon_data(){
-		return m_quorum_cop.clear_ribbon_data();
+	void service_node_list::clear_ribbon_data(uint64_t clear_height){
+		return m_quorum_cop.clear_ribbon_data(clear_height);
 	}
 	/// validates the miner TX for the next block
 	//
