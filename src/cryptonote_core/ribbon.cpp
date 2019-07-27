@@ -55,47 +55,55 @@ std::vector<exchange_trade> ribbon_protocol::trades_during_latest_1_block()
 }
 
 uint64_t ribbon_protocol::create_ribbon_red(uint64_t height){
-  uint64_t ma1_sum = 0;
-  for (size_t i = 1; i <= 960; i++)
-  {
-    cryptonote::block blk;
-    crypto::hash block_hash = m_core.get_block_id_by_height(height - i);
-    m_core.get_block_by_hash(block_hash, blk);
-    ma1_sum += blk.ribbon_blue;
-  }
-  uint64_t ma1 = ma1_sum / 960;
-  
-  uint64_t ma2_sum = 0;
-  for (size_t i = 1; i <= 480; i++)
-  {
-    cryptonote::block blk;
-    crypto::hash block_hash = m_core.get_block_id_by_height(height - i);
-    m_core.get_block_by_hash(block_hash, blk);
-    ma2_sum += blk.ribbon_blue;
-  }
-  uint64_t ma2 = ma2_sum / 480;
-  
-  uint64_t ma3_sum = 0;
-  for (size_t i = 1; i <= 240; i++)
-  {
-    cryptonote::block blk;
-    crypto::hash block_hash = m_core.get_block_id_by_height(height - i);
-    m_core.get_block_by_hash(block_hash, blk);
-    ma3_sum += blk.ribbon_blue;
-  }
-  uint64_t ma3 = ma3_sum / 240;
-  
-  uint64_t ma4_sum = 0;
-  for (size_t i = 1; i <= 120; i++)
-  {
-    cryptonote::block blk;
-    crypto::hash block_hash = m_core.get_block_id_by_height(height - i);
-    m_core.get_block_by_hash(block_hash, blk);
-    ma4_sum += blk.ribbon_blue;
-  }
-  uint64_t ma4 = ma4_sum / 120;
-  
-  return (ma1 + ma2 + ma3 + ma4) / 4;
+    uint64_t ma1_sum = 0;
+    uint64_t ma1_vol_sum = 0;
+    for (size_t i = 1; i <= 960; i++)
+    {
+      cryptonote::block blk;
+      crypto::hash block_hash = m_core.get_block_id_by_height(height - i);
+      m_core.get_block_by_hash(block_hash, blk);
+      ma1_sum += (blk.ribbon_volume * blk.ribbon_blue);
+      ma1_vol_sum += blk.ribbon_volume;
+    }
+    uint64_t ma1 = (ma1_sum / ma1_vol_sum);
+    
+    uint64_t ma2_sum = 0;
+    uint64_t ma2_vol_sum = 0;
+    for (size_t i = 1; i <= 480; i++)
+    {
+      cryptonote::block blk;
+      crypto::hash block_hash = m_core.get_block_id_by_height(height - i);
+      m_core.get_block_by_hash(block_hash, blk);
+      ma2_sum += (blk.ribbon_volume * blk.ribbon_blue);
+      ma2_vol_sum += blk.ribbon_volume;
+    }
+    uint64_t ma2 = (ma2_sum / ma2_vol_sum);
+    
+    uint64_t ma3_sum = 0;
+    uint64_t ma3_vol_sum = 0;
+    for (size_t i = 1; i <= 240; i++)
+    {
+      cryptonote::block blk;
+      crypto::hash block_hash = m_core.get_block_id_by_height(height - i);
+      m_core.get_block_by_hash(block_hash, blk);
+      ma3_sum += (blk.ribbon_volume * blk.ribbon_blue);
+      ma3_vol_sum += blk.ribbon_volume;
+    }
+    uint64_t ma3 = (ma3_sum / 240);
+    
+    uint64_t ma4_sum = 0;
+    uint64_t ma4_vol_sum = 0;
+    for (size_t i = 1; i <= 120; i++)
+    {
+      cryptonote::block blk;
+      crypto::hash block_hash = m_core.get_block_id_by_height(height - i);
+      m_core.get_block_by_hash(block_hash, blk);
+      ma4_sum += (blk.ribbon_volume * blk.ribbon_blue);
+      ma4_vol_sum += blk.ribbon_volume;
+    }
+    uint64_t ma4 = (ma4_sum / ma4_vol_sum);
+    
+    return (ma1 + ma2 + ma3 + ma4) / 4;
 }
 
 
@@ -259,6 +267,16 @@ uint64_t create_ribbon_green(std::vector<exchange_trade> trades){
   double weighted_mean = trades_weighted_mean(trades);
   return convert_btc_to_usd(weighted_mean);
 }
+
+uint64_t get_volume_for_block(std::vector<exchange_trade> trades){
+  double volume = 0;
+  for(size_t i = 0; i < trades.size();i++){
+    volume += (trades[i].price * trades[i].quantity);
+  }
+
+  return convert_btc_to_usd(volume);
+}
+
 
 //Volume Weighted Average with 2 STDEV trades removed
 double filter_trades_by_deviation(std::vector<exchange_trade> trades)

@@ -995,7 +995,7 @@ namespace service_nodes
 		return winners;
 	}
 	
-	uint64_t service_node_list::get_ribbon_data(crypto::public_key pubkey, uint64_t height) const
+	std::pair<uint64_t, uint64_t> service_node_list::get_ribbon_data(crypto::public_key pubkey, uint64_t height) const
 	{
 		return m_quorum_cop.get_ribbon_data(pubkey, height);
 	}

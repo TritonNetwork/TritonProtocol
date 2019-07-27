@@ -1251,44 +1251,52 @@ uint64_t Blockchain::get_current_cumulative_block_weight_median() const
  uint64_t Blockchain::create_ribbon_red(uint64_t height) const 
  {
     uint64_t ma1_sum = 0;
+    uint64_t ma1_vol_sum = 0;
     for (size_t i = 1; i <= 960; i++)
     {
       cryptonote::block blk;
       crypto::hash block_hash = get_block_id_by_height(height - i);
       get_block_by_hash(block_hash, blk);
-      ma1_sum += blk.ribbon_blue;
+      ma1_sum += (blk.ribbon_volume * blk.ribbon_blue);
+      ma1_vol_sum += blk.ribbon_volume;
     }
-    uint64_t ma1 = ma1_sum / 960;
+    uint64_t ma1 = (ma1_sum / ma1_vol_sum);
     
     uint64_t ma2_sum = 0;
+    uint64_t ma2_vol_sum = 0;
     for (size_t i = 1; i <= 480; i++)
     {
       cryptonote::block blk;
       crypto::hash block_hash = get_block_id_by_height(height - i);
       get_block_by_hash(block_hash, blk);
-      ma2_sum += blk.ribbon_blue;
+      ma2_sum += (blk.ribbon_volume * blk.ribbon_blue);
+      ma2_vol_sum += blk.ribbon_volume;
     }
-    uint64_t ma2 = ma2_sum / 480;
+    uint64_t ma2 = (ma2_sum / ma2_vol_sum);
     
     uint64_t ma3_sum = 0;
+    uint64_t ma3_vol_sum = 0;
     for (size_t i = 1; i <= 240; i++)
     {
       cryptonote::block blk;
       crypto::hash block_hash = get_block_id_by_height(height - i);
       get_block_by_hash(block_hash, blk);
-      ma3_sum += blk.ribbon_blue;
+      ma3_sum += (blk.ribbon_volume * blk.ribbon_blue);
+      ma3_vol_sum += blk.ribbon_volume;
     }
-    uint64_t ma3 = ma3_sum / 240;
+    uint64_t ma3 = (ma3_sum / 240);
     
     uint64_t ma4_sum = 0;
+    uint64_t ma4_vol_sum = 0;
     for (size_t i = 1; i <= 120; i++)
     {
       cryptonote::block blk;
       crypto::hash block_hash = get_block_id_by_height(height - i);
       get_block_by_hash(block_hash, blk);
-      ma4_sum += blk.ribbon_blue;
+      ma4_sum += (blk.ribbon_volume * blk.ribbon_blue);
+      ma4_vol_sum += blk.ribbon_volume;
     }
-    uint64_t ma4 = ma4_sum / 120;
+    uint64_t ma4 = (ma4_sum / ma4_vol_sum);
     
     return (ma1 + ma2 + ma3 + ma4) / 4;
   }
@@ -1345,31 +1353,38 @@ bool Blockchain::create_block_template(block& b, const account_public_address& m
   
   if (b.major_version > 5)
   {
-    uint64_t last_winner_ribbon_data = m_service_node_list.get_ribbon_data(m_service_node_list.select_winner(b.prev_id), height - 2);
-     MGINFO_GREEN("winner ribbon data: "  << last_winner_ribbon_data);
-    if (last_winner_ribbon_data == 0)
+    std::pair<uint64_t, uint64_t> last_winner_ribbon_data = m_service_node_list.get_ribbon_data(m_service_node_list.select_winner(b.prev_id), height - 2);
+     MGINFO_GREEN("Winner Ribbon Data: " << last_winner_ribbon_data.first);
+    if (last_winner_ribbon_data.first == 0)
     {
       MGINFO_GREEN("Last ribbon data not found for last winner at height: " << height -  2 << ", looking for info from other service nodes");
       crypto::public_key random_pubkey = m_service_node_list.get_random_service_node_pubkey();
-      uint64_t random_ribbon_data = m_service_node_list.get_ribbon_data(random_pubkey, height - 2);
+      std::pair<uint64_t, uint64_t> random_ribbon_data = m_service_node_list.get_ribbon_data(random_pubkey, height - 2);
       
-      if (random_ribbon_data != 0)
-        b.ribbon_blue = random_ribbon_data;
+      if (random_ribbon_data.first != 0) {
+        b.ribbon_blue = random_ribbon_data.first;
+        b.ribbon_volume = random_ribbon_data.second;
+      }
       else
       {
         std::vector<crypto::public_key> all_sn_pubkeys = m_service_node_list.get_service_nodes_pubkeys();
         for (size_t i = 0; i < all_sn_pubkeys.size(); i++)
         {
-          uint64_t ribbon_data = m_service_node_list.get_ribbon_data(all_sn_pubkeys[i], height - 2);
-          if (ribbon_data != 0)
-            b.ribbon_blue = ribbon_data;
-          else if (i == all_sn_pubkeys.size()-1)
+          std::pair<uint64_t,uint64_t> ribbon_data = m_service_node_list.get_ribbon_data(all_sn_pubkeys[i], height - 2);
+          if (ribbon_data.first != 0) {
+            b.ribbon_blue = ribbon_data.first;
+            b.ribbon_volume = ribbon_data.second;
+          } else if (i == all_sn_pubkeys.size()-1) {
             MGINFO_GREEN("No ribbon data for height " << height - 2 << "could be found from any service node");
+          }
         }
       }
     }
-    else
-      b.ribbon_blue = last_winner_ribbon_data;
+    else 
+    {
+      b.ribbon_blue = last_winner_ribbon_data.first;
+      b.ribbon_volume = last_winner_ribbon_data.second;
+    }
     
 
     m_service_node_list.clear_ribbon_data(height - 5);

@@ -1282,7 +1282,8 @@ namespace cryptonote
       }else{
 		    MGINFO("Submitted ribbon-data at Height: " << r.height << "for service node (yours): " << m_service_node_pubkey << std::endl << 
         "Ribbon Green Price: " << r.ribbon_green << std::endl << 
-        "Ribbon Blue Price: " << r.ribbon_blue);
+        "Ribbon Blue Price: " << r.ribbon_blue << std::endl <<
+        "Volume: " << r.ribbon_volume << std::endl);
         return true;
       }
     }

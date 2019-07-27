@@ -337,6 +337,7 @@ namespace cryptonote
       uint64_t height;
       uint64_t ribbon_green;
       uint64_t ribbon_blue;
+      uint64_t ribbon_volume;
       crypto::public_key pubkey;
       crypto::signature sig;
 
@@ -345,6 +346,7 @@ namespace cryptonote
         KV_SERIALIZE(height)
         KV_SERIALIZE(ribbon_green)
         KV_SERIALIZE(ribbon_blue)
+        KV_SERIALIZE(ribbon_volume)
         KV_SERIALIZE_VAL_POD_AS_BLOB(pubkey)
         KV_SERIALIZE_VAL_POD_AS_BLOB(sig)
       END_KV_SERIALIZE_MAP()

@@ -389,6 +389,7 @@ namespace cryptonote
     uint32_t nonce;
     uint64_t ribbon_blue;
     uint64_t ribbon_red;
+    uint64_t ribbon_volume;
 
     BEGIN_SERIALIZE()
       VARINT_FIELD(major_version)
@@ -400,6 +401,7 @@ namespace cryptonote
       {
         FIELD(ribbon_blue)
         FIELD(ribbon_red)
+        FIELD(ribbon_volume)
       }
     END_SERIALIZE()
   };

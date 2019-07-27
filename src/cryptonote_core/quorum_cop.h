@@ -50,6 +50,7 @@ namespace service_nodes
 	struct ribbon_data {
 		uint64_t height;
 		uint64_t ribbon_blue;
+		uint64_t ribbon_volume;
 	};
 
 	class quorum_cop
@@ -73,7 +74,7 @@ namespace service_nodes
 		bool prune_uptime_proof();
 
 		uint64_t get_uptime_proof(const crypto::public_key &pubkey) const;
-		uint64_t get_ribbon_data(const crypto::public_key &pubkey, uint64_t height);
+		std::pair<uint64_t,uint64_t> get_ribbon_data(const crypto::public_key &pubkey, uint64_t height);
 		void clear_ribbon_data(uint64_t clear_height);
 		bool send_out_ribbon();
 

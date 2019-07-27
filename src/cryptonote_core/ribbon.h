@@ -71,6 +71,7 @@ double filter_trades_by_deviation(std::vector<exchange_trade> trades);
 double trades_weighted_mean(std::vector<exchange_trade> trades);
 
 //Liquid Functions
+uint64_t get_volume_for_block(std::vector<exchange_trade> trades);
 std::vector<adjusted_liquidity> create_adjusted_liqudities(std::vector<exchange_order> orders, double spot);
 double create_mac(std::vector<adjusted_liquidity> adj_liquids);
 
