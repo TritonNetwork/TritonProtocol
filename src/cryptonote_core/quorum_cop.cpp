@@ -346,7 +346,7 @@ namespace service_nodes
 		while(it != m_ribbon_data_received.end())
 		{	
 			if(it->second.height < clear_height){
-				m_ribbon_data_received.erase(it);
+				it = m_ribbon_data_received.erase(it);
 			} else 
 				it++;
 		}
