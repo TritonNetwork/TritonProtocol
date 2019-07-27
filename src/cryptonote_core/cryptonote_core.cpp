@@ -1649,8 +1649,6 @@ namespace cryptonote
 			  uint64_t last_uptime = m_quorum_cop.get_uptime_proof(states[0].pubkey);
 			  if (last_uptime <= static_cast<uint64_t>(time(nullptr) - UPTIME_PROOF_FREQUENCY_IN_SECONDS)){
 				  this->submit_uptime_proof();
-          if(m_blockchain_storage.get_current_hard_fork_version() > 5)
-            this->submit_ribbon_data();
         }
 			  return true;
 		  });
