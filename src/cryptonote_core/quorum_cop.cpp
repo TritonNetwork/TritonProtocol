@@ -345,12 +345,10 @@ namespace service_nodes
 		std::unordered_map<crypto::hash, ribbon_data>::iterator it = m_ribbon_data_received.begin();
 		while(it != m_ribbon_data_received.end())
 		{	
-
 			if(it->second.height < clear_height){
-				m_ribbon_data_received.erase(it->first);
-			}
-
-			it++;
+				m_ribbon_data_received.erase(it);
+			} else 
+				it++;
 		}
 	}
 
