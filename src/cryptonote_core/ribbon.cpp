@@ -65,7 +65,11 @@ uint64_t ribbon_protocol::create_ribbon_red(uint64_t height){
       ma1_sum += (blk.ribbon_volume * blk.ribbon_blue);
       ma1_vol_sum += blk.ribbon_volume;
     }
-    uint64_t ma1 = (ma1_sum / ma1_vol_sum);
+    uint64_t ma1;
+    if(ma1_vol_sum > 0)
+      ma1 = (ma1_sum / ma1_vol_sum);
+    else
+      ma1 = 0;
     
     uint64_t ma2_sum = 0;
     uint64_t ma2_vol_sum = 0;
@@ -77,8 +81,12 @@ uint64_t ribbon_protocol::create_ribbon_red(uint64_t height){
       ma2_sum += (blk.ribbon_volume * blk.ribbon_blue);
       ma2_vol_sum += blk.ribbon_volume;
     }
-    uint64_t ma2 = (ma2_sum / ma2_vol_sum);
-    
+    uint64_t ma2;
+    if(ma2_vol_sum > 0)
+      ma2 = (ma2_sum / ma2_vol_sum);
+    else 
+      ma2 = 0;    
+      
     uint64_t ma3_sum = 0;
     uint64_t ma3_vol_sum = 0;
     for (size_t i = 1; i <= 240; i++)
@@ -89,7 +97,9 @@ uint64_t ribbon_protocol::create_ribbon_red(uint64_t height){
       ma3_sum += (blk.ribbon_volume * blk.ribbon_blue);
       ma3_vol_sum += blk.ribbon_volume;
     }
-    uint64_t ma3 = (ma3_sum / 240);
+     uint64_t ma3;
+    if(ma3_vol_sum > 0)
+      ma3 = (ma3_sum / ma3_vol_sum);
     
     uint64_t ma4_sum = 0;
     uint64_t ma4_vol_sum = 0;
@@ -101,7 +111,11 @@ uint64_t ribbon_protocol::create_ribbon_red(uint64_t height){
       ma4_sum += (blk.ribbon_volume * blk.ribbon_blue);
       ma4_vol_sum += blk.ribbon_volume;
     }
-    uint64_t ma4 = (ma4_sum / ma4_vol_sum);
+    uint64_t ma4;
+    if(ma4_vol_sum > 0)
+      ma4 = (ma4_sum / ma4_vol_sum);
+    else 
+      ma4 = 0;
     
     return (ma1 + ma2 + ma3 + ma4) / 4;
 }
