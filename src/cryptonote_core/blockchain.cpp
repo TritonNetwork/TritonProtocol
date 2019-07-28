@@ -3655,8 +3655,29 @@ bool Blockchain::check_tx_input(size_t tx_version, const txin_to_key& txin, cons
     {
       if (txs[i].version == 4)
       {
-        MERROR_VER("An input used in this transaction comes from a burn transaction, which cannot be spent");
-        return false;
+        crypto::public_key burn_pubkey;
+        crypto::secret_key burn_seckey;
+        get_burn_keys(burn_pubkey, burn_seckey);
+             
+        for (size_t a = 0; a < txs[i].vout.size(); a++)
+        {
+          std::vector<tx_extra_field> tx_extra_fields;
+          crypto::public_key tx_pubkey = get_tx_pub_key_from_extra(txs[i].extra, a);
+          crypto::public_key out_pubkey = boost::get<txout_to_key>(txs[i].vout[a].target).key;
+          crypto::key_derivation derivation;
+          if (crypto::generate_key_derivation(tx_pubkey, burn_seckey, derivation))
+          {
+            MERROR_VER("Failed to calculate input transaction key derivation while checking if input key was burned");
+            return false;
+          }
+          crypto::public_key derived_pubkey;
+          crypto::derive_public_key(derivation, a, burn_pubkey, derived_pubkey);
+          if (out_pubkey == derived_pubkey)
+          {
+            MERROR_VER("An input used in this transaction was burned and cannot be spent");
+            return false;
+          }
+        }
       }
     }
   }
