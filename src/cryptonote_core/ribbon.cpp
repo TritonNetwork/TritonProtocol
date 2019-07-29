@@ -86,7 +86,7 @@ uint64_t ribbon_protocol::create_ribbon_red(uint64_t height){
       ma2 = (ma2_sum / ma2_vol_sum);
     else 
       ma2 = 0;    
-      
+
     uint64_t ma3_sum = 0;
     uint64_t ma3_vol_sum = 0;
     for (size_t i = 1; i <= 240; i++)
@@ -284,9 +284,13 @@ uint64_t create_ribbon_green(std::vector<exchange_trade> trades){
 
 uint64_t get_volume_for_block(std::vector<exchange_trade> trades){
   double volume = 0;
+  if(trades.size() == 0)
+    return 0;
+
   for(size_t i = 0; i < trades.size();i++){
     volume += (trades[i].price * trades[i].quantity);
   }
+  std::cout << volume << std::endl;
 
   return convert_btc_to_usd(volume);
 }
