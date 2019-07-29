@@ -2352,7 +2352,11 @@ simple_wallet::simple_wallet()
                            boost::bind(&simple_wallet::locked_sweep_all, this, _1),
                            tr("locked_sweep_all [index=<N1>[,<N2>,...]] [<priority>] [<ring_size>] <address> <lockblocks> [<payment_id>]"),
                            tr("Send all unlocked balance to an address and lock it for <lockblocks> (max. 1000000). If the parameter \"index<N1>[,<N2>,...]\" is specified, the wallet sweeps outputs received by those address indices. If omitted, the wallet randomly chooses an address index to be used. <priority> is the priority of the sweep. The higher the priority, the higher the transaction fee. Valid values in priority order (from lowest to highest) are: unimportant, normal, elevated, priority. If omitted, the default value (see the command \"set priority\") is used. <ring_size> is the number of inputs to include for untraceability."));
- m_cmd_binder.set_handler("register_service_node",
+  m_cmd_binder.set_handler("burn",
+                           boost::bind(&simple_wallet::make_burn_transaction, this, _1),
+                           tr("burn <amount>"),
+                           tr("Burn XTRI for USDE using the most recent conversion rate"));
+  m_cmd_binder.set_handler("register_service_node",
                            boost::bind(&simple_wallet::register_service_node, this, _1),
                            tr("register_service_node [index=<N1>[,<N2>,...]] [priority] [auto] [<address1> <fraction1> [<address2> <fraction2> [...]]] <expiration timestamp> <pubkey> <signature> <amount>"),
                            tr("Send <amount> to this wallet's main account, locked for the required staking time plus a small buffer. If the parameter \"index<N1>[,<N2>,...]\" is specified, the wallet stakes outputs received by those address indices. <priority> is the priority of the stake. The higher the priority, the higher the transaction fee. Valid values in priority order (from lowest to highest) are: unimportant, normal, elevated, priority. If omitted, the default value (see the command \"set priority\") is used."));
@@ -5279,6 +5283,42 @@ bool simple_wallet::locked_transfer(const std::vector<std::string> &args_)
 bool simple_wallet::locked_sweep_all(const std::vector<std::string> &args_)
 {
   return sweep_main(0, true, args_);
+}
+//----------------------------------------------------------------------------------------------------
+bool simple_wallet::make_burn_transaction(const std::vector<std::string> &args_)
+{
+  uint64_t amount;
+  if(!cryptonote::parse_amount(amount, args_[0]))
+  {
+    return false;
+  }
+  
+  SCOPED_WALLET_UNLOCK();
+  
+  crypto::public_key burn_pubkey;
+  cryptonote::get_burn_pubkey(burn_pubkey);
+  
+  std::vector<uint8_t> extra;
+  std::set<uint32_t> subaddr_indices;
+  std::vector<cryptonote::tx_destination_entry> dsts;
+  cryptonote::tx_destination_entry burn_dst;
+  
+  burn_dst.original = ""; //not needed
+  burn_dst.addr.m_spend_public_key = burn_pubkey;
+  burn_dst.addr.m_view_public_key = burn_pubkey;
+  burn_dst.amount = amount;
+  burn_dst.is_subaddress = false;
+  burn_dst.is_integrated = false;
+  dsts.push_back(burn_dst);
+  
+  crypto::public_key mint_pubkey;
+  crypto::secret_key mint_seckey;
+  crypto::generate_keys(mint_pubkey, mint_seckey); // TODO: make this deterministic
+  
+  std::vector<tools::wallet2::pending_tx> ptx_vector = m_wallet->create_transactions_2(dsts, 4 /* minimum mixin */, 0 /* unlock_time */, 1, extra, m_current_subaddress_account, subaddr_indices, false, mint_pubkey);
+  commit_or_save(ptx_vector, m_do_not_relay);
+  
+  return true;
 }
 //----------------------------------------------------------------------------------------------------
 bool simple_wallet::register_service_node_main(

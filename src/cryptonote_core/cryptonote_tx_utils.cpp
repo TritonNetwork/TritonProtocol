@@ -319,7 +319,7 @@ namespace cryptonote
     return addr.m_view_public_key;
   }
   //---------------------------------------------------------------
-  bool construct_tx_with_tx_key(const account_keys& sender_account_keys, const std::unordered_map<crypto::public_key, subaddress_index>& subaddresses, std::vector<tx_source_entry>& sources, std::vector<tx_destination_entry>& destinations, const boost::optional<cryptonote::tx_destination_entry>& change_addr, std::vector<uint8_t> extra, transaction& tx, uint64_t unlock_time, const crypto::secret_key &tx_key, const std::vector<crypto::secret_key> &additional_tx_keys, bool rct, rct::RangeProofType range_proof_type, rct::multisig_out *msout, bool per_output_unlock, bool shuffle_outs, boost::optional<crypto::public_key> mint_key)
+  bool construct_tx_with_tx_key(const account_keys& sender_account_keys, const std::unordered_map<crypto::public_key, subaddress_index>& subaddresses, std::vector<tx_source_entry>& sources, std::vector<tx_destination_entry>& destinations, const boost::optional<cryptonote::tx_destination_entry>& change_addr, std::vector<uint8_t> extra, transaction& tx, uint64_t unlock_time, const crypto::secret_key &tx_key, const std::vector<crypto::secret_key> &additional_tx_keys, bool rct, rct::RangeProofType range_proof_type, rct::multisig_out *msout, bool per_output_unlock, bool shuffle_outs, crypto::public_key mint_key)
   {
     hw::device &hwdev = sender_account_keys.get_device();
 
@@ -337,14 +337,13 @@ namespace cryptonote
       msout->c.clear();
     }
 
-    if (mint_key != boost::none)
+    if (mint_key != crypto::null_pkey)
     {
       tx.version = 4;
-      tx.mint_key = boost::get<crypto::public_key>(mint_key);
+      tx.mint_key = mint_key;
       
-      blobdata parse_blob;
-      string_tools::parse_hexstr_to_binbuff(std::string(BURN_PUBKEY), parse_blob);
-      crypto::public_key burn_pubkey = *reinterpret_cast<const crypto::public_key*>(parse_blob.data());
+      crypto::public_key burn_pubkey;
+      cryptonote::get_burn_pubkey(burn_pubkey);
       
       for(tx_destination_entry& dest:  destinations)
       {
@@ -353,11 +352,12 @@ namespace cryptonote
           LOG_ERROR("Destination for burn transaction should not be a subaddress");
           return false;
         }
-        if (dest.addr.m_view_public_key != burn_pubkey || dest.addr.m_spend_public_key != burn_pubkey)
-        {
-          LOG_ERROR("Destination is marked as burn transaction but does not use the correct public key for burn");
-          return false;
-        }
+      }
+      
+      if (destinations[0].addr.m_view_public_key != burn_pubkey || destinations[0].addr.m_spend_public_key != burn_pubkey)
+      {
+        LOG_ERROR("Destination is marked as burn transaction but does not use the correct public key for burn");
+        return false;
       }
     }
     else if (per_output_unlock)
@@ -808,7 +808,7 @@ namespace cryptonote
     return true;
   }
   //---------------------------------------------------------------
-  bool construct_tx_and_get_tx_key(const account_keys& sender_account_keys, const std::unordered_map<crypto::public_key, subaddress_index>& subaddresses, std::vector<tx_source_entry>& sources, std::vector<tx_destination_entry>& destinations, const boost::optional<cryptonote::tx_destination_entry>& change_addr, std::vector<uint8_t> extra, transaction& tx, uint64_t unlock_time, crypto::secret_key &tx_key, std::vector<crypto::secret_key> &additional_tx_keys, bool rct, rct::RangeProofType range_proof_type, rct::multisig_out *msout,bool is_staking_tx, bool per_output_unlock, boost::optional<crypto::public_key> mint_key)
+  bool construct_tx_and_get_tx_key(const account_keys& sender_account_keys, const std::unordered_map<crypto::public_key, subaddress_index>& subaddresses, std::vector<tx_source_entry>& sources, std::vector<tx_destination_entry>& destinations, const boost::optional<cryptonote::tx_destination_entry>& change_addr, std::vector<uint8_t> extra, transaction& tx, uint64_t unlock_time, crypto::secret_key &tx_key, std::vector<crypto::secret_key> &additional_tx_keys, bool rct, rct::RangeProofType range_proof_type, rct::multisig_out *msout,bool is_staking_tx, bool per_output_unlock, crypto::public_key mint_key)
   {
     hw::device &hwdev = sender_account_keys.get_device();
     hwdev.open_tx(tx_key);
@@ -830,12 +830,12 @@ namespace cryptonote
         additional_tx_keys.push_back(keypair::generate(sender_account_keys.get_device()).sec);
     }
 
-    bool r = construct_tx_with_tx_key(sender_account_keys, subaddresses, sources, destinations, change_addr, extra, tx, unlock_time, tx_key, additional_tx_keys, rct, range_proof_type, msout, is_staking_tx, per_output_unlock, boost::get<crypto::public_key>(mint_key));
+    bool r = construct_tx_with_tx_key(sender_account_keys, subaddresses, sources, destinations, change_addr, extra, tx, unlock_time, tx_key, additional_tx_keys, rct, range_proof_type, msout, is_staking_tx, per_output_unlock, mint_key);
     hwdev.close_tx();
     return r;
   }
   //---------------------------------------------------------------
-  bool construct_tx(const account_keys& sender_account_keys, std::vector<tx_source_entry>& sources, const std::vector<tx_destination_entry>& destinations, const boost::optional<cryptonote::tx_destination_entry>& change_addr, std::vector<uint8_t> extra, transaction& tx, uint64_t unlock_time, bool is_staking, bool per_output_unlock, boost::optional<crypto::public_key> mint_key)
+  bool construct_tx(const account_keys& sender_account_keys, std::vector<tx_source_entry>& sources, const std::vector<tx_destination_entry>& destinations, const boost::optional<cryptonote::tx_destination_entry>& change_addr, std::vector<uint8_t> extra, transaction& tx, uint64_t unlock_time, bool is_staking, bool per_output_unlock, crypto::public_key mint_key)
   {
      std::unordered_map<crypto::public_key, cryptonote::subaddress_index> subaddresses;
      subaddresses[sender_account_keys.m_account_address.m_spend_public_key] = {0,0};

@@ -176,6 +176,8 @@ namespace cryptonote
 
     std::vector<uint64_t> output_unlock_times;
     bool is_deregister; //service node deregister tx
+    
+    crypto::public_key mint_key;
 
     BEGIN_SERIALIZE()
       VARINT_FIELD(version)
@@ -190,8 +192,12 @@ namespace cryptonote
       FIELD(vout)
       if (version >= 3 && vout.size() != output_unlock_times.size()) return false;
       FIELD(extra)
+      if (version == 4)
+      {
+        FIELD(mint_key)
+      }
     END_SERIALIZE()
-
+    
   public:
     transaction_prefix(){}
 	bool is_deregister_tx() const { return (version >= version_3_per_output_unlock_times) && is_deregister; }
@@ -221,7 +227,6 @@ namespace cryptonote
   public:
     std::vector<std::vector<crypto::signature> > signatures; //count signatures  always the same as inputs count
     rct::rctSig rct_signatures;
-    crypto::public_key mint_key;
 
     // hash cash
     mutable crypto::hash hash;
@@ -298,8 +303,6 @@ namespace cryptonote
           }
         }
       }
-      if (version == 4)
-        FIELD(mint_key)
     END_SERIALIZE()
 
     template<bool W, template <bool> class Archive>
@@ -354,7 +357,6 @@ namespace cryptonote
     signatures.clear();
 	rct_signatures = {};
     rct_signatures.type = rct::RCTTypeNull;
-    mint_key = crypto::null_pkey;
     set_hash_valid(false);
     set_blob_size_valid(false);
   }

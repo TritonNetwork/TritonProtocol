@@ -161,6 +161,10 @@ namespace boost
     a & x.vin;
     a & x.vout;
     a & x.extra;
+    if (x.version == 4)
+    {
+      a & x.mint_key;
+    }
   }
 
   template <class Archive>
@@ -176,6 +180,10 @@ namespace boost
     a & x.vin;
     a & x.vout;
     a & x.extra;
+    if (x.version == 4)
+    {
+      a & x.mint_key;
+    }
     if (x.version == 1)
     {
       a & x.signatures;
@@ -186,8 +194,6 @@ namespace boost
       if (x.rct_signatures.type != rct::RCTTypeNull)
         a & x.rct_signatures.p;
     }
-    if (x.version == 4)
-      a & x.mint_key;
   }
 
   template <class Archive>

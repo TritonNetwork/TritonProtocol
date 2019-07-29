@@ -431,6 +431,13 @@ namespace cryptonote
     burn_seckey = *reinterpret_cast<const crypto::secret_key*>(parse_blob.data());
   }
   //---------------------------------------------------------------
+  void get_burn_pubkey(crypto::public_key& pubkey)
+  {
+    cryptonote::blobdata parse_blob;
+    string_tools::parse_hexstr_to_binbuff(std::string(BURN_PUBKEY), parse_blob);
+    pubkey = *reinterpret_cast<const crypto::public_key*>(parse_blob.data());
+  }
+  //---------------------------------------------------------------
   bool parse_tx_extra(const std::vector<uint8_t>& tx_extra, std::vector<tx_extra_field>& tx_extra_fields)
   {
     tx_extra_fields.clear();
