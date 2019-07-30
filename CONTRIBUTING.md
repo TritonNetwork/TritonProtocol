@@ -1,4 +1,4 @@
-# Contributing to Triton
+# Contributing to Equilibria
 
 A good way to help is to test, and report bugs. See
 [How to Report Bugs Effectively (by Simon Tatham)](https://www.chiark.greenend.org.uk/~sgtatham/bugs.html)
@@ -54,6 +54,8 @@ the previous paragraph is here.
 Copyright (c) 2009-2015 Pieter Hintjens.
 Copyright (c) 2017-2018 The Monero Project.
 Copyright (c) 2018-2019 The Triton Project.
+Copyright (c) 2018-2019 Equilibria
+
 
 
 This Specification is free software; you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation; either version 3 of the License, or (at your option) any later version.
@@ -70,8 +72,9 @@ The "Monero Maintainer Team" is defined in this document as the following users:
 - fluffypony
 - moneromooo
 - hyc
-The "Triton Maintainer Team" is defined in this document as the following users:
-- KrakN
+The "Equilibria Maintainer Team" is defined in this document as the following users:
+- Harrison Hesslink
+- CryptoChangmenets
 
 ## Goals
 
@@ -127,7 +130,7 @@ C4 is meant to provide a reusable optimal collaboration model for open source so
 - To request changes, a user SHOULD log an issue on the project Platform issue tracker.
 - The user or Contributor SHOULD write the issue by describing the problem they face or observe.
 - The user or Contributor SHOULD seek consensus on the accuracy of their observation, and the value of solving the problem.
-- Users SHALL NOT log feature requests, ideas, or suggestions unrelated to Triton/Monero code or Triton/Monero's dependency code or Triton/Monero's potential/future dependency code or research which successfully implements Triton/Monero.
+- Users SHALL NOT log feature requests, ideas, or suggestions unrelated to Equilibria/Monero code or Equilibria/Monero's dependency code or Equilibria/Monero's potential/future dependency code or research which successfully implements Equilibria/Monero.
 - Users SHALL NOT log any solutions to problems (verifiable or hypothetical) of which are not explicitly documented and/or not provable and/or cannot be reasonably proven.
 - Thus, the release history of the project SHALL be a list of meaningful issues logged and solved.
 - To work on an issue, a Contributor SHALL fork the project repository and then work on their forked repository.
@@ -135,8 +138,8 @@ C4 is meant to provide a reusable optimal collaboration model for open source so
 - A Contributor SHALL NOT commit changes directly to the project.
 - To discuss a patch, people MAY comment on the Platform pull request, on the commit, or elsewhere.
 - To accept or reject a patch, a Maintainer SHALL use the Platform interface.
-- Maintainers SHOULD NOT merge their own patches except in exceptional cases, such as non-responsiveness from other Maintainers for an extended period (more than 30 days) or unless urgent as defined by the Triton Maintainers Team.
-- Triton Maintainers SHALL NOT make value judgments on correct patches unless the Triton Maintainer (as may happen in rare circumstances) is a core code developer.
+- Maintainers SHOULD NOT merge their own patches except in exceptional cases, such as non-responsiveness from other Maintainers for an extended period (more than 30 days) or unless urgent as defined by the Equilibria Maintainers Team.
+- Equilibria Maintainers SHALL NOT make value judgments on correct patches unless the Equilibria Maintainer (as may happen in rare circumstances) is a core code developer.
 - The Contributor MAY tag an issue as "Ready" after making a pull request for the issue.
 - The user who created an issue SHOULD close the issue after checking the patch is successful.
 - Maintainers SHOULD ask for improvements to incorrect patches and SHOULD reject incorrect patches if the Contributor does not respond constructively.

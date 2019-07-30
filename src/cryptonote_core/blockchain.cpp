@@ -2780,7 +2780,7 @@ bool Blockchain::check_tx_inputs(transaction& tx, tx_verification_context &tvc, 
 				}
 				else
 				{
-					MDEBUG("Found unmixable output! This should never happen in Triton!");
+					MDEBUG("Found unmixable output! This should never happen in Equilibria!");
 					uint64_t n_outputs = m_db->get_num_outputs(in_to_key.amount);
 					MDEBUG("output size " << print_money(in_to_key.amount) << ": " << n_outputs << " available");
 					// n_outputs includes the output we're considering
@@ -4101,7 +4101,7 @@ void Blockchain::check_against_checkpoints(const checkpoints& points, bool enfor
       }
       else
       {
-        LOG_ERROR("WARNING: local blockchain failed to pass a TritonPulse checkpoint, and you could be on a fork. You should either sync up from scratch, OR download a fresh blockchain bootstrap, OR enable checkpoint enforcing with the --enforce-dns-checkpointing command-line option");
+        LOG_ERROR("WARNING: local blockchain failed to pass a Equilibria checkpoint, and you could be on a fork. You should either sync up from scratch, OR download a fresh blockchain bootstrap, OR enable checkpoint enforcing with the --enforce-dns-checkpointing command-line option");
       }
     }
   }

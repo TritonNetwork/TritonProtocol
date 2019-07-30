@@ -96,9 +96,9 @@ using namespace cryptonote;
 #define CHACHA8_KEY_TAIL 0x8c
 #define CACHE_KEY_TAIL 0x8d
 
-#define UNSIGNED_TX_PREFIX "Triton unsigned tx set\004"
-#define SIGNED_TX_PREFIX "Triton signed tx set\004"
-#define MULTISIG_UNSIGNED_TX_PREFIX "Triton multisig unsigned tx set\001"
+#define UNSIGNED_TX_PREFIX "Equilibria unsigned tx set\004"
+#define SIGNED_TX_PREFIX "Equilibria signed tx set\004"
+#define MULTISIG_UNSIGNED_TX_PREFIX "Equilibria multisig unsigned tx set\001"
 
 #define RECENT_OUTPUT_RATIO (0.5) // 50% of outputs are from the recent zone
 #define RECENT_OUTPUT_DAYS (1.8) // last 1.8 day makes up the recent zone (taken from monerolink.pdf, Miller et al)
@@ -112,11 +112,11 @@ using namespace cryptonote;
 #define SUBADDRESS_LOOKAHEAD_MAJOR 50
 #define SUBADDRESS_LOOKAHEAD_MINOR 200
 
-#define KEY_IMAGE_EXPORT_FILE_MAGIC "Triton key image export\002"
+#define KEY_IMAGE_EXPORT_FILE_MAGIC "Equilibria key image export\002"
 
-#define MULTISIG_EXPORT_FILE_MAGIC "Triton multisig export\001"
+#define MULTISIG_EXPORT_FILE_MAGIC "Equilibria multisig export\001"
 
-#define OUTPUT_EXPORT_FILE_MAGIC "Triton output export\003"
+#define OUTPUT_EXPORT_FILE_MAGIC "Equilibria output export\003"
 
 #define SEGREGATION_FORK_HEIGHT 99999999
 #define TESTNET_SEGREGATION_FORK_HEIGHT 99999999
@@ -1316,8 +1316,8 @@ void wallet2::scan_output(const cryptonote::transaction &tx, bool miner_tx, cons
 		if (!m_encrypt_keys_after_refresh)
 		{
 			boost::optional<epee::wipeable_string> pwd = m_callback->on_get_password("output received");
-			THROW_WALLET_EXCEPTION_IF(!pwd, error::password_needed, tr("Password is needed to compute key image for incoming triton"));
-			THROW_WALLET_EXCEPTION_IF(!verify_password(*pwd), error::password_needed, tr("Invalid password: password is needed to compute key image for incoming triton"));
+			THROW_WALLET_EXCEPTION_IF(!pwd, error::password_needed, tr("Password is needed to compute key image for incoming Equilibria"));
+			THROW_WALLET_EXCEPTION_IF(!verify_password(*pwd), error::password_needed, tr("Invalid password: password is needed to compute key image for incoming Equilibria"));
 			decrypt_keys(*pwd);
 			m_encrypt_keys_after_refresh = *pwd;
 		}
@@ -6668,15 +6668,15 @@ bool wallet2::check_stake_allowed(const crypto::public_key& sn_key, const crypto
 
   /// b. Check if the amount is too small
   if (amount < min_contrib_total) {
-      LOG_ERROR("You must contribute at least " << print_money(min_contrib_total) << " triton to become a contributor for this service node.");
+      LOG_ERROR("You must contribute at least " << print_money(min_contrib_total) << " Equilibria to become a contributor for this service node.");
       return false;
   }
 
   /// c. Check if the amount is too big
   if (amount > max_contrib_total)
   {
-    LOG_ERROR("You may only contribute up to ") << print_money(max_contrib_total) << tr(" more triton to this service node") << std::endl;
-    LOG_ERROR("Reducing your stake from ") << print_money(amount) << tr(" to ") << print_money(max_contrib_total) << std::endl;
+    LOG_ERROR("You may only contribute up to " << print_money(max_contrib_total) << tr(" more Equilibria to this service node") << std::endl);
+    LOG_ERROR("Reducing your stake from " << print_money(amount) << tr(" to ") << print_money(max_contrib_total) << std::endl);
     amount = max_contrib_total;
   }
 
@@ -11601,7 +11601,7 @@ std::string wallet2::make_uri(const std::string &address, const std::string &pay
     }
   }
 
-  std::string uri = "triton:" + address;
+  std::string uri = "equilibria:" + address;
   unsigned int n_fields = 0;
 
   if (!payment_id.empty())
@@ -11630,9 +11630,9 @@ std::string wallet2::make_uri(const std::string &address, const std::string &pay
 //----------------------------------------------------------------------------------------------------
 bool wallet2::parse_uri(const std::string &uri, std::string &address, std::string &payment_id, uint64_t &amount, std::string &tx_description, std::string &recipient_name, std::vector<std::string> &unknown_parameters, std::string &error)
 {
-  if (uri.substr(0, 7) != "triton:")
+  if (uri.substr(0, 7) != "equilibria:")
   {
-    error = std::string("URI has wrong scheme (expected \"triton:\"): ") + uri;
+    error = std::string("URI has wrong scheme (expected \"equilibria:\"): ") + uri;
     return false;
   }
 

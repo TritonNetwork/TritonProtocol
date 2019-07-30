@@ -1096,11 +1096,11 @@ void add_tx_secret_key_to_tx_extra(std::vector<uint8_t>& tx_extra, const crypto:
     switch (std::atomic_load(&default_decimal_point))
     {
       case 4:
-        return "triton";
+        return "equilibria";
       case 2:
-        return "nenoton";
+        return "nanobria";
       case 0:
-        return "picton";
+        return "picobria";
       default:
         ASSERT_MES_AND_THROW("Invalid decimal point specification: " << default_decimal_point);
     }

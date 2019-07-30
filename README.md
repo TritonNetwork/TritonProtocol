@@ -1,20 +1,20 @@
-# Triton
+# Equilibria
 ![Image of Triton](https://cdn.discordapp.com/attachments/402595075949068288/544379818926538763/ProjectTritonwordlogov2.png)
 Freedom for Streamers and Professional Gamers
 
-Project Triton [XTRI] is developing innovative donation platforms for the Online Streaming and ESports industries through blockchain technology
+Equilibria [XEQ]
 
 ### For announcements:
-[Website](https://xtri.network)  
-[Twitter](https://twitter.com/TritonNetwork)  
+[Website](https://equilibria.network)  
+[Twitter](https://twitter.com/EquilibriaNetwork)  
 [Discord](https://discord.gg/7FWufDt)
 
 # Sao
 <p align="center">
   <img src="https://xtri.network/wp-content/uploads/2019/01/SAOTEXTSMALL-2.png" alt="Sao"/>
 </p>
-A new journey for Project Triton. The SAO stablecoin.
-SAO is a decentralized stablecoin based on mint and burn protocol called the Sao Dollar (SAO), which is minted from our established volatile coin Triton (XTRI).
+A new journey for Equilibria. The USDE stablecoin.
+Equilibria Dollar is a decentralized stablecoin based on mint and burn protocol called the Equilibria Dollar (USDE), which is minted from our established volatile coin Equilibria (XEQ).
 
 Check out the announcement [here](https://medium.com/@projecttriton/new-journey-the-sao-stablecoin-da6f9119a410)  
 Check out the paper [here](https://bit.ly/SAOTechinicalPaper)
@@ -28,9 +28,9 @@ Portions Copyright (c) 2012-2013 The Cryptonote developers.
 
 ## Current maintainer
 - Harrison Hesslink (krakn)
+- CryptoChangements
 
-
-**Anyone is welcome to contribute to Triton's codebase!** If you have a fix or code change, feel free to submit it as a pull request directly to the "master" branch. In cases where the change is relatively small or does not affect other parts of the codebase it may be merged in immediately by any one of the collaborators. On the other hand, if the change is particularly large or complex, it is expected that it will be discussed at length either well in advance of the pull request being submitted, or even directly on the pull request.
+**Anyone is welcome to contribute to Equilibria's codebase!** If you have a fix or code change, feel free to submit it as a pull request directly to the "master" branch. In cases where the change is relatively small or does not affect other parts of the codebase it may be merged in immediately by any one of the collaborators. On the other hand, if the change is particularly large or complex, it is expected that it will be discussed at length either well in advance of the pull request being submitted, or even directly on the pull request.
 
 
 
@@ -40,7 +40,7 @@ See [LICENSE](LICENSE).
 
 If you want to help out, see [CONTRIBUTING](CONTRIBUTING.md) for a set of guidelines.
 
-## Compiling Triton from source
+## Compiling Equilibria from source
 
 ### Dependencies
 
@@ -86,15 +86,15 @@ Debian / Ubuntu one liner for all dependencies
 
 Clone recursively to pull-in needed submodule(s):
 
-`$ git clone --recursive https://github.com/TritonNetwork/TritonProtocol triton`
+`$ git clone --recursive https://github.com/TritonNetwork/TritonProtocol bria`
 
 If you already have a repo cloned, initialize and update:
 
-`$ cd triton && git submodule init && git submodule update`
+`$ cd bria && git submodule init && git submodule update`
 
 ### Build instructions
 
-Triton uses the CMake build system and a top-level [Makefile](Makefile) that
+Equilibria uses the CMake build system and a top-level [Makefile](Makefile) that
 invokes cmake commands as needed.
 
 #### On Linux and OS X
@@ -102,7 +102,7 @@ invokes cmake commands as needed.
 * Install the dependencies
 * Change to the root of the source code directory, change to the most recent release branch, and build:
 
-        cd triton
+        cd bria
         git checkout v4.0.5
         make
 
@@ -115,16 +115,16 @@ invokes cmake commands as needed.
     https://github.com/zeromq/cppzmq to `/usr/local/include` should fix that error.
     
     *Note*: The instructions above will compile the most stable release of the
-    Triton software. If you would like to use and test the most recent software,
+    Equilibria software. If you would like to use and test the most recent software,
     use ```git checkout master```. The master branch may contain updates that are
     both unstable and incompatible with release software, though testing is always 
     encouraged. 
 
 * The resulting executables can be found in `build/release/bin`
 
-* Add `PATH="$PATH:$HOME/triton/build/Linux/release/bin"` to `.profile`
+* Add `PATH="$PATH:$HOME/bria/build/Linux/release/bin"` to `.profile`
 
-* Run Triton with `tritond --detach`
+* Run Equilibria with `briad --detach`
 
 * **Optional**: build and run the test suite to verify the binaries:
 
@@ -188,15 +188,15 @@ application.
 
 * To git clone, run:
 
-        git clone --recursive https://github.com/TritonNetwork/TritonProtocol.git triton
+        git clone --recursive https://github.com/TritonNetwork/TritonProtocol.git bria
 
 **Building**
 
 * Change to the cloned directory, run:
 	
-        cd triton
+        cd bria
 	
-        git checkout v3.0.0
+        git checkout v5.0.0
 
 * If you are on a 64-bit system, run:
 

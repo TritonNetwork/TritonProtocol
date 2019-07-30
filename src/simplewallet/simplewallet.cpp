@@ -146,7 +146,7 @@ namespace
   const command_line::arg_descriptor<bool> arg_non_deterministic = {"non-deterministic", sw::tr("Generate non-deterministic view and spend keys"), false};
   const command_line::arg_descriptor<bool> arg_allow_mismatched_daemon_version = {"allow-mismatched-daemon-version", sw::tr("Allow communicating with a daemon that uses a different RPC version"), false};
   const command_line::arg_descriptor<uint64_t> arg_restore_height = {"restore-height", sw::tr("Restore from specific blockchain height"), 0};
-  const command_line::arg_descriptor<bool> arg_do_not_relay = {"do-not-relay", sw::tr("The newly created transaction will not be relayed to the triton network"), false};
+  const command_line::arg_descriptor<bool> arg_do_not_relay = {"do-not-relay", sw::tr("The newly created transaction will not be relayed to the Equilibria network"), false};
   const command_line::arg_descriptor<bool> arg_create_address_file = {"create-address-file", sw::tr("Create an address file for new wallets"), false};
   const command_line::arg_descriptor<std::string> arg_subaddress_lookahead = {"subaddress-lookahead", tools::wallet2::tr("Set subaddress lookahead sizes to <major>:<minor>"), ""};
   const command_line::arg_descriptor<bool> arg_use_english_language_names = {"use-english-language-names", sw::tr("Display English language names"), false};
@@ -358,7 +358,7 @@ namespace
     std::stringstream prompt;
     prompt << sw::tr("For URL: ") << url
            << ", " << dnssec_str << std::endl
-           << sw::tr(" Triton Address = ") << addresses[0]
+           << sw::tr(" Equilibria Address = ") << addresses[0]
            << std::endl
            << sw::tr("Is this OK? (Y/n) ")
     ;
@@ -1404,7 +1404,7 @@ bool simple_wallet::export_raw_multisig(const std::vector<std::string> &args)
     for (auto &ptx: txs.m_ptx)
     {
       const crypto::hash txid = cryptonote::get_transaction_hash(ptx.tx);
-      const std::string filename = std::string("raw_multisig_triton_tx_") + epee::string_tools::pod_to_hex(txid);
+      const std::string filename = std::string("raw_multisig_equilibria_tx_") + epee::string_tools::pod_to_hex(txid);
       if (!filenames.empty())
         filenames += ", ";
       filenames += filename;
@@ -1825,7 +1825,7 @@ bool simple_wallet::save_known_rings(const std::vector<std::string> &args)
 
 bool simple_wallet::version(const std::vector<std::string> &args)
 {
-  message_writer() << "Triton '" << MONERO_RELEASE_NAME << "' (v" << MONERO_VERSION_FULL << ")";
+  message_writer() << "Equilibria '" << MONERO_RELEASE_NAME << "' (v" << MONERO_VERSION_FULL << ")";
   return true;
 }
 
@@ -2062,11 +2062,11 @@ bool simple_wallet::set_unit(const std::vector<std::string> &args/* = std::vecto
   const std::string &unit = args[1];
   unsigned int decimal_point = CRYPTONOTE_DISPLAY_DECIMAL_POINT;
 
-  if (unit == "triton")
+  if (unit == "equilibria")
     decimal_point = CRYPTONOTE_DISPLAY_DECIMAL_POINT;
-  else if (unit == "nanoton")
+  else if (unit == "nanobria")
     decimal_point = CRYPTONOTE_DISPLAY_DECIMAL_POINT - 2;
-  else if (unit == "picton")
+  else if (unit == "picobria")
     decimal_point = 0;
   else
   {
@@ -3698,7 +3698,7 @@ boost::optional<epee::wipeable_string> simple_wallet::new_wallet(const boost::pr
     "To start synchronizing with the daemon, use the \"refresh\" command.\n"
     "Use the \"help\" command to see the list of available commands.\n"
     "Use \"help <command>\" to see a command's documentation.\n"
-    "Always use the \"exit\" command when closing triton-wallet-cli to save \n"
+    "Always use the \"exit\" command when closing equilibria-wallet-cli to save \n"
     "your current session's state. Otherwise, you might need to synchronize \n"
     "your wallet again (your wallet keys are NOT at risk in any case).\n")
   ;
@@ -4459,9 +4459,9 @@ bool simple_wallet::estimate_sn_rewards(const std::vector<std::string>& args/* =
 	const auto& response = m_wallet->get_service_nodes(empty);
     if (response.service_node_states.size() != 1){
         success_msg_writer() << tr("Number of Service Nodes on Network: ") << response.service_node_states.size();
-        success_msg_writer() << tr("Expected Reward: (1 day) ") << print_money((480 / response.service_node_states.size()) * last_block_reward * num_nodes) << tr(" XTRI");
-        success_msg_writer() << tr("\t \t (7 day) ") << print_money(( 3360 / response.service_node_states.size()) * last_block_reward * num_nodes) << tr(" XTRI");
-        success_msg_writer() << tr("\t \t (31 day) ") << print_money(( 14880 / response.service_node_states.size()) * last_block_reward * num_nodes) << tr(" XTRI");
+        success_msg_writer() << tr("Expected Reward: (1 day) ") << print_money((480 / response.service_node_states.size()) * last_block_reward * num_nodes) << tr(" XEQ");
+        success_msg_writer() << tr("\t \t (7 day) ") << print_money(( 3360 / response.service_node_states.size()) * last_block_reward * num_nodes) << tr(" XEQ");
+        success_msg_writer() << tr("\t \t (31 day) ") << print_money(( 14880 / response.service_node_states.size()) * last_block_reward * num_nodes) << tr(" XEQ");
     }
   } 
   catch (const std::exception &e)
@@ -4988,7 +4988,7 @@ bool simple_wallet::transfer_main(int transfer_type, const std::vector<std::stri
     }
     else
     {
-      if (boost::starts_with(local_args[i], "triton:"))
+      if (boost::starts_with(local_args[i], "equilibria:"))
         fail_msg_writer() << tr("Invalid last argument: ") << local_args.back() << ": " << error;
       else
         fail_msg_writer() << tr("Invalid last argument: ") << local_args.back();
@@ -5226,26 +5226,26 @@ bool simple_wallet::transfer_main(int transfer_type, const std::vector<std::stri
     // actually commit the transactions
     if (m_wallet->multisig())
     {
-      bool r = m_wallet->save_multisig_tx(ptx_vector, "multisig_triton_tx");
+      bool r = m_wallet->save_multisig_tx(ptx_vector, "multisig_equilibria_tx");
       if (!r)
       {
         fail_msg_writer() << tr("Failed to write transaction(s) to file");
       }
       else
       {
-        success_msg_writer(true) << tr("Unsigned transaction(s) successfully written to file: ") << "multisig_triton_tx";
+        success_msg_writer(true) << tr("Unsigned transaction(s) successfully written to file: ") << "multisig_equilibria_tx";
       }
     }
     else if (m_wallet->watch_only())
     {
-      bool r = m_wallet->save_tx(ptx_vector, "unsigned_triton_tx");
+      bool r = m_wallet->save_tx(ptx_vector, "unsigned_equilibria_tx");
       if (!r)
       {
         fail_msg_writer() << tr("Failed to write transaction(s) to file");
       }
       else
       {
-        success_msg_writer(true) << tr("Unsigned transaction(s) successfully written to file: ") << "unsigned_triton_tx";
+        success_msg_writer(true) << tr("Unsigned transaction(s) successfully written to file: ") << "unsigned_equilibria_tx";
       }
     }
     else
@@ -5491,26 +5491,26 @@ bool simple_wallet::register_service_node_main(
 		// actually commit the transactions
 		if (m_wallet->multisig())
 		{
-			bool r = m_wallet->save_multisig_tx(ptx_vector, "multisig_triton_tx");
+			bool r = m_wallet->save_multisig_tx(ptx_vector, "multisig_equilibria_tx");
 			if (!r)
 			{
 				fail_msg_writer() << tr("Failed to write transaction(s) to file");
 			}
 			else
 			{
-				success_msg_writer(true) << tr("Unsigned transaction(s) successfully written to file: ") << "multisig_triton_tx";
+				success_msg_writer(true) << tr("Unsigned transaction(s) successfully written to file: ") << "multisig_equilibria_tx";
 			}
 		}
 		else if (m_wallet->watch_only())
 		{
-			bool r = m_wallet->save_tx(ptx_vector, "unsigned_triton_tx");
+			bool r = m_wallet->save_tx(ptx_vector, "unsigned_equilibria_tx");
 			if (!r)
 			{
 				fail_msg_writer() << tr("Failed to write transaction(s) to file");
 			}
 			else
 			{
-				success_msg_writer(true) << tr("Unsigned transaction(s) successfully written to file: ") << "unsigned_triton_tx";
+				success_msg_writer(true) << tr("Unsigned transaction(s) successfully written to file: ") << "unsigned_equilibria_tx";
 			}
 		}
 		else
@@ -5557,7 +5557,7 @@ static const char ASK_PASSWORD_MUST_BE_OFF_MSG[] = "Cannot autostake with ask-pa
 static bool prompt_autostaking_non_trusted_contributors_warning()
 {
 	success_msg_writer(false/*color*/)
-		<< tr("Auto staking to a reserved service node with non-trusted contributors may lock up your triton for the staking duration "
+		<< tr("Auto staking to a reserved service node with non-trusted contributors may lock up your Equilibria for the staking duration "
 			"if they do not restake after service node expiration.")
 		<< tr("\n\nIf this behaviour is not desirable, please reuse the staking command without the auto command");
 	bool result = input_line_and_parse_yes_no_result("Accept auto staking towards a reserved service node");
@@ -5831,14 +5831,14 @@ bool simple_wallet::stake_main(
 	 }
 	 if (amount > can_contrib_total)
 	 {
-		 success_msg_writer() << tr("You may only contribute up to ") << print_money(can_contrib_total) << tr(" more triton to this service node");
+		 success_msg_writer() << tr("You may only contribute up to ") << print_money(can_contrib_total) << tr(" more Equilibria to this service node");
 		 success_msg_writer() << tr("Reducing your stake from ") << print_money(amount) << tr(" to ") << print_money(can_contrib_total);
 		 amount = can_contrib_total;
 	 }
 	 if (amount < must_contrib_total)
 	 {
 		if (is_preexisting_contributor)
-			success_msg_writer() << tr("Warning: You must contribute ") << print_money(must_contrib_total) << tr(" triton to meet your registration requirements for this service node");
+			success_msg_writer() << tr("Warning: You must contribute ") << print_money(must_contrib_total) << tr(" Equilibria to meet your registration requirements for this service node");
 
 		 if (amount == 0)
 		 {
@@ -5856,7 +5856,7 @@ bool simple_wallet::stake_main(
 			 else if (!is_preexisting_contributor || autostake)
 			 {
 				 if (!is_preexisting_contributor)
-					 fail_msg_writer() << tr("You must contribute atleast ") << print_money(must_contrib_total) << tr(" triton to become a contributor for this service node");
+					 fail_msg_writer() << tr("You must contribute atleast ") << print_money(must_contrib_total) << tr(" Equilibria to become a contributor for this service node");
 
 				 return true;
 			 }
@@ -5962,26 +5962,26 @@ bool simple_wallet::stake_main(
     // actually commit the transactions
     if (m_wallet->multisig())
     {
-      bool r = m_wallet->save_multisig_tx(ptx_vector, "multisig_triton_tx");
+      bool r = m_wallet->save_multisig_tx(ptx_vector, "multisig_equilibria_tx");
       if (!r)
       {
         fail_msg_writer() << tr("Failed to write transaction(s) to file");
       }
       else
       {
-        success_msg_writer(true) << tr("Unsigned transaction(s) successfully written to file: ") << "multisig_triton_tx";
+        success_msg_writer(true) << tr("Unsigned transaction(s) successfully written to file: ") << "multisig_equilibria_tx";
       }
     }
     else if (m_wallet->watch_only())
     {
-      bool r = m_wallet->save_tx(ptx_vector, "unsigned_triton_tx");
+      bool r = m_wallet->save_tx(ptx_vector, "unsigned_equilibria_tx");
       if (!r)
       {
         fail_msg_writer() << tr("Failed to write transaction(s) to file");
       }
       else
       {
-        success_msg_writer(true) << tr("Unsigned transaction(s) successfully written to file: ") << "unsigned_triton_tx";
+        success_msg_writer(true) << tr("Unsigned transaction(s) successfully written to file: ") << "unsigned_equilibria_tx";
       }
     }
     else
@@ -6137,15 +6137,15 @@ bool simple_wallet::stake(const std::vector<std::string> &args_)
 
 		if (amount_fraction == 0) // Fixed amount loki warning
 		{
-			success_msg_writer(false/*color*/) << tr("You're autostaking to a service node using a fixed amount of triton: ")
+			success_msg_writer(false/*color*/) << tr("You're autostaking to a service node using a fixed amount of Equilibria: ")
 				<< print_money(amount)
 				<< tr(".\nThe staking requirement will be different after the service node expires. Staking a fixed amount "
 					"may change your percentage of stake towards the service node and consequently your block reward allocation.")
 				<< tr("\n\nIf this behaviour is not desirable, please reuse the staking command with a percentage sign.");
 
-			if (!input_line_and_parse_yes_no_result("Accept staking with a fixed amount of triton"))
+			if (!input_line_and_parse_yes_no_result("Accept staking with a fixed amount of Equilibria"))
 			{
-				fail_msg_writer() << tr("Staking transaction with fixed triton specified cancelled.");
+				fail_msg_writer() << tr("Staking transaction with fixed Equilibria specified cancelled.");
 				return true;
 			}
 
@@ -6235,26 +6235,26 @@ bool simple_wallet::sweep_unmixable(const std::vector<std::string> &args_)
     // actually commit the transactions
     if (m_wallet->multisig())
     {
-      bool r = m_wallet->save_multisig_tx(ptx_vector, "multisig_triton_tx");
+      bool r = m_wallet->save_multisig_tx(ptx_vector, "multisig_equilibria_tx");
       if (!r)
       {
         fail_msg_writer() << tr("Failed to write transaction(s) to file");
       }
       else
       {
-        success_msg_writer(true) << tr("Unsigned transaction(s) successfully written to file: ") << "multisig_triton_tx";
+        success_msg_writer(true) << tr("Unsigned transaction(s) successfully written to file: ") << "multisig_equilibria_tx";
       }
     }
     else if (m_wallet->watch_only())
     {
-      bool r = m_wallet->save_tx(ptx_vector, "unsigned_triton_tx");
+      bool r = m_wallet->save_tx(ptx_vector, "unsigned_equilibria_tx");
       if (!r)
       {
         fail_msg_writer() << tr("Failed to write transaction(s) to file");
       }
       else
       {
-        success_msg_writer(true) << tr("Unsigned transaction(s) successfully written to file: ") << "unsigned_triton_tx";
+        success_msg_writer(true) << tr("Unsigned transaction(s) successfully written to file: ") << "unsigned_equilibria_tx";
       }
     }
     else
@@ -6558,26 +6558,26 @@ bool simple_wallet::sweep_main(uint64_t below, bool locked, const std::vector<st
     // actually commit the transactions
     if (m_wallet->multisig())
     {
-      bool r = m_wallet->save_multisig_tx(ptx_vector, "multisig_triton_tx");
+      bool r = m_wallet->save_multisig_tx(ptx_vector, "multisig_equilibria_tx");
       if (!r)
       {
         fail_msg_writer() << tr("Failed to write transaction(s) to file");
       }
       else
       {
-        success_msg_writer(true) << tr("Unsigned transaction(s) successfully written to file: ") << "multisig_triton_tx";
+        success_msg_writer(true) << tr("Unsigned transaction(s) successfully written to file: ") << "multisig_equilibria_tx";
       }
     }
     else if (m_wallet->watch_only())
     {
-      bool r = m_wallet->save_tx(ptx_vector, "unsigned_triton_tx");
+      bool r = m_wallet->save_tx(ptx_vector, "unsigned_equilibria_tx");
       if (!r)
       {
         fail_msg_writer() << tr("Failed to write transaction(s) to file");
       }
       else
       {
-        success_msg_writer(true) << tr("Unsigned transaction(s) successfully written to file: ") << "unsigned_triton_tx";
+        success_msg_writer(true) << tr("Unsigned transaction(s) successfully written to file: ") << "unsigned_equilibria_tx";
       }
     }
     else
@@ -6790,26 +6790,26 @@ bool simple_wallet::sweep_single(const std::vector<std::string> &args_)
     // actually commit the transactions
     if (m_wallet->multisig())
     {
-      bool r = m_wallet->save_multisig_tx(ptx_vector, "multisig_triton_tx");
+      bool r = m_wallet->save_multisig_tx(ptx_vector, "multisig_equilibria_tx");
       if (!r)
       {
         fail_msg_writer() << tr("Failed to write transaction(s) to file");
       }
       else
       {
-        success_msg_writer(true) << tr("Unsigned transaction(s) successfully written to file: ") << "multisig_triton_tx";
+        success_msg_writer(true) << tr("Unsigned transaction(s) successfully written to file: ") << "multisig_equilibria_tx";
       }
     }
     else if (m_wallet->watch_only())
     {
-      bool r = m_wallet->save_tx(ptx_vector, "unsigned_triton_tx");
+      bool r = m_wallet->save_tx(ptx_vector, "unsigned_equilibria_tx");
       if (!r)
       {
         fail_msg_writer() << tr("Failed to write transaction(s) to file");
       }
       else
       {
-        success_msg_writer(true) << tr("Unsigned transaction(s) successfully written to file: ") << "unsigned_triton_tx";
+        success_msg_writer(true) << tr("Unsigned transaction(s) successfully written to file: ") << "unsigned_equilibria_tx";
       }
     }
     else
@@ -7093,7 +7093,7 @@ bool simple_wallet::sign_transfer(const std::vector<std::string> &args_)
   std::vector<tools::wallet2::pending_tx> ptx;
   try
   {
-    bool r = m_wallet->sign_tx("unsigned_triton_tx", "signed_triton_tx", ptx, [&](const tools::wallet2::unsigned_tx_set &tx){ return accept_loaded_tx(tx); }, export_raw);
+    bool r = m_wallet->sign_tx("unsigned_equilibria_tx", "signed_equilibria_tx", ptx, [&](const tools::wallet2::unsigned_tx_set &tx){ return accept_loaded_tx(tx); }, export_raw);
     if (!r)
     {
       fail_msg_writer() << tr("Failed to sign transaction");
@@ -7113,7 +7113,7 @@ bool simple_wallet::sign_transfer(const std::vector<std::string> &args_)
       txids_as_text += (", ");
     txids_as_text += epee::string_tools::pod_to_hex(get_transaction_hash(t.tx));
   }
-  success_msg_writer(true) << tr("Transaction successfully signed to file ") << "signed_triton_tx" << ", txid " << txids_as_text;
+  success_msg_writer(true) << tr("Transaction successfully signed to file ") << "signed_equilibria_tx" << ", txid " << txids_as_text;
   if (export_raw)
   {
     std::string rawfiles_as_text;
@@ -7121,7 +7121,7 @@ bool simple_wallet::sign_transfer(const std::vector<std::string> &args_)
     {
       if (i > 0)
         rawfiles_as_text += ", ";
-      rawfiles_as_text += "signed_triton_tx_raw" + (ptx.size() == 1 ? "" : ("_" + std::to_string(i)));
+      rawfiles_as_text += "signed_equilibria_tx_raw" + (ptx.size() == 1 ? "" : ("_" + std::to_string(i)));
     }
     success_msg_writer(true) << tr("Transaction raw hex data exported to ") << rawfiles_as_text;
   }
@@ -7141,7 +7141,7 @@ bool simple_wallet::submit_transfer(const std::vector<std::string> &args_)
   try
   {
     std::vector<tools::wallet2::pending_tx> ptx_vector;
-    bool r = m_wallet->load_tx("signed_triton_tx", ptx_vector, [&](const tools::wallet2::signed_tx_set &tx){ return accept_loaded_tx(tx); });
+    bool r = m_wallet->load_tx("signed_equilibria_tx", ptx_vector, [&](const tools::wallet2::signed_tx_set &tx){ return accept_loaded_tx(tx); });
     if (!r)
     {
       fail_msg_writer() << tr("Failed to load transaction from file");
@@ -7294,7 +7294,7 @@ bool simple_wallet::get_tx_proof(const std::vector<std::string> &args)
   try
   {
     std::string sig_str = m_wallet->get_tx_proof(txid, info.address, info.is_subaddress, args.size() == 3 ? args[2] : "");
-    const std::string filename = "triton_tx_proof";
+    const std::string filename = "equilibria_tx_proof";
     if (epee::file_io_utils::save_string_to_file(filename, sig_str))
       success_msg_writer() << tr("signature file saved to: ") << filename;
     else
@@ -7509,7 +7509,7 @@ bool simple_wallet::get_spend_proof(const std::vector<std::string> &args)
   try
   {
     const std::string sig_str = m_wallet->get_spend_proof(txid, args.size() == 2 ? args[1] : "");
-    const std::string filename = "triton_spend_proof";
+    const std::string filename = "equilibria_spend_proof";
     if (epee::file_io_utils::save_string_to_file(filename, sig_str))
       success_msg_writer() << tr("signature file saved to: ") << filename;
     else
@@ -7604,7 +7604,7 @@ bool simple_wallet::get_reserve_proof(const std::vector<std::string> &args)
   try
   {
     const std::string sig_str = m_wallet->get_reserve_proof(account_minreserve, args.size() == 2 ? args[1] : "");
-    const std::string filename = "triton_reserve_proof";
+    const std::string filename = "equilibria_reserve_proof";
     if (epee::file_io_utils::save_string_to_file(filename, sig_str))
       success_msg_writer() << tr("signature file saved to: ") << filename;
     else
@@ -9296,7 +9296,7 @@ void simple_wallet::commit_or_save(std::vector<tools::wallet2::pending_tx>& ptx_
       cryptonote::blobdata blob;
       tx_to_blob(ptx.tx, blob);
       const std::string blob_hex = epee::string_tools::buff_to_hex_nodelimer(blob);
-      const std::string filename = "raw_triton_tx" + (ptx_vector.size() == 1 ? "" : ("_" + std::to_string(i++)));
+      const std::string filename = "raw_equilibria_tx" + (ptx_vector.size() == 1 ? "" : ("_" + std::to_string(i++)));
       if (epee::file_io_utils::save_string_to_file(filename, blob_hex))
         success_msg_writer(true) << tr("Transaction successfully saved to ") << filename << tr(", txid ") << txid;
       else
@@ -9354,12 +9354,12 @@ int main(int argc, char* argv[])
   bool should_terminate = false;
   std::tie(vm, should_terminate) = wallet_args::main(
    argc, argv,
-   "triton-wallet-cli [--wallet-file=<file>|--generate-new-wallet=<file>] [<COMMAND>]",
-    sw::tr("This is the command line triton wallet. It needs to connect to a triton\ndaemon to work correctly.\nWARNING: Do not reuse your triton keys on another fork, UNLESS this fork has key reuse mitigations built in. Doing so will harm your privacy."),
+   "equilibria-wallet-cli [--wallet-file=<file>|--generate-new-wallet=<file>] [<COMMAND>]",
+    sw::tr("This is the command line Equilibria wallet. It needs to connect to a Equilibria\ndaemon to work correctly.\nWARNING: Do not reuse your Equilibria keys on another fork, UNLESS this fork has key reuse mitigations built in. Doing so will harm your privacy."),
     desc_params,
     positional_options,
     [](const std::string &s, bool emphasis){ tools::scoped_message_writer(emphasis ? epee::console_color_white : epee::console_color_default, true) << s; },
-    "triton-wallet-cli.log"
+    "equilibria-wallet-cli.log"
   );
 
   if (!vm)
