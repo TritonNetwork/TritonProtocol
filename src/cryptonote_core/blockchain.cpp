@@ -1388,7 +1388,7 @@ bool Blockchain::create_block_template(block& b, const account_public_address& m
       b.ribbon_red = 0;
       LOG_PRINT_L3("Not enough data for ribbon red, setting to zero");
     }
-  } */
+  }
   
   diffic = get_difficulty_for_next_block();
   CHECK_AND_ASSERT_MES(diffic, false, "difficulty overhead.");
