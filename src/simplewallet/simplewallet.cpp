@@ -4370,60 +4370,83 @@ bool simple_wallet::refresh(const std::vector<std::string>& args)
 //----------------------------------------------------------------------------------------------------
 bool simple_wallet::show_balance_unlocked(bool detailed)
 {
-	std::string extra;
-	if (m_wallet->has_multisig_partial_key_images())
-		extra = tr(" (Some owned outputs have partial key images - import_multisig_info needed)");
-	else if (m_wallet->has_unknown_key_images())
-		extra += tr(" (Some owned outputs have missing key images - import_key_images needed)");
+  std::string extra;
+  if (m_wallet->has_multisig_partial_key_images())
+    extra = tr(" (Some owned outputs have partial key images - import_multisig_info needed)");
+  else if (m_wallet->has_unknown_key_images())
+    extra += tr(" (Some owned outputs have missing key images - import_key_images needed)");
 
 
   std::vector<transfer_view> all_transfers;
   std::vector<std::string> local_args;
-	if (!get_transfers(local_args, all_transfers))
-		return true;
+  if (!get_transfers(local_args, all_transfers))
+    return true;
 
-	PAUSE_READLINE();
+  PAUSE_READLINE();
   uint64_t snode_rewards = 0;
+  uint64_t USDE_balance = 0;
   uint64_t unlocked_bal = m_wallet->unlocked_balance(m_current_subaddress_account);
 
-	for (const auto& transfer : all_transfers)
-	{
-		if (!transfer.outputs.empty())
-		{
-			for (const auto& output : transfer.outputs)
-			{
-        if (transfer.type == tools::pay_type::service_node){
-          if((snode_rewards + transfer.amount) <= unlocked_bal){
+  for (const auto& transfer : all_transfers)
+  {
+    if (!transfer.outputs.empty())
+    {
+      for (const auto& output : transfer.outputs)
+      {
+        if (transfer.type == tools::pay_type::service_node) 
+        {
+          if((snode_rewards + transfer.amount) <= unlocked_bal)
+          {
             snode_rewards += transfer.amount;
           }
         }
-			}
-		}
+        else
+        {
+          crypto::public_key burn_pubkey;
+          get_burn_pubkey(burn_pubkey);
+          const cryptonote::account_public_address burn_address = {burn_pubkey, burn_pubkey};
+          std::string burn_addr_string = get_account_address_as_str(m_wallet->nettype(), false, burn_address);
+          if (output.wallet_addr == burn_addr_string)
+          {
+            try {
+              uint64_t height = boost::get<uint64_t>(transfer.block);
+              std::pair<uint64_t, uint64_t> ribbons_at_height = m_wallet->get_ribbons_at_height(height);
+              USDE_balance += (output.amount * ribbons_at_height.second) / 100;
+            }
+            catch (boost::bad_get) {
+              LOG_PRINT_L2("Caught boost::bad_get, it's likely that we're trying to get the height of a transaction that is still in the mempool");
+            }
+          }
+        }
+      }
+    }  
   }
+  
 
-	success_msg_writer() << tr("Currently selected account: [") << m_current_subaddress_account << tr("] ") << m_wallet->get_subaddress_label({ m_current_subaddress_account, 0 });
-	const std::string tag = m_wallet->get_account_tags().second[m_current_subaddress_account];
-	success_msg_writer() << tr("Tag: ") << (tag.empty() ? std::string{ tr("(No tag assigned)") } : tag);
-	success_msg_writer() << tr("Balance: ") << print_money(m_wallet->balance(m_current_subaddress_account)) << ", "
-		<< tr("unlocked balance: ") << print_money(unlocked_bal) << extra << ", "
-    		<< tr("Service Rewards: ") << print_money(snode_rewards);
-;
-	std::map<uint32_t, uint64_t> balance_per_subaddress = m_wallet->balance_per_subaddress(m_current_subaddress_account);
-	std::map<uint32_t, uint64_t> unlocked_balance_per_subaddress = m_wallet->unlocked_balance_per_subaddress(m_current_subaddress_account);
-	if (!detailed || balance_per_subaddress.empty())
-		return true;
-	success_msg_writer() << tr("Balance per address:");
-	success_msg_writer() << boost::format("%15s %21s %21s %7s %21s") % tr("Address") % tr("Balance") % tr("Unlocked balance") % tr("Outputs") % tr("Label");
-	std::vector<tools::wallet2::transfer_details> transfers;
-	m_wallet->get_transfers(transfers);
-	for (const auto& i : balance_per_subaddress)
-	{
-		cryptonote::subaddress_index subaddr_index = { m_current_subaddress_account, i.first };
-		std::string address_str = m_wallet->get_subaddress_as_str(subaddr_index).substr(0, 6);
-		uint64_t num_unspent_outputs = std::count_if(transfers.begin(), transfers.end(), [&subaddr_index](const tools::wallet2::transfer_details& td) { return !td.m_spent && td.m_subaddr_index == subaddr_index; });
-		success_msg_writer() << boost::format(tr("%8u %6s %21s %21s %7u %21s")) % i.first % address_str % print_money(i.second) % print_money(unlocked_balance_per_subaddress[i.first]) % num_unspent_outputs % m_wallet->get_subaddress_label(subaddr_index);
-	}
-	return true;
+  success_msg_writer() << tr("Currently selected account: [") << m_current_subaddress_account << tr("] ") << m_wallet->get_subaddress_label({ m_current_subaddress_account, 0 });
+  const std::string tag = m_wallet->get_account_tags().second[m_current_subaddress_account];
+  success_msg_writer() << tr("Tag: ") << (tag.empty() ? std::string{ tr("(No tag assigned)") } : tag);
+  success_msg_writer() << tr("XEQ balance: ") << print_money(m_wallet->balance(m_current_subaddress_account)) << ", "
+    << tr("XEQ unlocked balance: ") << print_money(unlocked_bal) << extra << ", "
+    << tr("USDE balance: ") << print_money(USDE_balance) << ", "
+    << tr("Service Rewards (XEQ): ") << print_money(snode_rewards);
+
+  std::map<uint32_t, uint64_t> balance_per_subaddress = m_wallet->balance_per_subaddress(m_current_subaddress_account);
+  std::map<uint32_t, uint64_t> unlocked_balance_per_subaddress = m_wallet->unlocked_balance_per_subaddress(m_current_subaddress_account);
+  if (!detailed || balance_per_subaddress.empty())
+    return true;
+  success_msg_writer() << tr("Balance per address:");
+  success_msg_writer() << boost::format("%15s %21s %21s %7s %21s") % tr("Address") % tr("Balance") % tr("Unlocked balance") % tr("Outputs") % tr("Label");
+  std::vector<tools::wallet2::transfer_details> transfers;
+  m_wallet->get_transfers(transfers);
+  for (const auto& i : balance_per_subaddress)
+  {
+    cryptonote::subaddress_index subaddr_index = { m_current_subaddress_account, i.first };
+    std::string address_str = m_wallet->get_subaddress_as_str(subaddr_index).substr(0, 6);
+    uint64_t num_unspent_outputs = std::count_if(transfers.begin(), transfers.end(), [&subaddr_index](const tools::wallet2::transfer_details& td) { return !td.m_spent && td.m_subaddr_index == subaddr_index; });
+    success_msg_writer() << boost::format(tr("%8u %6s %21s %21s %7u %21s")) % i.first % address_str % print_money(i.second) % print_money(unlocked_balance_per_subaddress[i.first]) % num_unspent_outputs % m_wallet->get_subaddress_label(subaddr_index);
+  }
+  return true;
 }
 //----------------------------------------------------------------------------------------------------
 bool simple_wallet::show_balance(const std::vector<std::string>& args/* = std::vector<std::string>()*/)

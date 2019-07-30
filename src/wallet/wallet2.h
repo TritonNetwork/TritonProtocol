@@ -1246,6 +1246,8 @@ namespace tools
     void set_tx_notify(const std::shared_ptr<tools::Notify> &notify) { m_tx_notify = notify; }
 
     bool is_tx_spendtime_unlocked(uint64_t unlock_time, uint64_t block_height) const;
+    
+    std::pair<uint64_t, uint64_t> get_ribbons_at_height(uint64_t height);
 
   private:
     /*!

@@ -2111,6 +2111,25 @@ void wallet2::pull_blocks(uint64_t start_height, uint64_t &blocks_start_height, 
   o_indices = std::move(res.output_indices);
 }
 //----------------------------------------------------------------------------------------------------
+std::pair<uint64_t, uint64_t> wallet2::get_ribbons_at_height(uint64_t height)
+{
+  cryptonote::COMMAND_RPC_GET_BLOCK_HEADER_BY_HEIGHT::request req;
+  cryptonote::COMMAND_RPC_GET_BLOCK_HEADER_BY_HEIGHT::response res;
+  
+  req.height = height;
+  req.fill_pow_hash = false;
+  
+  m_daemon_rpc_mutex.lock();
+  bool r = net_utils::invoke_http_json_rpc("/json_rpc", "getblockheaderbyheight", req, res, m_http_client);
+  m_daemon_rpc_mutex.unlock();
+  
+  THROW_WALLET_EXCEPTION_IF(!r, error::no_connection_to_daemon, "getblockheaderbyheight");
+  THROW_WALLET_EXCEPTION_IF(res.status == CORE_RPC_STATUS_BUSY, error::daemon_busy, "getblockheaderbyheight");
+  THROW_WALLET_EXCEPTION_IF(res.status != CORE_RPC_STATUS_OK, error::get_hashes_error, res.status);
+  
+  return std::make_pair(res.block_header.ribbon_blue, res.block_header.ribbon_red);
+}
+//----------------------------------------------------------------------------------------------------
 void wallet2::pull_hashes(uint64_t start_height, uint64_t &blocks_start_height, const std::list<crypto::hash> &short_chain_history, std::vector<crypto::hash> &hashes)
 {
   cryptonote::COMMAND_RPC_GET_HASHES_FAST::request req = AUTO_VAL_INIT(req);
