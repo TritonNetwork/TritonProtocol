@@ -2757,10 +2757,11 @@ bool Blockchain::check_tx_outputs(const transaction& tx, tx_verification_context
   }
   
   // from v7 allow burn transactions
+  crypto::public_key mint_key;
+  bool mint_key_found = get_mint_key_from_tx_extra(tx.extra, mint_key);
   if (hf_version > 6)
   {
-    crypto::public_key mint_key;
-    if (get_mint_key_from_tx_extra(tx.extra, mint_key))
+    if (mint_key_found)
     {
       crypto::public_key burn_pubkey;
       crypto::secret_key burn_seckey;
@@ -2804,9 +2805,9 @@ bool Blockchain::check_tx_outputs(const transaction& tx, tx_verification_context
   }
   else
   {
-    if (tx.version == 4)
+    if (mint_key_found)
     {
-      MERROR_VER("Burn transactions (tx version 4) are not allowed until v7");
+      MERROR_VER("Burn transactions are not allowed until v7");
       tvc.m_invalid_output = true;
       return false;
     }

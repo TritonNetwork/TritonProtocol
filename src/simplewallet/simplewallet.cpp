@@ -5293,6 +5293,28 @@ bool simple_wallet::make_burn_transaction(const std::vector<std::string> &args_)
     return false;
   }
   
+  cryptonote::COMMAND_RPC_GET_INFO::request req = AUTO_VAL_INIT(req);
+  cryptonote::COMMAND_RPC_GET_INFO::response res = AUTO_VAL_INIT(res);
+  bool r = m_wallet->invoke_http_json_rpc("/json_rpc", "get_info", req, res);
+  
+  if (!r)
+  {
+    fail_msg_writer() << "Failed to get ribbon data from daemon";
+    return false;
+  }
+  
+  uint64_t USDE_estimate = (res.last_ribbon_red * amount) / 100;
+  
+  std::string prompt = std::string("You will burn ") + std::string(args_[0]) + std::string(" XEQ for ~") + std::string(print_money(USDE_estimate)) + std::string(" USDE\nIs this okay?  (Y/Yes/N/No): ");
+  std::string accepted = input_line(prompt);
+  if (std::cin.eof())
+  return true;
+  if (!command_line::is_yes(accepted))
+  {
+   fail_msg_writer() << tr("burn transaction cancelled.");
+   return true;
+  }
+  
   SCOPED_WALLET_UNLOCK();
   
   crypto::public_key burn_pubkey;

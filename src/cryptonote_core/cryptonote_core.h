@@ -124,6 +124,14 @@ namespace cryptonote
      * @return true if we haven't seen it before and thus need to relay.
      */
      bool handle_ribbon_data(const NOTIFY_RIBBON_DATA::request &data);
+     /**
+     * @brief gets ribbon blue from last block
+     *
+     * gets ribbon data from top block header
+     *
+     * @return ribbon_blue, ribbon_red
+     */
+     std::pair<uint64_t, uint64_t> get_top_block_ribbon_data();
     /**
      * @brief stores trade history in database
      *

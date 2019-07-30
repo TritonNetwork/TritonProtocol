@@ -1295,6 +1295,15 @@ namespace cryptonote
     return m_quorum_cop.handle_ribbon_data_received(data);
   }
   //-----------------------------------------------------------------------------------------------
+  std::pair<uint64_t, uint64_t> core::get_top_block_ribbon_data()
+  {
+    uint64_t top_block_height = m_blockchain_storage.get_current_blockchain_height() - 1;
+    crypto::hash top_block_hash = m_blockchain_storage.get_block_id_by_height(top_block_height);
+    cryptonote::block top_blk;
+    m_blockchain_storage.get_block_by_hash(top_block_hash, top_blk);
+    return std::make_pair(top_blk.ribbon_blue, top_blk.ribbon_red);
+  }
+  //-----------------------------------------------------------------------------------------------
   bool core::store_trade_history_at_height(std::vector<service_nodes::exchange_trade>& trades, uint64_t height)
   {
     if (m_service_node)
