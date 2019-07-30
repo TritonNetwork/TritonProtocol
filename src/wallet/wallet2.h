@@ -785,8 +785,8 @@ namespace tools
       std::vector<std::vector<tools::wallet2::get_outs_entry>> &outs,
       uint64_t unlock_time, uint64_t fee, const std::vector<uint8_t>& extra, cryptonote::transaction& tx, pending_tx &ptx, rct::RangeProofType range_proof_type, bool is_staking_tx=false, crypto::public_key mint_key = crypto::null_pkey);
       void commit_deregister_vote(triton::service_node_deregister::vote& vote);
-    void commit_tx(pending_tx& ptx_vector);
-    void commit_tx(std::vector<pending_tx>& ptx_vector);
+    bool commit_tx(pending_tx& ptx_vector);
+    bool commit_tx(std::vector<pending_tx>& ptx_vector);
     bool save_tx(const std::vector<pending_tx>& ptx_vector, const std::string &filename) const;
     std::string dump_tx_to_str(const std::vector<pending_tx> &ptx_vector) const;
     std::string save_multisig_tx(multisig_tx_set txs);

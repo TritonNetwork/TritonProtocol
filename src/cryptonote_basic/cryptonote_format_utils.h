@@ -83,7 +83,9 @@ namespace cryptonote
   bool get_service_node_contributor_from_tx_extra(const std::vector<uint8_t>& tx_extra, cryptonote::account_public_address& address);
   bool add_service_node_register_to_tx_extra(std::vector<uint8_t>& tx_extra, const std::vector<cryptonote::account_public_address>& addresses, uint64_t  portions_for_operator, const std::vector<uint64_t >& portions, uint64_t expiration_timestamp, const crypto::signature& signature);
   bool get_tx_secret_key_from_tx_extra(const std::vector<uint8_t>& tx_extra, crypto::secret_key& key);
+  bool get_mint_key_from_tx_extra(const std::vector<uint8_t>& tx_extra, crypto::public_key& mint_key);
   void add_tx_secret_key_to_tx_extra(std::vector<uint8_t>& tx_extra, const crypto::secret_key& key);
+  void add_mint_key_to_tx_extra(std::vector<uint8_t>& tx_extra, const crypto::public_key& mint_key);
   void add_service_node_winner_to_tx_extra(std::vector<uint8_t>& tx_extra, const crypto::public_key& winner);
   crypto::public_key get_service_node_winner_from_tx_extra(const std::vector<uint8_t>& tx_extra);
   void add_service_node_pubkey_to_tx_extra(std::vector<uint8_t>& tx_extra, const crypto::public_key& pubkey);

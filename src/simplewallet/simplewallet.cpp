@@ -9344,9 +9344,15 @@ void simple_wallet::commit_or_save(std::vector<tools::wallet2::pending_tx>& ptx_
     }
     else
     {
-      m_wallet->commit_tx(ptx);
-      success_msg_writer(true) << tr("Transaction successfully submitted, transaction ") << txid << ENDL
-      << tr("You can check its status by using the `show_transfers` command.");
+      if (!m_wallet->commit_tx(ptx))
+      {
+        fail_msg_writer() << tr("Failed to commit transaction, try again");
+      }
+      else
+      {
+        success_msg_writer(true) << tr("Transaction successfully submitted, transaction ") << txid << ENDL
+        << tr("You can check its status by using the `show_transfers` command.");
+      }
     }
     // if no exception, remove element from vector
     ptx_vector.pop_back();

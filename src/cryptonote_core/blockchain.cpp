@@ -96,7 +96,7 @@ static const struct {
   { 3, 100, 0, 1541014463 },
   { 4, 45000, 0, 1549695692 },
   { 5, 106950, 0, 1560481469 },
-  { 6, 106950, 0, 1564479224 }
+  { 6, 106951, 0, 1564479224 }
 
 };
 static const uint64_t mainnet_hard_fork_version_1_till = 8;
@@ -114,7 +114,7 @@ static const struct {
   { 4, 50, 0, 1472415035 },
   { 5, 190, 0, 1551499880 },
   {6, 240, 0, 1561538231 },
-  {7, 390, 0, 1561538231 }
+  {7, 390, 0, 1561538232 }
 };
 static const uint64_t testnet_hard_fork_version_1_till = 10;
 
@@ -1388,7 +1388,7 @@ bool Blockchain::create_block_template(block& b, const account_public_address& m
       b.ribbon_red = 0;
       LOG_PRINT_L3("Not enough data for ribbon red, setting to zero");
     }
-  }
+  } */
   
   diffic = get_difficulty_for_next_block();
   CHECK_AND_ASSERT_MES(diffic, false, "difficulty overhead.");
@@ -2759,7 +2759,8 @@ bool Blockchain::check_tx_outputs(const transaction& tx, tx_verification_context
   // from v7 allow burn transactions
   if (hf_version > 6)
   {
-    if (tx.version == 4)
+    crypto::public_key mint_key;
+    if (get_mint_key_from_tx_extra(tx.extra, mint_key))
     {
       crypto::public_key burn_pubkey;
       crypto::secret_key burn_seckey;
@@ -2767,10 +2768,16 @@ bool Blockchain::check_tx_outputs(const transaction& tx, tx_verification_context
       
       std::vector<tx_extra_field> tx_extra_fields;
       crypto::public_key txkey_pub_i_zero = get_tx_pub_key_from_extra(tx.extra, 0); // require index in transaction to be zero for simplicity
+      if(txkey_pub_i_zero == null_pkey)
+      {
+        MERROR_VER("Could not get tx pubkey from extra to verify burn transaction");
+        tvc.m_invalid_output = true;
+        return false;
+      }
       crypto::public_key index_zero_pubkey = boost::get<txout_to_key>(tx.vout[0].target).key;
       crypto::key_derivation derivation;
       
-      if (crypto::generate_key_derivation(txkey_pub_i_zero, burn_seckey, derivation))
+      if (!crypto::generate_key_derivation(txkey_pub_i_zero, burn_seckey, derivation))
       {
         MERROR_VER("Failed to calculate burn transaction key derivation");
         tvc.m_invalid_output = true;
@@ -2782,12 +2789,12 @@ bool Blockchain::check_tx_outputs(const transaction& tx, tx_verification_context
       
       if (index_zero_pubkey != derived_pubkey)
       {
-        MERROR_VER("Burn transaction output at index zero does not match expected derived public key");
+        MERROR_VER("Burn transaction output at index zero does not match expected derived public key" << std::endl << "fetched: " << index_zero_pubkey << " derived: " << derived_pubkey);
         tvc.m_invalid_output = true;
         return false;
       }
       
-      if (!crypto::check_key(tx.mint_key))
+      if (!crypto::check_key(mint_key))
       {
         MERROR_VER("Burn transaction's mint key is not a proper public key");
         tvc.m_invalid_output = true;

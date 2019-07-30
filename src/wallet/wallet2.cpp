@@ -5429,7 +5429,7 @@ crypto::hash wallet2::get_payment_id(const pending_tx &ptx) const
 }
 //----------------------------------------------------------------------------------------------------
 // take a pending tx and actually send it to the daemon
-void wallet2::commit_tx(pending_tx& ptx)
+bool wallet2::commit_tx(pending_tx& ptx)
 {
   using namespace cryptonote;
 
@@ -5459,7 +5459,11 @@ void wallet2::commit_tx(pending_tx& ptx)
     m_daemon_rpc_mutex.unlock();
     THROW_WALLET_EXCEPTION_IF(!r, error::no_connection_to_daemon, "sendrawtransaction");
     THROW_WALLET_EXCEPTION_IF(daemon_send_resp.status == CORE_RPC_STATUS_BUSY, error::daemon_busy, "sendrawtransaction");
-    THROW_WALLET_EXCEPTION_IF(daemon_send_resp.status != CORE_RPC_STATUS_OK, error::tx_rejected, ptx.tx, daemon_send_resp.status, daemon_send_resp.reason);
+    if (daemon_send_resp.status != CORE_RPC_STATUS_OK)
+    {
+     LOG_PRINT_L2("Transaction was rejected by daemon");
+     return false;
+    }
     // sanity checks
     for (size_t idx: ptx.selected_transfers)
     {
@@ -5504,14 +5508,17 @@ void wallet2::commit_tx(pending_tx& ptx)
             << "Balance: " << print_money(balance(ptx.construction_data.subaddr_account)) << ENDL
             << "Unlocked: " << print_money(unlocked_balance(ptx.construction_data.subaddr_account)) << ENDL
             << "Please, wait for confirmation for your balance to be unlocked.");
+  return true;
 }
 
-void wallet2::commit_tx(std::vector<pending_tx>& ptx_vector)
+bool wallet2::commit_tx(std::vector<pending_tx>& ptx_vector)
 {
   for (auto & ptx : ptx_vector)
   {
-    commit_tx(ptx);
+    if (!commit_tx(ptx))
+      return false;
   }
+  return true;
 }
 //----------------------------------------------------------------------------------------------------
 bool wallet2::save_tx(const std::vector<pending_tx>& ptx_vector, const std::string &filename) const
