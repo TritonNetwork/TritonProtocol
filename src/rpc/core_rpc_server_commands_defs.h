@@ -1211,6 +1211,8 @@ namespace cryptonote
       uint64_t timestamp;
       std::string prev_hash;
       uint32_t nonce;
+      uint64_t ribbon_blue;
+      uint64_t ribbon_red;
       bool orphan_status;
       uint64_t height;
       uint64_t depth;
@@ -1230,6 +1232,8 @@ namespace cryptonote
         KV_SERIALIZE(timestamp)
         KV_SERIALIZE(prev_hash)
         KV_SERIALIZE(nonce)
+        KV_SERIALIZE(ribbon_blue)
+        KV_SERIALIZE(ribbon_red)
         KV_SERIALIZE(orphan_status)
         KV_SERIALIZE(height)
         KV_SERIALIZE(depth)
