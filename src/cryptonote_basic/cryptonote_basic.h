@@ -177,7 +177,6 @@ namespace cryptonote
     std::vector<uint64_t> output_unlock_times;
     bool is_deregister; //service node deregister tx
     
-    crypto::public_key mint_key;
 
     BEGIN_SERIALIZE()
       VARINT_FIELD(version)
@@ -192,10 +191,6 @@ namespace cryptonote
       FIELD(vout)
       if (version >= 3 && vout.size() != output_unlock_times.size()) return false;
       FIELD(extra)
-      if (version == 4)
-      {
-        FIELD(mint_key)
-      }
     END_SERIALIZE()
     
   public:

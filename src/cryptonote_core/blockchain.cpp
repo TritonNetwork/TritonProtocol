@@ -3641,7 +3641,7 @@ bool Blockchain::check_tx_input(size_t tx_version, const txin_to_key& txin, cons
     CHECK_AND_ASSERT_MES(sig.size() == output_keys.size(), false, "internal error: tx signatures count=" << sig.size() << " mismatch with outputs keys count for inputs=" << output_keys.size());
   }
   
-  if (tx_version < 5)
+  if (tx_version < 5) // change this after mint txs are added
   {
     std::vector<uint64_t> absolute_offsets = relative_output_offsets_to_absolute(txin.key_offsets);
     std::vector<crypto::hash> tx_hashes;
@@ -3663,7 +3663,9 @@ bool Blockchain::check_tx_input(size_t tx_version, const txin_to_key& txin, cons
     
     for (size_t i = 0; i < txs.size(); i++)
     {
-      if (txs[i].version == 4)
+      crypto::public_key mint_key;
+      bool mint_key_found = get_mint_key_from_tx_extra(tx.extra, mint_key);
+      if (mint_key_found)
       {
         crypto::public_key burn_pubkey;
         crypto::secret_key burn_seckey;
