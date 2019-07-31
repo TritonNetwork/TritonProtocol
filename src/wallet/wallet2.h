@@ -1248,6 +1248,7 @@ namespace tools
     bool is_tx_spendtime_unlocked(uint64_t unlock_time, uint64_t block_height) const;
     
     std::pair<uint64_t, uint64_t> get_ribbons_at_height(uint64_t height);
+    void save_mint_key(pending_tx ptx, crypto::secret_key sec_mint_key);
 
   private:
     /*!
@@ -1409,6 +1410,7 @@ namespace tools
     std::unordered_set<crypto::hash> m_scanned_pool_txs[2];
     size_t m_subaddress_lookahead_major, m_subaddress_lookahead_minor;
     std::string m_device_name;
+    std::vector<std::pair<crypto::hash, crypto::secret_key>> m_mint_keys; // tx_hash, secret_mint_keys
 	bool m_fork_on_autostake;
     // Light wallet
     bool m_light_wallet; /* sends view key to daemon for scanning */

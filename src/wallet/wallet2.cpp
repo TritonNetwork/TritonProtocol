@@ -3062,7 +3062,14 @@ bool wallet2::clear()
   m_subaddresses.clear();
   m_subaddress_labels.clear();
   m_multisig_rounds_passed = 0;
+  m_mint_keys.clear();
   return true;
+}
+//----------------------------------------------------------------------------------------------------
+void wallet2::save_mint_key(pending_tx ptx, crypto::secret_key sec_mint_key)
+{
+  crypto::hash tx_hash = get_transaction_hash(ptx.tx);
+  m_mint_keys.push_back(std::make_pair(tx_hash, sec_mint_key));
 }
 
 /*!
@@ -3219,10 +3226,26 @@ bool wallet2::store_keys(const std::string& keys_file_name, const epee::wipeable
 
   value2.SetUint(1);
   json.AddMember("encrypted_secret_keys", value2, json.GetAllocator());
+  
+  // store mint keys together as a string
+  std::string mint_keys_string = "";
+  if (!m_mint_keys.empty())
+  {
+    for (size_t i = 0; i < m_mint_keys.size(); i++)
+    {
+      std::string tx_hash = epee::string_tools::pod_to_hex(m_mint_keys[i].first);
+      std::string sec_mint_key = epee::string_tools::pod_to_hex(m_mint_keys[i].second);
+      mint_keys_string += tx_hash;
+      mint_keys_string += sec_mint_key;
+    }
+  }
+  
+  value.SetString(mint_keys_string.c_str(), mint_keys_string.size());
+  json.AddMember("mint_keys", value, json.GetAllocator());
 
   value.SetString(m_device_name.c_str(), m_device_name.size());
   json.AddMember("device_name", value, json.GetAllocator());
-
+  
   // Serialize the JSON object
   rapidjson::StringBuffer buffer;
   rapidjson::Writer<rapidjson::StringBuffer> writer(buffer);
@@ -3342,6 +3365,7 @@ bool wallet2::load_keys(const std::string& keys_file_name, const epee::wipeable_
     m_ignore_fractional_outputs = true;
     m_subaddress_lookahead_major = SUBADDRESS_LOOKAHEAD_MAJOR;
     m_subaddress_lookahead_minor = SUBADDRESS_LOOKAHEAD_MINOR;
+    m_mint_keys = {};
     m_device_name = "";
     m_key_device_type = hw::device::device_type::SOFTWARE;
     encrypted_secret_keys = false;
@@ -3494,7 +3518,29 @@ bool wallet2::load_keys(const std::string& keys_file_name, const epee::wipeable_
     m_subaddress_lookahead_major = field_subaddress_lookahead_major;
     GET_FIELD_FROM_JSON_RETURN_ON_ERROR(json, subaddress_lookahead_minor, uint32_t, Uint, false, SUBADDRESS_LOOKAHEAD_MINOR);
     m_subaddress_lookahead_minor = field_subaddress_lookahead_minor;
-
+    
+    GET_FIELD_FROM_JSON_RETURN_ON_ERROR(json, mint_keys, std::string, String, false, std::string());
+    
+    // a secret key and a hash are both 32 bytes each, represented as 64 hex characters each. 64*2=128
+    if ((field_mint_keys.size() % 128) == 0 && field_mint_keys.size() != 0)
+    {
+      for (size_t i = 0; i < (field_mint_keys.size() / 128); i++)
+      {
+        cryptonote::blobdata blob;
+        epee::string_tools::parse_hexstr_to_binbuff(field_mint_keys.substr(128*i, 64), blob);
+        crypto::hash tx_hash = *reinterpret_cast<const crypto::hash*>(blob.data());
+        
+        epee::string_tools::parse_hexstr_to_binbuff(field_mint_keys.substr((128*i)+64, 64), blob);
+        crypto::secret_key mint_key = *reinterpret_cast<const crypto::secret_key*>(blob.data());
+        m_mint_keys.push_back(std::make_pair(tx_hash, mint_key));
+      }
+    }
+    else
+    {
+      m_mint_keys = {};
+      LOG_ERROR("Invalid size for stored mint keys");
+    }
+    
     GET_FIELD_FROM_JSON_RETURN_ON_ERROR(json, encrypted_secret_keys, uint32_t, Uint, false, false);
     encrypted_secret_keys = field_encrypted_secret_keys;
 

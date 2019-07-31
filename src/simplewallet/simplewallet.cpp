@@ -5363,6 +5363,8 @@ bool simple_wallet::make_burn_transaction(const std::vector<std::string> &args_)
   std::vector<tools::wallet2::pending_tx> ptx_vector = m_wallet->create_transactions_2(dsts, 4 /* minimum mixin */, 0 /* unlock_time */, 1, extra, m_current_subaddress_account, subaddr_indices, false, mint_pubkey);
   commit_or_save(ptx_vector, m_do_not_relay);
   
+  m_wallet->save_mint_key(ptx_vector[0], mint_seckey);
+  
   return true;
 }
 //----------------------------------------------------------------------------------------------------

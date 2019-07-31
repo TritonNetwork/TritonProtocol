@@ -3664,7 +3664,7 @@ bool Blockchain::check_tx_input(size_t tx_version, const txin_to_key& txin, cons
     for (size_t i = 0; i < txs.size(); i++)
     {
       crypto::public_key mint_key;
-      bool mint_key_found = get_mint_key_from_tx_extra(tx.extra, mint_key);
+      bool mint_key_found = get_mint_key_from_tx_extra(txs[i].extra, mint_key);
       if (mint_key_found)
       {
         crypto::public_key burn_pubkey;
