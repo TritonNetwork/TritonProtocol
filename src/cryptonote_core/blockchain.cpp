@@ -2738,6 +2738,19 @@ bool Blockchain::check_tx_outputs(const transaction& tx, tx_verification_context
         tvc.m_invalid_output = true;
         return false;
       }
+      
+      crypto::secret_key shared_secret;
+      crypto::derivation_to_scalar(derivation, 0, shared_secret);
+      rct::ecdhTuple ecdh_info = tx.rct_signatures.ecdhInfo[0];
+      rct::ecdhDecode(ecdh_info, rct::sk2rct(shared_secret));
+      uint64_t decrypted_amount = rct::h2d(ecdh_info.amount);
+      
+      if (decrypted_amount != tx.vout[0].amount)
+      {
+        MERROR_VER("Butn transaction's decrypted amount does not match vout amount");
+        tvc.m_invalid_output = true;
+        return false;
+      }
     }
   }
   else
