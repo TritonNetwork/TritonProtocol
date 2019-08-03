@@ -792,9 +792,13 @@ namespace cryptonote
         if (sources[i].rct)
           boost::get<txin_to_key>(tx.vin[i]).amount = 0;
       }
-      for (size_t i = 0; i < tx.vout.size(); ++i)
-        tx.vout[i].amount = 0;
 
+      for (size_t i = 0; i < tx.vout.size(); ++i)
+      {
+        if (!is_burn_tx || (is_burn_tx && i !=0))
+          tx.vout[i].amount = 0;
+      }
+      
       crypto::hash tx_prefix_hash;
       get_transaction_prefix_hash(tx, tx_prefix_hash);
       rct::ctkeyV outSk;

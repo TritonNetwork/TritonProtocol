@@ -2692,70 +2692,6 @@ bool Blockchain::check_tx_outputs(const transaction& tx, tx_verification_context
   CRITICAL_REGION_LOCAL(m_blockchain_lock);
 
   const uint8_t hf_version = m_hardfork->get_current_version();
-
-  // from hard fork 2, we forbid dust and compound outputs
-  if (hf_version >= 2){
-    for (auto &o: tx.vout) {
-      if (tx.version == 1)
-      {
-        if (!is_valid_decomposed_amount(o.amount)) {
-          tvc.m_invalid_output = true;
-          return false;
-        }
-      }
-    }
-  }
-
-  // in a v2 tx, all outputs must have 0 amount
-  if (hf_version >= 3) {
-    if (tx.version >= 2) {
-      for (auto &o: tx.vout) {
-        if (o.amount != 0) {
-          tvc.m_invalid_output = true;
-          return false;
-        }
-      }
-    }
-  }
-
-  // from v4, forbid invalid pubkeys
-  if (hf_version >= 4) {
-    for (const auto &o: tx.vout) {
-      if (o.target.type() == typeid(txout_to_key)) {
-        const txout_to_key& out_to_key = boost::get<txout_to_key>(o.target);
-        if (!crypto::check_key(out_to_key.key)) {
-          tvc.m_invalid_output = true;
-          return false;
-        }
-      }
-    }
-  }
-
-  // from v5, allow bulletproofs
-  if (hf_version < 4) {
-    if (tx.version >= 2) {
-      const bool bulletproof = rct::is_rct_bulletproof(tx.rct_signatures.type);
-      if (bulletproof || !tx.rct_signatures.p.bulletproofs.empty())
-      {
-        MERROR_VER("Bulletproofs are not allowed before v5");
-        tvc.m_invalid_output = true;
-        return false;
-      }
-    }
-  }
-
-  // from v6, forbid borromean range proofs
-  if (hf_version > 5) {
-    if (tx.version >= 2) {
-      const bool borromean = rct::is_rct_borromean(tx.rct_signatures.type);
-      if (borromean)
-      {
-        MERROR_VER("Borromean range proofs are not allowed after v5");
-        tvc.m_invalid_output = true;
-        return false;
-      }
-    }
-  }
   
   // from v7 allow burn transactions
   crypto::public_key mint_key;
@@ -2811,6 +2747,70 @@ bool Blockchain::check_tx_outputs(const transaction& tx, tx_verification_context
       MERROR_VER("Burn transactions are not allowed until v7");
       tvc.m_invalid_output = true;
       return false;
+    }
+  }
+
+  // from hard fork 2, we forbid dust and compound outputs
+  if (hf_version >= 2){
+    for (auto &o: tx.vout) {
+      if (tx.version == 1)
+      {
+        if (!is_valid_decomposed_amount(o.amount)) {
+          tvc.m_invalid_output = true;
+          return false;
+        }
+      }
+    }
+  }
+
+  // in a v2 tx, all outputs must have 0 amount
+  if (hf_version >= 3) {
+    if (tx.version >= 2 && !mint_key_found) {
+      for (auto &o: tx.vout) {
+        if (o.amount != 0) {
+          tvc.m_invalid_output = true;
+          return false;
+        }
+      }
+    }
+  }
+
+  // from v4, forbid invalid pubkeys
+  if (hf_version >= 4) {
+    for (const auto &o: tx.vout) {
+      if (o.target.type() == typeid(txout_to_key)) {
+        const txout_to_key& out_to_key = boost::get<txout_to_key>(o.target);
+        if (!crypto::check_key(out_to_key.key)) {
+          tvc.m_invalid_output = true;
+          return false;
+        }
+      }
+    }
+  }
+
+  // from v5, allow bulletproofs
+  if (hf_version < 4) {
+    if (tx.version >= 2) {
+      const bool bulletproof = rct::is_rct_bulletproof(tx.rct_signatures.type);
+      if (bulletproof || !tx.rct_signatures.p.bulletproofs.empty())
+      {
+        MERROR_VER("Bulletproofs are not allowed before v5");
+        tvc.m_invalid_output = true;
+        return false;
+      }
+    }
+  }
+
+  // from v6, forbid borromean range proofs
+  if (hf_version > 5) {
+    if (tx.version >= 2) {
+      const bool borromean = rct::is_rct_borromean(tx.rct_signatures.type);
+      if (borromean)
+      {
+        MERROR_VER("Borromean range proofs are not allowed after v5");
+        tvc.m_invalid_output = true;
+        return false;
+      }
     }
   }  
 
