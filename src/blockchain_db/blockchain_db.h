@@ -369,6 +369,7 @@ private:
                 , uint64_t long_term_block_weight
                 , const difficulty_type& cumulative_difficulty
                 , const uint64_t& coins_generated
+                , const uint64_t& coints_burned
                 , uint64_t num_rct_outs
                 , const crypto::hash& blk_hash
                 ) = 0;
@@ -803,6 +804,7 @@ public:
                             , uint64_t long_term_block_weight
                             , const difficulty_type& cumulative_difficulty
                             , const uint64_t& coins_generated
+                            , const uint64_t& coins_burned
                             , const std::vector<transaction>& txs
                             );
 
@@ -987,6 +989,20 @@ public:
    * @return the already generated coins
    */
   virtual uint64_t get_block_already_generated_coins(const uint64_t& height) const = 0;
+  
+  /**
+   * @brief fetch a block's total burned coins
+   *
+   * The subclass should return the total coins burned as of the block
+   * with the given height.
+   *
+   * If the block does not exist, the subclass should throw BLOCK_DNE
+   *
+   * @param height the height requested
+   *
+   * @return the total burned coins
+   */
+  virtual uint64_t get_block_total_burned_coins(const uint64_t& height) const = 0;
 
   /**
    * @brief fetch a block's long term weight

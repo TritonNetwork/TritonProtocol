@@ -295,7 +295,20 @@ typedef struct mdb_block_info_3
   uint64_t bi_long_term_block_weight;
 } mdb_block_info_3;
 
-typedef mdb_block_info_3 mdb_block_info;
+typedef struct mdb_block_info_4
+{
+  uint64_t bi_height;
+  uint64_t bi_timestamp;
+  uint64_t bi_coins;
+  uint64_t bi_burned;
+  uint64_t bi_weight; // a size_t really but we need 32-bit compat
+  difficulty_type bi_diff;
+  crypto::hash bi_hash;
+  uint64_t bi_cum_rct;
+  uint64_t bi_long_term_block_weight;
+} mdb_block_info_4;
+
+typedef mdb_block_info_4 mdb_block_info;
 
 typedef struct blk_height {
     crypto::hash bh_hash;
@@ -702,7 +715,7 @@ estim:
   return threshold_size;
 }
 
-void BlockchainLMDB::add_block(const block& blk, uint64_t block_weight,  uint64_t long_term_block_weight, const difficulty_type& cumulative_difficulty, const uint64_t& coins_generated,
+void BlockchainLMDB::add_block(const block& blk, uint64_t block_weight,  uint64_t long_term_block_weight, const difficulty_type& cumulative_difficulty, const uint64_t& coins_generated, const uint64_t& coins_burned,
     uint64_t num_rct_outs, const crypto::hash& blk_hash)
 {
   LOG_PRINT_L3("BlockchainLMDB::" << __func__);
@@ -748,6 +761,7 @@ void BlockchainLMDB::add_block(const block& blk, uint64_t block_weight,  uint64_
   bi.bi_height = m_height;
   bi.bi_timestamp = blk.timestamp;
   bi.bi_coins = coins_generated;
+  bi.bi_burned = coins_burned;
   bi.bi_weight = block_weight;
   bi.bi_diff = cumulative_difficulty;
   bi.bi_hash = blk_hash;
@@ -2194,6 +2208,29 @@ uint64_t BlockchainLMDB::get_block_already_generated_coins(const uint64_t& heigh
   return ret;
 }
 
+uint64_t BlockchainLMDB::get_block_total_burned_coins(const uint64_t& height) const
+{
+  LOG_PRINT_L3("BlockchainLMDB::" << __func__);
+  check_open();
+
+  TXN_PREFIX_RDONLY();
+  RCURSOR(block_info);
+
+  MDB_val_set(result, height);
+  auto get_result = mdb_cursor_get(m_cur_block_info, (MDB_val *)&zerokval, &result, MDB_GET_BOTH);
+  if (get_result == MDB_NOTFOUND)
+  {
+    throw0(BLOCK_DNE(std::string("Attempt to get burned coins from height ").append(boost::lexical_cast<std::string>(height)).append(" failed -- block size not in db").c_str()));
+  }
+  else if (get_result)
+    throw0(DB_ERROR("Error attempting to retrieve a total burned coins from the db"));
+
+  mdb_block_info *bi = (mdb_block_info *)result.mv_data;
+  uint64_t ret = bi->bi_burned;
+  TXN_POSTFIX_RDONLY();
+  return ret;
+}
+
 uint64_t BlockchainLMDB::get_block_long_term_weight(const uint64_t& height) const
 {
   LOG_PRINT_L3("BlockchainLMDB::" << __func__);
@@ -3211,7 +3248,7 @@ void BlockchainLMDB::block_txn_abort()
   }
 }
 
-uint64_t BlockchainLMDB::add_block(const block& blk, uint64_t block_weight, uint64_t long_term_block_weight, const difficulty_type& cumulative_difficulty, const uint64_t& coins_generated,
+uint64_t BlockchainLMDB::add_block(const block& blk, uint64_t block_weight, uint64_t long_term_block_weight, const difficulty_type& cumulative_difficulty, const uint64_t& coins_generated, const uint64_t& coins_burned,
     const std::vector<transaction>& txs)
 {
   LOG_PRINT_L3("BlockchainLMDB::" << __func__);
@@ -3230,7 +3267,7 @@ uint64_t BlockchainLMDB::add_block(const block& blk, uint64_t block_weight, uint
 
   try
   {
-    BlockchainDB::add_block(blk, block_weight, long_term_block_weight, cumulative_difficulty, coins_generated, txs);
+    BlockchainDB::add_block(blk, block_weight, long_term_block_weight, cumulative_difficulty, coins_generated, coins_burned, txs);
   }
   catch (const DB_ERROR_TXN_START& e)
   {

@@ -73,6 +73,7 @@ namespace cryptonote
       size_t block_weight;
       difficulty_type cumulative_difficulty;
       uint64_t coins_generated;
+      uint64_t coins_burned;
 
       BEGIN_SERIALIZE()
         FIELD(block)
@@ -80,6 +81,7 @@ namespace cryptonote
         VARINT_FIELD(block_weight)
         VARINT_FIELD(cumulative_difficulty)
         VARINT_FIELD(coins_generated)
+        VARINT_FIELD(coins_burned)
       END_SERIALIZE()
     };
 

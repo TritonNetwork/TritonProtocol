@@ -221,6 +221,8 @@ public:
   virtual difficulty_type get_block_difficulty(const uint64_t& height) const;
 
   virtual uint64_t get_block_already_generated_coins(const uint64_t& height) const;
+  
+  virtual uint64_t get_block_total_burned_coins(const uint64_t& height) const;
 
   virtual uint64_t get_block_long_term_weight(const uint64_t& height) const;
 
@@ -290,6 +292,7 @@ public:
                             , uint64_t long_term_block_weight
                             , const difficulty_type& cumulative_difficulty
                             , const uint64_t& coins_generated
+                            , const uint64_t& coins_burned
                             , const std::vector<transaction>& txs
                             );
 
@@ -335,6 +338,7 @@ private:
                 , uint64_t long_term_block_weight
                 , const difficulty_type& cumulative_difficulty
                 , const uint64_t& coins_generated
+                , const uint64_t& coins_burned
                 , uint64_t num_rct_outs
                 , const crypto::hash& block_hash
                 );

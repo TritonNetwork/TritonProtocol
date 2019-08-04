@@ -438,6 +438,30 @@ namespace cryptonote
     pubkey = *reinterpret_cast<const crypto::public_key*>(parse_blob.data());
   }
   //---------------------------------------------------------------
+  uint64_t coins_burned_in_tx(cryptonote::transaction tx)
+  {
+    crypto::public_key mint_key;
+    bool mint_key_found = get_mint_key_from_tx_extra(tx.extra, mint_key);
+    if (mint_key_found)
+    {
+      return tx.vout[0].amount;
+    }
+    else
+    {
+      return 0;
+    }
+  }
+  //---------------------------------------------------------------
+  uint64_t coins_burned_in_txs(std::vector<cryptonote::transaction> txs)
+  {
+    uint64_t total_burned = 0;
+    for (cryptonote::transaction tx : txs)
+    {
+      total_burned += coins_burned_in_tx(tx);
+    }
+    return total_burned;
+  }
+  //---------------------------------------------------------------
   bool parse_tx_extra(const std::vector<uint8_t>& tx_extra, std::vector<tx_extra_field>& tx_extra_fields)
   {
     tx_extra_fields.clear();

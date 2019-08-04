@@ -2747,7 +2747,7 @@ bool Blockchain::check_tx_outputs(const transaction& tx, tx_verification_context
       
       if (decrypted_amount != tx.vout[0].amount)
       {
-        MERROR_VER("Butn transaction's decrypted amount does not match vout amount");
+        MERROR_VER("Burn transaction's decrypted amount does not match vout amount");
         tvc.m_invalid_output = true;
         return false;
       }
@@ -4107,6 +4107,13 @@ leave:
   TIME_MEASURE_FINISH(block_processing_time);
   if(precomputed)
     block_processing_time += m_fake_pow_calc_time;
+    
+  uint64_t total_burned_coins = 0;
+  if(bl.major_version > 6)
+  {
+    uint64_t coins_burned_in_block = coins_burned_in_txs(txs);
+    total_burned_coins = m_db->get_block_total_burned_coins(m_db->height() - 1) + coins_burned_in_block;
+  }
 
   m_db->block_txn_stop();
   TIME_MEASURE_START(addblock);
@@ -4117,7 +4124,7 @@ leave:
     try
     {
       uint64_t long_term_block_weight = get_next_long_term_block_weight(block_weight);
-      new_height = m_db->add_block(bl, block_weight, long_term_block_weight, cumulative_difficulty, already_generated_coins, txs);
+      new_height = m_db->add_block(bl, block_weight, long_term_block_weight, cumulative_difficulty, already_generated_coins, total_burned_coins,  txs);
     }
     catch (const KEY_IMAGE_EXISTS& e)
     {
