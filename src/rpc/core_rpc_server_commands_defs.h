@@ -986,6 +986,8 @@ namespace cryptonote
       bool update_available;
       uint64_t last_ribbon_blue;
       uint64_t last_ribbon_red;
+      uint64_t already_generated_coins;
+      uint64_t total_burned_coins;
 
       BEGIN_KV_SERIALIZE_MAP()
         KV_SERIALIZE(status)
@@ -1022,6 +1024,8 @@ namespace cryptonote
         KV_SERIALIZE(update_available)
         KV_SERIALIZE(last_ribbon_blue)
         KV_SERIALIZE(last_ribbon_red)
+        KV_SERIALIZE(already_generated_coins)
+        KV_SERIALIZE(total_burned_coins)
       END_KV_SERIALIZE_MAP()
     };
   };

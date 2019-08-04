@@ -1652,7 +1652,8 @@ namespace cryptonote
     res.grey_peerlist_size = m_p2p.get_peerlist_manager().get_gray_peers_count();
     res.last_ribbon_blue = m_core.get_blockchain_storage().get_current_hard_fork_version() > 6 ? m_core.get_top_block_ribbon_data().first : 0;
     res.last_ribbon_red = m_core.get_blockchain_storage().get_current_hard_fork_version() > 6 ? m_core.get_top_block_ribbon_data().second : 0;
-    
+    res.already_generated_coins = m_core.get_blockchain_storage().get_db().get_block_already_generated_coins(res.height - 1);
+    res.total_burned_coins = m_core.get_blockchain_storage().get_db().get_block_total_burned_coins(res.height - 1);
 
     cryptonote::network_type net_type = nettype();
     res.mainnet = net_type == MAINNET;
