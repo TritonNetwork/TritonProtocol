@@ -2776,7 +2776,7 @@ bool Blockchain::check_tx_outputs(const transaction& tx, tx_verification_context
     }
   }
 
-  // in a v2 tx, all outputs must have 0 amount
+  // in a v2 non-burn/mint tx, all outputs must have 0 amount
   if (hf_version >= 3) {
     if (tx.version >= 2 && !mint_key_found) {
       for (auto &o: tx.vout) {
@@ -2928,20 +2928,26 @@ bool Blockchain::check_tx_inputs(transaction& tx, tx_verification_context &tvc, 
 	crypto::hash tx_prefix_hash = get_transaction_prefix_hash(tx);
 
 	const uint8_t hf_version = m_hardfork->get_current_version();
+	
+	bool is_mint_tx;
+	get_is_mint_tx_tag_from_tx_extra(tx.extra, is_mint_tx);
 
-	if (hf_version >= SERVICE_NODE_VERSION && tx.version < 2)
+    // mint txs use tx version 1
+	if (hf_version >= SERVICE_NODE_VERSION && tx.version < 2 && !is_mint_tx)
 	{
+		MERROR_VER("tx version is too low for hf version");
 		tvc.m_invalid_version = true;
 		return false;
 	}
-	else if (hf_version < SERVICE_NODE_VERSION && tx.version > 2)
+	else if (hf_version < SERVICE_NODE_VERSION && tx.version > 2 && !is_mint_tx)
 	{
+		MERROR_VER("tx version is too high for hf version");
 		tvc.m_invalid_version = true;
 		return false;
 	}
 	// from hard fork 2, we require mixin at least 2 unless one output cannot mix with 2 others
 	// if one output cannot mix with 2 others, we accept at most 1 output that can mix
-	if (hf_version >= 2 && !tx.is_deregister_tx())
+	if (hf_version >= 2 && !tx.is_deregister_tx() && !is_mint_tx)
 	{
 		size_t n_unmixable = 0, n_mixable = 0;
 		size_t mixin = std::numeric_limits<size_t>::max();
@@ -3096,7 +3102,7 @@ bool Blockchain::check_tx_inputs(transaction& tx, tx_verification_context &tvc, 
 
 		// make sure that output being spent matches up correctly with the
 		// signature spending it.
-		if (!check_tx_input(tx.version, in_to_key, tx_prefix_hash, tx.version == 1 ? tx.signatures[sig_index] : std::vector<crypto::signature>(), tx.rct_signatures, pubkeys[sig_index], pmax_used_block_height))
+		if (!check_tx_input(tx.version, in_to_key, tx_prefix_hash, tx.version == 1 ? tx.signatures[sig_index] : std::vector<crypto::signature>(), tx.rct_signatures, pubkeys[sig_index], pmax_used_block_height, is_mint_tx))
 		{
 			it->second[in_to_key.k_image] = false;
 			MERROR_VER("Failed to check ring signature for tx " << get_transaction_hash(tx) << "  vin key with k_image: " << in_to_key.k_image << "  sig_index: " << sig_index);
@@ -3108,7 +3114,7 @@ bool Blockchain::check_tx_inputs(transaction& tx, tx_verification_context &tvc, 
 			return false;
 		}
 
-		if (tx.version == 1)
+		if (tx.version == 1 && !is_mint_tx)
 		{
 			if (threads > 1)
 			{
@@ -3134,6 +3140,10 @@ bool Blockchain::check_tx_inputs(transaction& tx, tx_verification_context &tvc, 
 				it->second[in_to_key.k_image] = true;
 			}
 		}
+		else if (tx.version == 1 && is_mint_tx)
+		{
+			// TODO: verify mint inputs
+        }
 
 		sig_index++;
 	}
@@ -3161,7 +3171,7 @@ bool Blockchain::check_tx_inputs(transaction& tx, tx_verification_context &tvc, 
 			}
 		}
 	}
-	else if (!tx.is_deregister_tx())
+	else if (!tx.is_deregister_tx() && !is_mint_tx)
 	{
 		if (!expand_transaction_2(tx, tx_prefix_hash, pubkeys))
 		{
@@ -3600,7 +3610,7 @@ bool Blockchain::is_output_spendtime_unlocked(uint64_t unlock_time) const
 // This function locates all outputs associated with a given input (mixins)
 // and validates that they exist and are usable.  It also checks the ring
 // signature for each input.
-bool Blockchain::check_tx_input(size_t tx_version, const txin_to_key& txin, const crypto::hash& tx_prefix_hash, const std::vector<crypto::signature>& sig, const rct::rctSig &rct_signatures, std::vector<rct::ctkey> &output_keys, uint64_t* pmax_related_block_height)
+bool Blockchain::check_tx_input(size_t tx_version, const txin_to_key& txin, const crypto::hash& tx_prefix_hash, const std::vector<crypto::signature>& sig, const rct::rctSig &rct_signatures, std::vector<rct::ctkey> &output_keys, uint64_t* pmax_related_block_height, bool is_mint_tx)
 {
   LOG_PRINT_L3("Blockchain::" << __func__);
 
@@ -3654,7 +3664,7 @@ bool Blockchain::check_tx_input(size_t tx_version, const txin_to_key& txin, cons
     CHECK_AND_ASSERT_MES(sig.size() == output_keys.size(), false, "internal error: tx signatures count=" << sig.size() << " mismatch with outputs keys count for inputs=" << output_keys.size());
   }
   
-  if (tx_version < 5) // change this after mint txs are added
+  if (!is_mint_tx) // change this after mint txs are added
   {
     std::vector<uint64_t> absolute_offsets = relative_output_offsets_to_absolute(txin.key_offsets);
     std::vector<crypto::hash> tx_hashes;

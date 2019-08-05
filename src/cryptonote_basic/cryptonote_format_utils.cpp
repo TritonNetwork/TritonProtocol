@@ -127,6 +127,29 @@ namespace cryptonote
     return h;
   }
   //---------------------------------------------------------------
+  crypto::hash get_mint_hash(transaction tx)
+  {
+    size_t vin_count = tx.vin.size();
+    size_t vout_count = tx.vout.size();
+    char buf[(vin_count*sizeof(crypto::key_image)) + (vout_count*sizeof(crypto::public_key))];
+
+    for (size_t i = 0; i < vin_count; i++)
+    {
+      crypto::key_image k_image = boost::get<txin_to_key>(tx.vin[i]).k_image;
+      memcpy(buf + (i*sizeof(crypto::key_image)), reinterpret_cast<const void *>(&k_image), sizeof(k_image));
+    }
+    
+    for (size_t i = 0; i < vout_count; i++)
+    {
+      crypto::public_key out_key = boost::get<txout_to_key>(tx.vout[i].target).key;
+      memcpy(buf + (vin_count*sizeof(crypto::public_key)) + (sizeof(crypto::public_key)*i), reinterpret_cast<const void *>(&out_key), sizeof(out_key));
+    }
+    
+	crypto::hash result;
+	crypto::cn_fast_hash(buf, sizeof(buf), result);
+	return result;
+  }
+  //---------------------------------------------------------------
   bool expand_transaction_1(transaction &tx, bool base_only)
   {
     if (tx.version >= 2 && !is_coinbase(tx))
@@ -566,6 +589,7 @@ namespace cryptonote
 	if (!pick<tx_extra_service_node_pubkey>(nar, tx_extra_fields, TX_EXTRA_TAG_SERVICE_NODE_PUBKEY)) return false;
 	if (!pick<tx_extra_tx_secret_key>(nar, tx_extra_fields, TX_EXTRA_TAG_TX_SECRET_KEY)) return false;
 	if (!pick<tx_extra_mint_key>(nar, tx_extra_fields, TX_EXTRA_TAG_MINT_KEY)) return false;
+	if (!pick<tx_extra_is_mint_tx>(nar, tx_extra_fields, TX_EXTRA_TAG_IS_MINT_TX)) return false;
     // if not empty, someone added a new type and did not add a case above
     if (!tx_extra_fields.empty())
     {
@@ -739,6 +763,18 @@ bool get_mint_key_from_tx_extra(const std::vector<uint8_t>& tx_extra, crypto::pu
   return true;
 }
 //---------------------------------------------------------------
+bool get_is_mint_tx_tag_from_tx_extra(const std::vector<uint8_t>& tx_extra, bool& is_mint_tx)
+{
+  std::vector<tx_extra_field> tx_extra_fields;
+  parse_tx_extra(tx_extra, tx_extra_fields);
+  tx_extra_is_mint_tx is_mint;
+  bool result = find_tx_extra_field_by_type(tx_extra_fields, is_mint);
+  if (!result)
+    return false;
+  is_mint_tx = is_mint.is_mint_tx;
+  return true;
+}
+//---------------------------------------------------------------
 void add_tx_secret_key_to_tx_extra(std::vector<uint8_t>& tx_extra, const crypto::secret_key& key)
 {
   add_data_to_tx_extra(tx_extra, reinterpret_cast<const char *>(&key), sizeof(key), TX_EXTRA_TAG_TX_SECRET_KEY);
@@ -747,6 +783,10 @@ void add_tx_secret_key_to_tx_extra(std::vector<uint8_t>& tx_extra, const crypto:
 void add_mint_key_to_tx_extra(std::vector<uint8_t>& tx_extra, const crypto::public_key& mint_key)
 {
   add_data_to_tx_extra(tx_extra, reinterpret_cast<const char *>(&mint_key), sizeof(const crypto::public_key), TX_EXTRA_TAG_MINT_KEY);
+}
+void add_is_mint_tx_tag_to_tx_extra(std::vector<uint8_t>& tx_extra, bool is_mint_tx)
+{
+  add_data_to_tx_extra(tx_extra, reinterpret_cast<const char *>(&is_mint_tx), sizeof(bool), TX_EXTRA_TAG_IS_MINT_TX);
 }
 //---------------------------------------------------------------
  bool get_service_node_contributor_from_tx_extra(const std::vector<uint8_t>& tx_extra, cryptonote::account_public_address& address)
