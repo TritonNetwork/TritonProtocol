@@ -3664,13 +3664,13 @@ bool Blockchain::check_tx_input(size_t tx_version, const txin_to_key& txin, cons
     CHECK_AND_ASSERT_MES(sig.size() == output_keys.size(), false, "internal error: tx signatures count=" << sig.size() << " mismatch with outputs keys count for inputs=" << output_keys.size());
   }
   
-  if (!is_mint_tx) // change this after mint txs are added
+  if (!is_mint_tx)
   {
     std::vector<uint64_t> absolute_offsets = relative_output_offsets_to_absolute(txin.key_offsets);
     std::vector<crypto::hash> tx_hashes;
-    for (const auto& offset : absolute_offsets)
+    for (size_t i = 0; i < txin.key_offsets.size(); i++)
     {
-      tx_out_index tx_oi = m_db->get_output_tx_and_index_from_global(offset);
+      tx_out_index tx_oi = m_db->get_output_tx_and_index(txin.amount, absolute_offsets[i]);
       tx_hashes.push_back(tx_oi.first);
     }
     
