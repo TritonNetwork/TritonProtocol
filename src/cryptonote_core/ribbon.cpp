@@ -123,7 +123,7 @@ uint64_t ribbon_protocol::create_ribbon_red(uint64_t height){
 
 bool get_trades_from_ogre(std::vector<exchange_trade> *trades)
 {
-  std::string data = make_curl_http_get(std::string(TRADE_OGRE_API) + std::string("/history/BTC-XTRI"));
+  std::string data = make_curl_http_get(std::string(TRADE_OGRE_API) + std::string("/history/BTC-XEQ"));
     
   rapidjson::Document document;
   document.Parse(data.c_str());
@@ -161,7 +161,7 @@ bool get_trades_from_tritonex(std::vector<exchange_trade> *trades)
 
 bool get_orders_from_ogre(std::vector<exchange_order> *orders)
 {
-  std::string data = make_curl_http_get(std::string(TRADE_OGRE_API) + std::string("/orders/BTC-XTRI"));
+  std::string data = make_curl_http_get(std::string(TRADE_OGRE_API) + std::string("/orders/BTC-XEQ"));
     
   rapidjson::Document document;
   document.Parse(data.c_str());
