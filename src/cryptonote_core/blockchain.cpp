@@ -3142,7 +3142,21 @@ bool Blockchain::check_tx_inputs(transaction& tx, tx_verification_context &tvc, 
 		}
 		else if (tx.version == 1 && is_mint_tx)
 		{
-			// TODO: verify mint inputs
+			if (tx.vin.size() != 1)
+			{
+				MERROR_VER("Mint txs can only have one input");
+				return false;
+			}
+			std::vector<transaction> input_txs;
+			get_input_txs_from_txin(boost::get<txin_to_key>(tx.vin[0]), input_txs); // only use index zero as there should only be one input for now
+			// mixin should be zero but we'll use a loop for now in case this changes later
+			for(transaction input_tx : input_txs)
+			{
+				crypto::public_key mint_key;
+				get_mint_key_from_tx_extra(input_tx.extra, mint_key);
+				crypto::hash mint_hash = get_mint_hash(tx);
+				crypto::check_signature(mint_hash, mint_key, tx.signatures[0][0]); // again use index zero bc there should only be a single signature for a single input
+			}
         }
 
 		sig_index++;
@@ -3606,6 +3620,29 @@ bool Blockchain::is_output_spendtime_unlocked(uint64_t unlock_time) const
   return cryptonote::rules::is_output_unlocked(unlock_time, m_db->height());
 
 }
+// This function finds the whole transaction for an input from
+// a given set of key offsets and an amount
+bool Blockchain::get_input_txs_from_txin(txin_to_key txin, std::vector<transaction>& txs)
+{
+  std::vector<uint64_t> absolute_offsets = relative_output_offsets_to_absolute(txin.key_offsets);
+  std::vector<crypto::hash> tx_hashes;
+  for (size_t i = 0; i < txin.key_offsets.size(); i++)
+  {
+    tx_out_index tx_oi = m_db->get_output_tx_and_index(txin.amount, absolute_offsets[i]);
+    tx_hashes.push_back(tx_oi.first);
+  }
+  
+  std::vector<crypto::hash> missed_txs;
+  get_transactions(tx_hashes, txs, missed_txs);
+  
+  if (missed_txs.size() != 0)
+  {
+    MERROR("Could not find a transaction from input");
+    return false;
+  }
+  
+  return true;
+}
 //------------------------------------------------------------------
 // This function locates all outputs associated with a given input (mixins)
 // and validates that they exist and are usable.  It also checks the ring
@@ -3666,19 +3703,8 @@ bool Blockchain::check_tx_input(size_t tx_version, const txin_to_key& txin, cons
   
   if (!is_mint_tx)
   {
-    std::vector<uint64_t> absolute_offsets = relative_output_offsets_to_absolute(txin.key_offsets);
-    std::vector<crypto::hash> tx_hashes;
-    for (size_t i = 0; i < txin.key_offsets.size(); i++)
-    {
-      tx_out_index tx_oi = m_db->get_output_tx_and_index(txin.amount, absolute_offsets[i]);
-      tx_hashes.push_back(tx_oi.first);
-    }
-    
     std::vector<transaction> txs;
-    std::vector<crypto::hash> missed_txs;
-    get_transactions(tx_hashes, txs, missed_txs);
-    
-    if (missed_txs.size() != 0)
+    if (get_input_txs_from_txin(txin, txs))
     {
       MERROR_VER("Could not find transaction from which a transaction input originates");
       return false;

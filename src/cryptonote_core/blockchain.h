@@ -1405,6 +1405,16 @@ namespace cryptonote
      * @return true if spendable, otherwise false
      */
      bool is_output_spendtime_unlocked(uint64_t unlock_time) const;
+     
+    /**
+     * @brief fetches txs from mixins according to key offsets and an amount
+     *
+     * @param txin_to_key the tx input. cannot be txin_gen
+     * @param txs return by reference vector of transactions
+     *
+     * @return true if all transactions are found
+     */
+     bool get_input_txs_from_txin(txin_to_key txin, std::vector<transaction>& txs);
 
     /**
      * @brief stores an invalid block in a separate container
