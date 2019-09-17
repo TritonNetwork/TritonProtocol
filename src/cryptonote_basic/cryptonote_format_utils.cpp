@@ -785,7 +785,7 @@ bool get_is_burn_tx_tag_from_tx_extra(const std::vector<uint8_t>& tx_extra, bool
   bool result = find_tx_extra_field_by_type(tx_extra_fields, is_burn);
   if (!result)
     return false;
-  is_burn = is_burn.is_burn_tx;
+  is_burn_tx = is_burn.is_burn_tx;
   return true;
 }
 //---------------------------------------------------------------
