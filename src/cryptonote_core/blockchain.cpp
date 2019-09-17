@@ -2932,6 +2932,9 @@ bool Blockchain::check_tx_inputs(transaction& tx, tx_verification_context &tvc, 
 	bool is_mint_tx;
 	get_is_mint_tx_tag_from_tx_extra(tx.extra, is_mint_tx);
 
+  bool is_burn_tx;
+	get_is_burn_tx_tag_from_tx_extra(tx.extra, is_burn_tx);
+  
     // mint txs use tx version 1
 	if (hf_version >= SERVICE_NODE_VERSION && tx.version < 2 && !is_mint_tx)
 	{
@@ -2967,7 +2970,7 @@ bool Blockchain::check_tx_inputs(transaction& tx, tx_verification_context &tvc, 
 				}
 				else
 				{
-					MDEBUG("Found unmixable output! This should never happen in Triton!");
+					MDEBUG("Found unmixable output! This should never happen in Equilibria!");
 					uint64_t n_outputs = m_db->get_num_outputs(in_to_key.amount);
 					MDEBUG("output size " << print_money(in_to_key.amount) << ": " << n_outputs << " available");
 					// n_outputs includes the output we're considering
@@ -2979,7 +2982,7 @@ bool Blockchain::check_tx_inputs(transaction& tx, tx_verification_context &tvc, 
 				// TODO(jcktm) - remove branch if safe after fork
 				if (in_to_key.key_offsets.size() - 1 < mixin)
 					mixin = in_to_key.key_offsets.size() - 1;
-				if (hf_version >= SERVICE_NODE_VERSION && in_to_key.key_offsets.size() - 1 != min_mixin && !is_mint_tx)
+				if (hf_version >= SERVICE_NODE_VERSION && in_to_key.key_offsets.size() - 1 != min_mixin && !is_mint_tx && !is_burn_tx)
 				{
 					MERROR_VER("Tx " << get_transaction_hash(tx) << " has incorrect ring size (" << in_to_key.key_offsets.size() - 1 << ")");
 					tvc.m_low_mixin = true;

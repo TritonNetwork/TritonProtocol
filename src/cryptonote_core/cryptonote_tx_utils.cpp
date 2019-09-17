@@ -349,8 +349,6 @@ namespace cryptonote
       tx.version = rct ? 2 : 1;
       tx.unlock_time = unlock_time;
     }
-    LOG_PRINT_L0("TX Version: " << tx.version);
-    LOG_PRINT_L0("P_O_U: " << per_output_unlock);
 
     crypto::public_key txkey_pub;
     if (is_burn_tx)
@@ -375,6 +373,7 @@ namespace cryptonote
       
       std::vector<uint8_t> new_extra;
       add_mint_key_to_tx_extra(new_extra, pub_mint_key);
+      add_is_burn_tx_tag_to_tx_extra(new_extra, is_burn_tx);
       tx.extra = new_extra;
       
     }

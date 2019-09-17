@@ -48,6 +48,7 @@
 
 #define TX_EXTRA_TAG_MINT_KEY                 0x76
 #define TX_EXTRA_TAG_IS_MINT_TX               0x77
+#define TX_EXTRA_TAG_IS_BURN_TX               0x78
 
 #define TX_EXTRA_MYSTERIOUS_MINERGATE_TAG     0xDE
 
@@ -274,6 +275,14 @@ struct tx_extra_service_node_deregister
     FIELD(is_mint_tx)
   END_SERIALIZE()
 };
+struct tx_extra_is_burn_tx
+{
+  bool is_burn_tx;
+
+  BEGIN_SERIALIZE()
+    FIELD(is_burn_tx)
+  END_SERIALIZE()
+};
   // tx_extra_field format, except tx_extra_padding and tx_extra_pub_key:
   //   varint tag;
   //   varint size;
@@ -291,7 +300,8 @@ struct tx_extra_service_node_deregister
 	 tx_extra_service_node_deregister,
 	 tx_extra_tx_secret_key,
 	 tx_extra_mint_key,
-	 tx_extra_is_mint_tx> tx_extra_field;
+	 tx_extra_is_mint_tx,
+   tx_extra_is_burn_tx> tx_extra_field;
   }
   BLOB_SERIALIZER(cryptonote::tx_extra_service_node_deregister::vote);
 
@@ -309,3 +319,4 @@ struct tx_extra_service_node_deregister
   VARIANT_TAG(binary_archive, cryptonote::tx_extra_tx_secret_key, TX_EXTRA_TAG_TX_SECRET_KEY);
   VARIANT_TAG(binary_archive, cryptonote::tx_extra_mint_key, TX_EXTRA_TAG_MINT_KEY);
   VARIANT_TAG(binary_archive, cryptonote::tx_extra_is_mint_tx, TX_EXTRA_TAG_IS_MINT_TX);
+  VARIANT_TAG(binary_archive, cryptonote::tx_extra_is_burn_tx, TX_EXTRA_TAG_IS_BURN_TX);
