@@ -85,6 +85,7 @@ namespace cryptonote
   bool get_tx_secret_key_from_tx_extra(const std::vector<uint8_t>& tx_extra, crypto::secret_key& key);
   bool get_mint_key_from_tx_extra(const std::vector<uint8_t>& tx_extra, crypto::public_key& mint_key);
   bool get_is_mint_tx_tag_from_tx_extra(const std::vector<uint8_t>& tx_extra, bool& is_mint_tx);
+  bool get_is_burn_tx_tag_from_tx_extra(const std::vector<uint8_t>& tx_extra, bool& is_burn_tx);
   void add_tx_secret_key_to_tx_extra(std::vector<uint8_t>& tx_extra, const crypto::secret_key& key);
   void add_mint_key_to_tx_extra(std::vector<uint8_t>& tx_extra, const crypto::public_key& mint_key);
   void add_is_mint_tx_tag_to_tx_extra(std::vector<uint8_t>& tx_extra, bool is_mint_tx);
