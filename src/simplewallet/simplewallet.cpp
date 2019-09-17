@@ -5403,7 +5403,7 @@ bool simple_wallet::make_mint_transaction(const std::vector<std::string> &args_)
   dsts.push_back(dst);
   
   std::vector<tools::wallet2::pending_tx> ptx_vector = m_wallet->create_transactions_2(dsts, 0, 0, 1, extra, m_current_subaddress_account, subaddr_indices, false, mint_pubkey, mint_seckey);
-  commit_or_save(ptx_vector[0], m_do_not_relay);
+  commit_or_save(ptx_vector, m_do_not_relay);
   
   return true;
 }
