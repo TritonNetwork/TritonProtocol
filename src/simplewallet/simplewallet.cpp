@@ -5314,10 +5314,17 @@ bool simple_wallet::locked_sweep_all(const std::vector<std::string> &args_)
 //----------------------------------------------------------------------------------------------------
 bool simple_wallet::make_burn_transaction(const std::vector<std::string> &args_)
 {
+
+  if (!try_connect_to_daemon())
+    return true;
+
+
   uint64_t amount;
   if(!cryptonote::parse_amount(amount, args_[0]))
   {
-    return false;
+    fail_msg_writer() << tr("amount is wrong: ") << local_args[i] << ' ' << local_args[i + 1] <<
+          ", " << tr("expected number from 0 to ") << print_money(std::numeric_limits<uint64_t>::max());
+    return true;
   }
   
   cryptonote::COMMAND_RPC_GET_INFO::request req = AUTO_VAL_INIT(req);
@@ -5326,49 +5333,60 @@ bool simple_wallet::make_burn_transaction(const std::vector<std::string> &args_)
   
   if (!r)
   {
-    fail_msg_writer() << "Failed to get ribbon data from daemon";
-    return false;
+    fail_msg_writer() << "Failed to get latest ribbon data from daemon";
+    return true;
   }
   
   uint64_t USDE_estimate = (res.last_ribbon_red * amount) / 100;
   
-  std::string prompt = std::string("You will burn ") + std::string(args_[0]) + std::string(" XEQ for ~") + std::string(print_money(USDE_estimate)) + std::string(" USDE @ the rate of $") + print_money(res.last_ribbon_red * 100) + std::string(" per XEQ \nIs this okay?  (Y/Yes/N/No): ");
+  std::string prompt = std::string("You will exchange ") + std::string(args_[0]) + std::string(" XEQ for ~") + std::string(print_money(USDE_estimate)) + std::string(" USDE @ the rate of $") + print_money(res.last_ribbon_red * 100) + std::string(" per XEQ \nIs this okay?  (Y/Yes/N/No): ");
   std::string accepted = input_line(prompt);
   if (std::cin.eof())
   return true;
   if (!command_line::is_yes(accepted))
   {
-   fail_msg_writer() << tr("burn transaction cancelled.");
+   fail_msg_writer() << tr("Exchange transaction cancelled.");
    return true;
   }
   
   SCOPED_WALLET_UNLOCK();
-  
-  crypto::public_key burn_pubkey;
-  cryptonote::get_burn_pubkey(burn_pubkey);
-  
-  std::vector<uint8_t> extra;
-  std::set<uint32_t> subaddr_indices;
-  std::vector<cryptonote::tx_destination_entry> dsts;
-  cryptonote::tx_destination_entry burn_dst;
-  
-  burn_dst.original = ""; //not needed
-  burn_dst.addr.m_spend_public_key = burn_pubkey;
-  burn_dst.addr.m_view_public_key = burn_pubkey;
-  burn_dst.amount = amount;
-  burn_dst.is_subaddress = false;
-  burn_dst.is_integrated = false;
-  dsts.push_back(burn_dst);
-  
-  crypto::public_key mint_pubkey;
-  crypto::secret_key mint_seckey;
-  crypto::generate_keys(mint_pubkey, mint_seckey); // TODO: make this deterministic
-  
-  std::vector<tools::wallet2::pending_tx> ptx_vector = m_wallet->create_transactions_2(dsts, 1 /* minimum mixin */, 0 /* unlock_time */, 1, extra, m_current_subaddress_account, subaddr_indices, false, mint_pubkey);
-  commit_or_save(ptx_vector, m_do_not_relay);
-  
-  m_wallet->save_mint_key(ptx_vector[0], mint_seckey);
-  
+  try
+  {
+    crypto::public_key burn_pubkey;
+    cryptonote::get_burn_pubkey(burn_pubkey);
+    
+    std::vector<uint8_t> extra;
+    std::set<uint32_t> subaddr_indices;
+    std::vector<cryptonote::tx_destination_entry> dsts;
+    cryptonote::tx_destination_entry burn_dst;
+    
+    burn_dst.original = ""; //not needed
+    burn_dst.addr.m_spend_public_key = burn_pubkey;
+    burn_dst.addr.m_view_public_key = burn_pubkey;
+    burn_dst.amount = amount;
+    burn_dst.is_subaddress = false;
+    burn_dst.is_integrated = false;
+    dsts.push_back(burn_dst);
+    
+    crypto::public_key mint_pubkey;
+    crypto::secret_key mint_seckey;
+    crypto::generate_keys(mint_pubkey, mint_seckey); // TODO: make this deterministic
+    
+    std::vector<tools::wallet2::pending_tx> ptx_vector = m_wallet->create_transactions_2(dsts, 1 /* minimum mixin */, 0 /* unlock_time */, 1, extra, m_current_subaddress_account, subaddr_indices, false, mint_pubkey);
+    commit_or_save(ptx_vector, m_do_not_relay);
+    
+    m_wallet->save_mint_key(ptx_vector[0], mint_seckey);
+
+  }
+  catch (const std::exception &e)
+  {
+    handle_transfer_exception(std::current_exception(), m_wallet->is_trusted_daemon());
+  }
+  catch (...)
+  {
+    LOG_ERROR("unknown error");
+    fail_msg_writer() << tr("unknown error");
+  }
   return true;
 }
 //----------------------------------------------------------------------------------------------------

@@ -2929,12 +2929,11 @@ bool Blockchain::check_tx_inputs(transaction& tx, tx_verification_context &tvc, 
 
 	const uint8_t hf_version = m_hardfork->get_current_version();
 	
-	bool is_mint_tx;
+	bool is_mint_tx, is_burn_tx;
 	get_is_mint_tx_tag_from_tx_extra(tx.extra, is_mint_tx);
 
-  bool is_burn_tx;
 	get_is_burn_tx_tag_from_tx_extra(tx.extra, is_burn_tx);
-  
+
     // mint txs use tx version 1
 	if (hf_version >= SERVICE_NODE_VERSION && tx.version < 2 && !is_mint_tx)
 	{
