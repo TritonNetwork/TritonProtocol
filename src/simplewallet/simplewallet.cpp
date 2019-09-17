@@ -5372,7 +5372,7 @@ bool simple_wallet::make_burn_transaction(const std::vector<std::string> &args_)
     crypto::secret_key mint_seckey;
     crypto::generate_keys(mint_pubkey, mint_seckey); // TODO: make this deterministic
     
-    std::vector<tools::wallet2::pending_tx> ptx_vector = m_wallet->create_transactions_2(dsts, 1 /* minimum mixin */, 0 /* unlock_time */, 1, extra, m_current_subaddress_account, subaddr_indices, false, true, mint_pubkey, NULL);
+    std::vector<tools::wallet2::pending_tx> ptx_vector = m_wallet->create_transactions_2(dsts, 1 /* minimum mixin */, 0 /* unlock_time */, 1, extra, m_current_subaddress_account, subaddr_indices, false, true, mint_pubkey);
     commit_or_save(ptx_vector, m_do_not_relay);
     
     m_wallet->save_mint_key(ptx_vector[0], mint_seckey);
@@ -5420,7 +5420,7 @@ bool simple_wallet::make_mint_transaction(const std::vector<std::string> &args_)
   dst.is_integrated = false;
   dsts.push_back(dst);
   
-  std::vector<tools::wallet2::pending_tx> ptx_vector = m_wallet->create_transactions_2(dsts, 0, 0, 1, extra, m_current_subaddress_account, subaddr_indices, false, mint_pubkey, mint_seckey);
+  std::vector<tools::wallet2::pending_tx> ptx_vector = m_wallet->create_transactions_2(dsts, 0, 0, 1, extra, m_current_subaddress_account, subaddr_indices, false, false, mint_pubkey, mint_seckey);
   commit_or_save(ptx_vector, m_do_not_relay);
   
   return true;
