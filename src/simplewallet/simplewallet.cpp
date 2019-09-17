@@ -5322,7 +5322,7 @@ bool simple_wallet::make_burn_transaction(const std::vector<std::string> &args_)
   uint64_t amount;
   if(!cryptonote::parse_amount(amount, args_[0]))
   {
-    fail_msg_writer() << tr("amount is wrong: ") << local_args[i] << ' ' << local_args[i + 1] <<
+    fail_msg_writer() << tr("amount is wrong: ") << amount <<
           ", " << tr("expected number from 0 to ") << print_money(std::numeric_limits<uint64_t>::max());
     return true;
   }
