@@ -2953,7 +2953,7 @@ bool Blockchain::check_tx_inputs(transaction& tx, tx_verification_context &tvc, 
 	{
 		size_t n_unmixable = 0, n_mixable = 0;
 		size_t mixin = std::numeric_limits<size_t>::max();
-		const size_t min_mixin = is_mint_tx ? 0 : (hf_version >= HF_VERSION_MIN_MIXIN_4 ? 4 : 2);
+		const size_t min_mixin = (is_burn_tx || is_mint_tx) ? 0 : (hf_version >= HF_VERSION_MIN_MIXIN_4 ? 4 : 2);
 		for (const auto& txin : tx.vin)
 		{
 			// non txin_to_key inputs will be rejected below
@@ -3008,9 +3008,9 @@ bool Blockchain::check_tx_inputs(transaction& tx, tx_verification_context &tvc, 
 
 		// min/max tx version based on HF, and we accept v1 txes if having a non mixable
 		size_t max_tx_version;
-		if(hf_version <= 3 || is_mint_tx)
+		if(hf_version <= 3 || (is_mint_tx || is_burn_tx))
 			max_tx_version = 1;
-		else if (hf_version < SERVICE_NODE_VERSION && !is_mint_tx)
+		else if (hf_version < SERVICE_NODE_VERSION && (!is_mint_tx || !is_burn_tx))
 			max_tx_version = transaction::version_2;
 		else 
 			transaction::version_3_per_output_unlock_times;
@@ -3030,7 +3030,7 @@ bool Blockchain::check_tx_inputs(transaction& tx, tx_verification_context &tvc, 
 		}
 	}
 
-	// from v7, sorted ins
+	// from v4, sorted ins
 	if (hf_version >= 4) {
 		const crypto::key_image *last_key_image = NULL;
 		for (size_t n = 0; n < tx.vin.size(); ++n)

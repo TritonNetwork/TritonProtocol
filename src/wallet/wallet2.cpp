@@ -5527,7 +5527,7 @@ bool wallet2::commit_tx(pending_tx& ptx)
     if (daemon_send_resp.status != CORE_RPC_STATUS_OK)
     {
      LOG_PRINT_L2("Transaction was rejected by daemon");
-     return false;
+     return true;
     }
     // sanity checks
     for (size_t idx: ptx.selected_transfers)
@@ -5580,8 +5580,10 @@ bool wallet2::commit_tx(std::vector<pending_tx>& ptx_vector)
 {
   for (auto & ptx : ptx_vector)
   {
-    if (!commit_tx(ptx))
-      return false;
+    if (!commit_tx(ptx)){
+      LOG_PRINT_L2("Could not commit TX!");
+      return true;
+    }
   }
   return true;
 }
@@ -8588,7 +8590,7 @@ bool wallet2::light_wallet_key_image_is_ours(const crypto::key_image& key_image,
 // This system allows for sending (almost) the entire balance, since it does
 // not generate spurious change in all txes, thus decreasing the instantaneous
 // usable balance.
-std::vector<wallet2::pending_tx> wallet2::create_transactions_2(std::vector<cryptonote::tx_destination_entry> dsts, const size_t fake_outs_count, const uint64_t unlock_time, uint32_t priority, const std::vector<uint8_t>& extra, uint32_t subaddr_account, std::set<uint32_t> subaddr_indices, bool is_staking_tx, crypto::public_key mint_pubkey, crypto::secret_key mint_seckey)
+std::vector<wallet2::pending_tx> wallet2::create_transactions_2(std::vector<cryptonote::tx_destination_entry> dsts, const size_t fake_outs_count, const uint64_t unlock_time, uint32_t priority, const std::vector<uint8_t>& extra, uint32_t subaddr_account, std::set<uint32_t> subaddr_indices, bool is_staking_tx, crypto::public_key mint_pubkey, crypto::secret_key mint_seckey, bool is_burn_tx)
 {
   //ensure device is let in NONE mode in any case
   hw::device &hwdev = m_account.get_device();
@@ -8646,7 +8648,7 @@ std::vector<wallet2::pending_tx> wallet2::create_transactions_2(std::vector<cryp
   uint64_t needed_fee, available_for_fee = 0;
   uint64_t upper_transaction_weight_limit = get_upper_transaction_weight_limit();
   const bool use_per_byte_fee = use_fork_rules(HF_VERSION_PER_BYTE_FEE, 0);
-  const bool use_rct = mint_seckey != crypto::null_skey ? false : use_fork_rules(0, 4);
+  const bool use_rct = (mint_seckey != crypto::null_skey  || is_burn_tx)? false : use_fork_rules(0, 4);
   const bool bulletproof = use_fork_rules(get_bulletproof_fork(), 0);
   const rct::RangeProofType range_proof_type = bulletproof ? rct::RangeProofPaddedBulletproof : rct::RangeProofBorromean;
 
