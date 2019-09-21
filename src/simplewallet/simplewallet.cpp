@@ -2357,7 +2357,7 @@ simple_wallet::simple_wallet()
                            tr("burn <amount>"),
                            tr("Burn XTRI for USDE using the most recent conversion rate"));
   m_cmd_binder.set_handler("mint",
-                           boost::bind(&simple_wallet::make_burn_transaction, this, _1),
+                           boost::bind(&simple_wallet::make_mint_transaction, this, _1),
                            tr("mint <amount> <mint_key>"),
                            tr("Exchange USDE to mint new XEQ at the most recent conversion rate"));
   m_cmd_binder.set_handler("register_service_node",
@@ -5318,6 +5318,11 @@ bool simple_wallet::make_burn_transaction(const std::vector<std::string> &args_)
   if (!try_connect_to_daemon())
     return true;
 
+  if(args_.size() < 1)
+  {
+    fail_msg_writer() << tr("wrong number of arguments");
+    return true;
+  }
 
   uint64_t amount;
   if(!cryptonote::parse_amount(amount, args_[0]))
@@ -5371,11 +5376,15 @@ bool simple_wallet::make_burn_transaction(const std::vector<std::string> &args_)
     crypto::public_key mint_pubkey;
     crypto::secret_key mint_seckey;
     crypto::generate_keys(mint_pubkey, mint_seckey); // TODO: make this deterministic
-    
-    std::vector<tools::wallet2::pending_tx> ptx_vector = m_wallet->create_transactions_2(dsts, 1 /* minimum mixin */, 0 /* unlock_time */, 1, extra, m_current_subaddress_account, subaddr_indices, false, true, mint_pubkey);
+    std::vector<tools::wallet2::pending_tx> ptx_vector = m_wallet->create_transactions_2(dsts, 1, 0, 1, extra, m_current_subaddress_account, subaddr_indices, false, true, mint_pubkey);
+ 
     commit_or_save(ptx_vector, m_do_not_relay);
-    
-    m_wallet->save_mint_key(ptx_vector[0], mint_seckey);
+
+    if (ptx_vector.empty())
+    {
+      fail_msg_writer() << tr("No outputs found, or daemon is not ready");
+      return true;
+    }
 
   }
   catch (const std::exception &e)
@@ -5387,21 +5396,29 @@ bool simple_wallet::make_burn_transaction(const std::vector<std::string> &args_)
     LOG_ERROR("unknown error");
     fail_msg_writer() << tr("unknown error");
   }
+  //m_wallet->save_mint_key(ptx_vector[0], mint_seckey);
   return true;
 }
 //----------------------------------------------------------------------------------------------------
 bool simple_wallet::make_mint_transaction(const std::vector<std::string> &args_)
 {
+
+  if (!try_connect_to_daemon())
+    return true;
+
   uint64_t amount;
   if(!cryptonote::parse_amount(amount, args_[0]))
   {
-    return false;
+    fail_msg_writer() << tr("Exchange amount is not valid!");
+    return true;
   }
   cryptonote::blobdata blob;
   if(!epee::string_tools::parse_hexstr_to_binbuff(args_[1], blob))
   {
-    return false;
+    fail_msg_writer() << tr("Mint key parse error...");
+    return true;
   }
+
   crypto::secret_key mint_seckey = *reinterpret_cast<const crypto::secret_key*>(blob.data());
   crypto::public_key mint_pubkey;
   crypto::secret_key_to_public_key(mint_seckey, mint_pubkey);

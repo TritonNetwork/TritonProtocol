@@ -3008,12 +3008,14 @@ bool Blockchain::check_tx_inputs(transaction& tx, tx_verification_context &tvc, 
 
 		// min/max tx version based on HF, and we accept v1 txes if having a non mixable
 		size_t max_tx_version;
-		if(hf_version <= 3 || (is_mint_tx || is_burn_tx))
-			max_tx_version = 1;
-		else if (hf_version < SERVICE_NODE_VERSION && (!is_mint_tx || !is_burn_tx))
-			max_tx_version = transaction::version_2;
-		else 
-			transaction::version_3_per_output_unlock_times;
+
+    if(hf_version <= 3 || is_mint_tx){
+      max_tx_version= 1;
+    }else if(is_burn_tx || (hf_version < SERVICE_NODE_VERSION && !is_mint_tx)){
+      max_tx_version = transaction::version_2;
+    }else{
+      max_tx_version = transaction::version_3_per_output_unlock_times;
+    }
 
 		if (tx.version > max_tx_version)
 		{
@@ -3107,7 +3109,7 @@ bool Blockchain::check_tx_inputs(transaction& tx, tx_verification_context &tvc, 
 
 		// make sure that output being spent matches up correctly with the
 		// signature spending it.
-		if (!check_tx_input(tx.version, in_to_key, tx_prefix_hash, tx.version == 1 ? tx.signatures[sig_index] : std::vector<crypto::signature>(), tx.rct_signatures, pubkeys[sig_index], pmax_used_block_height, is_mint_tx))
+		if (!check_tx_input(tx.version, in_to_key, tx_prefix_hash, tx.version == 1 ? tx.signatures[sig_index] : std::vector<crypto::signature>(), tx.rct_signatures, pubkeys[sig_index], pmax_used_block_height, is_mint_tx, is_burn_tx))
 		{
 			it->second[in_to_key.k_image] = false;
 			MERROR_VER("Failed to check ring signature for tx " << get_transaction_hash(tx) << "  vin key with k_image: " << in_to_key.k_image << "  sig_index: " << sig_index);
@@ -3629,12 +3631,13 @@ bool Blockchain::is_output_spendtime_unlocked(uint64_t unlock_time) const
 // a given set of key offsets and an amount
 bool Blockchain::get_input_txs_from_txin(txin_to_key txin, std::vector<transaction>& txs)
 {
-  std::vector<uint64_t> absolute_offsets = relative_output_offsets_to_absolute(txin.key_offsets);
+   std::vector<uint64_t> absolute_offsets = relative_output_offsets_to_absolute(txin.key_offsets);
   std::vector<crypto::hash> tx_hashes;
   for (size_t i = 0; i < txin.key_offsets.size(); i++)
   {
     tx_out_index tx_oi = m_db->get_output_tx_and_index(txin.amount, absolute_offsets[i]);
     tx_hashes.push_back(tx_oi.first);
+    std::cout << tx_oi.first << std::endl;
   }
   
   std::vector<crypto::hash> missed_txs;
@@ -3706,7 +3709,7 @@ bool Blockchain::check_tx_input(size_t tx_version, const txin_to_key& txin, cons
     CHECK_AND_ASSERT_MES(sig.size() == output_keys.size(), false, "internal error: tx signatures count=" << sig.size() << " mismatch with outputs keys count for inputs=" << output_keys.size());
   }
   
-  if (!is_mint_tx)
+  if (!is_mint_tx || !is_burn_tx)
   {
     std::vector<transaction> txs;
     if (get_input_txs_from_txin(txin, txs))
