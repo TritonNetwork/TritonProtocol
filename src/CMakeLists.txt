@@ -32,6 +32,9 @@ if (WIN32 OR STATIC)
   add_definitions(-DSTATICLIB)
   # miniupnp changed their static define
   add_definitions(-DMINIUPNP_STATICLIB)
+  add_definitions(-DCURL_STATICLIB)
+  add_definitions(-DNGHTTP2_STATIC)
+
 endif ()
 
 function (monero_private_headers group)
