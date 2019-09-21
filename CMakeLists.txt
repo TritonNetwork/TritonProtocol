@@ -454,10 +454,13 @@ endif()
 
 find_package(OpenSSL REQUIRED)
 message(STATUS "Using OpenSSL include dir at ${OPENSSL_INCLUDE_DIR}")
-include_directories(${CURL_INCLUDE_DIRS})
+include_directories(${OPENSSL_INCLUDE_DIR})
 
 find_package(CURL REQUIRED)
-include_directories(${OPENSSL_INCLUDE_DIR})
+message(STATUS "Using OpenSSL include dir at ${CURL_INCLUDE_DIRS}")
+include_directories(${CURL_INCLUDE_DIRS})
+set(CURL_LIBRARIES "${CURL_LIBRARIES}")
+
 
 if(STATIC AND NOT IOS)
   if(UNIX)
@@ -465,8 +468,6 @@ if(STATIC AND NOT IOS)
     set(CURL_LIBRARIES "${CURL_LIBRARIES}")
   endif()
   if(MINGW)
-    include_directories( ${CURL_INCLUDE_DIRS} )
-    link_directories( ${CURL_LIBRARIES} )
   endif()
   
 endif()

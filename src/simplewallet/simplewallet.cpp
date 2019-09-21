@@ -5380,12 +5380,6 @@ bool simple_wallet::make_burn_transaction(const std::vector<std::string> &args_)
  
     commit_or_save(ptx_vector, m_do_not_relay);
 
-    if (ptx_vector.empty())
-    {
-      fail_msg_writer() << tr("No outputs found, or daemon is not ready");
-      return true;
-    }
-
   }
   catch (const std::exception &e)
   {

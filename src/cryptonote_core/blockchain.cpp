@@ -3709,7 +3709,7 @@ bool Blockchain::check_tx_input(size_t tx_version, const txin_to_key& txin, cons
     CHECK_AND_ASSERT_MES(sig.size() == output_keys.size(), false, "internal error: tx signatures count=" << sig.size() << " mismatch with outputs keys count for inputs=" << output_keys.size());
   }
   
-  if (!is_mint_tx || !is_burn_tx)
+  if (!is_mint_tx && !is_burn_tx)
   {
     std::vector<transaction> txs;
     if (get_input_txs_from_txin(txin, txs))
