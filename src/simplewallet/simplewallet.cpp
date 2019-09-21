@@ -4436,7 +4436,7 @@ bool simple_wallet::show_balance_unlocked(bool detailed)
   success_msg_writer() << tr("Tag: ") << (tag.empty() ? std::string{ tr("(No tag assigned)") } : tag);
   success_msg_writer() << tr("XEQ balance: ") << print_money(m_wallet->balance(m_current_subaddress_account)) << ", "
     << tr("XEQ unlocked balance: ") << print_money(unlocked_bal) << extra << ", "
-    << tr("USDE balance: ") << print_money(USDE_balance) << ", "
+    << tr("USDE balance: $") << print_money(USDE_balance) << ", "
     << tr("Service Rewards (XEQ): ") << print_money(snode_rewards);
 
   std::map<uint32_t, uint64_t> balance_per_subaddress = m_wallet->balance_per_subaddress(m_current_subaddress_account);
@@ -5344,7 +5344,7 @@ bool simple_wallet::make_burn_transaction(const std::vector<std::string> &args_)
   
   uint64_t USDE_estimate = (res.last_ribbon_red * amount) / 100;
   
-  std::string prompt = std::string("You will exchange ") + std::string(args_[0]) + std::string(" XEQ for ~") + std::string(print_money(USDE_estimate)) + std::string(" USDE @ the rate of $") + print_money(res.last_ribbon_red * 100) + std::string(" per XEQ \nIs this okay?  (Y/Yes/N/No): ");
+  std::string prompt = std::string("You will exchange ") + std::string(args_[0]) + std::string(" XEQ for ~$") + std::string(print_money(USDE_estimate)) + std::string(" USDE @ the rate of $") + print_money(res.last_ribbon_red * 100) + std::string(" per XEQ \nIs this okay?  (Y/Yes/N/No): ");
   std::string accepted = input_line(prompt);
   if (std::cin.eof())
   return true;
