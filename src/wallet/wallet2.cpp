@@ -194,7 +194,7 @@ struct options {
   const command_line::arg_descriptor<bool> testnet = {"testnet", tools::wallet2::tr("For testnet. Daemon must also be launched with --testnet flag"), false};
   const command_line::arg_descriptor<bool> stagenet = {"stagenet", tools::wallet2::tr("For stagenet. Daemon must also be launched with --stagenet flag"), false};
   const command_line::arg_descriptor<std::string, false, true, 2> shared_ringdb_dir = {
-    "triton-shared-ringdb-dir", tools::wallet2::tr("Set shared ring database path"),
+    "equilibria-shared-ringdb-dir", tools::wallet2::tr("Set shared ring database path"),
     get_default_ringdb_path(),
     {{ &testnet, &stagenet }},
     [](std::array<bool, 2> testnet_stagenet, bool defaulted, std::string val)->std::string {
@@ -11603,7 +11603,7 @@ std::string wallet2::make_uri(const std::string &address, const std::string &pay
     }
   }
 
-  std::string uri = "triton:" + address;
+  std::string uri = "equilibria:" + address;
   unsigned int n_fields = 0;
 
   if (!payment_id.empty())
@@ -11632,9 +11632,9 @@ std::string wallet2::make_uri(const std::string &address, const std::string &pay
 //----------------------------------------------------------------------------------------------------
 bool wallet2::parse_uri(const std::string &uri, std::string &address, std::string &payment_id, uint64_t &amount, std::string &tx_description, std::string &recipient_name, std::vector<std::string> &unknown_parameters, std::string &error)
 {
-  if (uri.substr(0, 7) != "triton:")
+  if (uri.substr(0, 7) != "equilibria:")
   {
-    error = std::string("URI has wrong scheme (expected \"triton:\"): ") + uri;
+    error = std::string("URI has wrong scheme (expected \"equilibria:\"): ") + uri;
     return false;
   }
 
