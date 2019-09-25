@@ -1,4 +1,5 @@
 #include <vector>
+#define CURL_STATICLIB
 #include <curl/curl.h>
 #include <iostream>
 #include <math.h>
@@ -22,14 +23,14 @@ std::string make_curl_http_get(std::string url)
 {
   std::string read_buffer;
   CURL* curl = curl_easy_init(); 
-  
+  curl_global_init(CURL_GLOBAL_ALL); 
+  curl_easy_setopt(curl, CURLOPT_SSL_VERIFYPEER, 0L); //Fix this before launching...Should verify tradeogre
   curl_easy_setopt(curl, CURLOPT_URL, url.c_str()); 
   curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, curl_write_callback);
   curl_easy_setopt(curl, CURLOPT_WRITEDATA, &read_buffer);
   curl_easy_setopt(curl, CURLOPT_FAILONERROR, true);
   CURLcode res = curl_easy_perform(curl); 
   curl_easy_cleanup(curl);
-  
   return read_buffer;
 }
 
@@ -57,7 +58,7 @@ std::vector<exchange_trade> ribbon_protocol::trades_during_latest_1_block()
 uint64_t ribbon_protocol::create_ribbon_red(uint64_t height){
     uint64_t ma1_sum = 0;
     uint64_t ma1_vol_sum = 0;
-    for (size_t i = 1; i <= 960; i++)
+    for (size_t i = 1; i <= 1440; i++)
     {
       cryptonote::block blk;
       crypto::hash block_hash = m_core.get_block_id_by_height(height - i);
@@ -73,7 +74,7 @@ uint64_t ribbon_protocol::create_ribbon_red(uint64_t height){
     
     uint64_t ma2_sum = 0;
     uint64_t ma2_vol_sum = 0;
-    for (size_t i = 1; i <= 480; i++)
+    for (size_t i = 1; i <= 720; i++)
     {
       cryptonote::block blk;
       crypto::hash block_hash = m_core.get_block_id_by_height(height - i);
@@ -89,7 +90,7 @@ uint64_t ribbon_protocol::create_ribbon_red(uint64_t height){
 
     uint64_t ma3_sum = 0;
     uint64_t ma3_vol_sum = 0;
-    for (size_t i = 1; i <= 240; i++)
+    for (size_t i = 1; i <= 360; i++)
     {
       cryptonote::block blk;
       crypto::hash block_hash = m_core.get_block_id_by_height(height - i);
@@ -103,7 +104,7 @@ uint64_t ribbon_protocol::create_ribbon_red(uint64_t height){
     
     uint64_t ma4_sum = 0;
     uint64_t ma4_vol_sum = 0;
-    for (size_t i = 1; i <= 120; i++)
+    for (size_t i = 1; i <= 180; i++)
     {
       cryptonote::block blk;
       crypto::hash block_hash = m_core.get_block_id_by_height(height - i);
@@ -124,7 +125,7 @@ uint64_t ribbon_protocol::create_ribbon_red(uint64_t height){
 bool get_trades_from_ogre(std::vector<exchange_trade> *trades)
 {
   std::string data = make_curl_http_get(std::string(TRADE_OGRE_API) + std::string("/history/BTC-XEQ"));
-    
+
   rapidjson::Document document;
   document.Parse(data.c_str());
   for (size_t i = 0; i < document.Size(); i++)

@@ -110,14 +110,14 @@ static const struct {
 
 } testnet_hard_forks[] = {
   { 1, 1, 0, 1341378000 },
-  { 2, 10, 0, 1445355000 },
-  { 3, 25, 0, 1472415034 },
-  { 4, 50, 0, 1472415035 },
-  { 5, 190, 0, 1551499880 },
-  {6, 240, 0, 1561538231 },
-  {7, 309, 0, 1561538232 }
+  { 2, 5, 0, 1445355000 },
+  { 3, 8, 0, 1472415034 },
+  { 4, 10, 0, 1472415035 },
+  { 5, 15, 0, 1551499880 },
+  {6, 20, 0, 1561538231 },
+  {7, 30, 0, 1561538232 }
 };
-static const uint64_t testnet_hard_fork_version_1_till = 10;
+static const uint64_t testnet_hard_fork_version_1_till = 5;
 
 static const struct {
   uint8_t version;
@@ -1254,7 +1254,7 @@ uint64_t Blockchain::get_current_cumulative_block_weight_median() const
  {
     uint64_t ma1_sum = 0;
     uint64_t ma1_vol_sum = 0;
-    for (size_t i = 1; i <= 960; i++)
+    for (size_t i = 1; i <= 1440; i++)
     {
       cryptonote::block blk;
       crypto::hash block_hash = get_block_id_by_height(height - i);
@@ -1270,7 +1270,7 @@ uint64_t Blockchain::get_current_cumulative_block_weight_median() const
     
     uint64_t ma2_sum = 0;
     uint64_t ma2_vol_sum = 0;
-    for (size_t i = 1; i <= 480; i++)
+    for (size_t i = 1; i <= 720; i++)
     {
       cryptonote::block blk;
       crypto::hash block_hash = get_block_id_by_height(height - i);
@@ -1286,7 +1286,7 @@ uint64_t Blockchain::get_current_cumulative_block_weight_median() const
     
     uint64_t ma3_sum = 0;
     uint64_t ma3_vol_sum = 0;
-    for (size_t i = 1; i <= 240; i++)
+    for (size_t i = 1; i <= 360; i++)
     {
       cryptonote::block blk;
       crypto::hash block_hash = get_block_id_by_height(height - i);
@@ -1302,7 +1302,7 @@ uint64_t Blockchain::get_current_cumulative_block_weight_median() const
     
     uint64_t ma4_sum = 0;
     uint64_t ma4_vol_sum = 0;
-    for (size_t i = 1; i <= 120; i++)
+    for (size_t i = 1; i <= 180; i++)
     {
       cryptonote::block blk;
       crypto::hash block_hash = get_block_id_by_height(height - i);
@@ -3631,6 +3631,7 @@ bool Blockchain::is_output_spendtime_unlocked(uint64_t unlock_time) const
 // a given set of key offsets and an amount
 bool Blockchain::get_input_txs_from_txin(txin_to_key txin, std::vector<transaction>& txs)
 {
+  
    std::vector<uint64_t> absolute_offsets = relative_output_offsets_to_absolute(txin.key_offsets);
   std::vector<crypto::hash> tx_hashes;
   for (size_t i = 0; i < txin.key_offsets.size(); i++)
@@ -3640,15 +3641,20 @@ bool Blockchain::get_input_txs_from_txin(txin_to_key txin, std::vector<transacti
     std::cout << tx_oi.first << std::endl;
   }
   
-  std::vector<crypto::hash> missed_txs;
-  get_transactions(tx_hashes, txs, missed_txs);
-  
-  if (missed_txs.size() != 0)
+
+  bool found_no_tx = false;
+  for(size_t j = 0; j < tx_hashes.size();j++){
+    bool r = have_tx(tx_hashes[j]);
+    if(!r && !found_no_tx)
+      found_no_tx = true;
+  }
+
+  if(!found_no_tx)
   {
     MERROR("Could not find a transaction from input");
     return false;
   }
-  
+
   return true;
 }
 //------------------------------------------------------------------
