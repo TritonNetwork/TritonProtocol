@@ -162,9 +162,9 @@ namespace service_nodes
 		if (!m_core.is_service_node(pubkey))
 			return false;
 
-		if (!(proof.snode_version_major == 4 &&
+		if (!(proof.snode_version_major == 5 &&
 			proof.snode_version_minor == 0 &&
-			proof.snode_version_patch == 5))
+			proof.snode_version_patch == 0))
 		{
 			return false;
 		}

@@ -850,7 +850,14 @@ difficulty_type Blockchain::get_difficulty_for_next_block()
     m_timestamps = timestamps;
     m_difficulties = difficulties;
   }
-  size_t target = DIFFICULTY_TARGET_V2;
+  size_t target;
+
+  if(get_current_hard_fork_version() < 6){
+    target = DIFFICULTY_TARGET_V2;
+  }else if(get_current_hard_fork_version() >= 6){
+    target = DIFFICULTY_TARGET_V3;
+  }
+
   difficulty_type diff = 0;
   if (get_current_hard_fork_version() != 0 && get_current_hard_fork_version() < 4 && m_db->height() < 235) {
 	  diff = 1000;
@@ -1075,7 +1082,7 @@ difficulty_type Blockchain::get_next_difficulty_for_alternative_chain(const std:
   }
 
   // FIXME: This will fail if fork activation heights are subject to voting
-  size_t target = get_ideal_hard_fork_version(bei.height) < 2 ? DIFFICULTY_TARGET_V1 : DIFFICULTY_TARGET_V2;
+  size_t target = get_ideal_hard_fork_version(bei.height) < 6 ? DIFFICULTY_TARGET_V2 : DIFFICULTY_TARGET_V3;
 
   // calculate the difficulty target for the block and return it
   uint64_t diff = 0;
@@ -4819,7 +4826,7 @@ bool Blockchain::get_hard_fork_voting_info(uint8_t version, uint32_t &window, ui
 
 uint64_t Blockchain::get_difficulty_target() const
 {
-  return get_current_hard_fork_version() < 2 ? DIFFICULTY_TARGET_V1 : DIFFICULTY_TARGET_V2;
+  return get_current_hard_fork_version() < 6 ? DIFFICULTY_TARGET_V2 : DIFFICULTY_TARGET_V3;
 }
 
 std::map<uint64_t, std::tuple<uint64_t, uint64_t, uint64_t>> Blockchain:: get_output_histogram(const std::vector<uint64_t> &amounts, bool unlocked, uint64_t recent_cutoff, uint64_t min_count) const

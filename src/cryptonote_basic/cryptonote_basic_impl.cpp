@@ -101,7 +101,14 @@ namespace cryptonote {
 	   }
 
      static_assert(DIFFICULTY_TARGET_V2 % 60 == 0 && DIFFICULTY_TARGET_V1 % 60 == 0, "difficulty targets must be a multiple of 60");
-	   const int target = DIFFICULTY_TARGET_V2;
+	   int target; 
+      if(version < 6)
+      {
+        target = DIFFICULTY_TARGET_V2;
+      }else if(version >= 6){
+        target = DIFFICULTY_TARGET_V3;
+      }
+      
 	   const int target_minutes = target / 60;
 	   const int emission_speed_factor = EMISSION_SPEED_FACTOR_PER_MINUTE;
 	   uint64_t base_reward = (MONEY_SUPPLY - already_generated_coins) >> emission_speed_factor;
