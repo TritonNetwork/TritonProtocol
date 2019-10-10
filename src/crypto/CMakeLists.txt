@@ -41,10 +41,15 @@ set(crypto_sources
   hash.c
   jh.c
   keccak.c
+  tree-hash.c
+  pow_hash/aux_hash.c
+  pow_hash/cn_slow_hash_soft.cpp
+  pow_hash/cn_slow_hash_hard_intel.cpp
+  pow_hash/cn_slow_hash_intel_avx2.cpp
+  pow_hash/cn_slow_hash_hard_arm.cpp
   oaes_lib.c
   random.c
   skein.c
-  slow-hash.c
   tree-hash.c)
 
 set(crypto_headers)
@@ -62,6 +67,7 @@ set(crypto_private_headers
   initializer.h
   jh.h
   keccak.h
+  pow_hash/cn_slow_hash.hpp
   oaes_config.h
   oaes_lib.h
   random.h

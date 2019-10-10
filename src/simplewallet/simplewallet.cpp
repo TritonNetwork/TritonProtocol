@@ -54,6 +54,9 @@
 #include "common/dns_utils.h"
 #include "common/base58.h"
 #include "common/scoped_message_writer.h"
+#include "crypto/pow_hash/cn_slow_hash.hpp"
+#include "crypto/crypto.h" // for crypto::secret_key definition
+#include "cryptonote_basic/cryptonote_format_utils.h"
 #include "cryptonote_protocol/cryptonote_protocol_handler.h"
 #include "cryptonote_core/service_node_deregister.h"
 #include "cryptonote_core/service_node_list.h"

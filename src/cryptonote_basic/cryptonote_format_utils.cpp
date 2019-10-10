@@ -31,6 +31,7 @@
 #include "include_base_utils.h"
 using namespace epee;
 
+#include "crypto/pow_hash/cn_slow_hash.hpp"
 #include <atomic>
 #include <boost/algorithm/string.hpp>
 #include "wipeable_string.h"

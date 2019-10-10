@@ -39,6 +39,8 @@
 #if defined(__cplusplus)
 #include <memory.h>
 
+#include "pow_hash/cn_slow_hash.hpp"
+#include "hash.h"
 #include "memwipe.h"
 #include "mlocker.h"
 #include "hash.h"

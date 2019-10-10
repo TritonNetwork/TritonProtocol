@@ -28,6 +28,7 @@
 //
 // Parts of this file are originally copyright (c) 2012-2013 The Cryptonote developers
 
+#include "crypto/pow_hash/cn_slow_hash.hpp"
 #include <numeric>
 #include <random>
 #include <tuple>

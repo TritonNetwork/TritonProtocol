@@ -33,6 +33,8 @@
 #include "cryptonote_basic_impl.h"
 #include "tx_extra.h"
 #include "account.h"
+#include "blobdatatype.h"
+#include "crypto/pow_hash/cn_slow_hash.hpp"
 #include "subaddress_index.h"
 #include "include_base_utils.h"
 #include "crypto/crypto.h"
