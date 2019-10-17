@@ -47,26 +47,29 @@
 
 #pragma once
 
+#include <boost/align/aligned_alloc.hpp>
+#include "hw_detect.hpp"
+#include <assert.h>
 #include <inttypes.h>
 #include <stddef.h>
 #include <stdlib.h>
-#include <assert.h>
 #include <string.h>
-#include "hw_detect.hpp"
+
 
 // Macros are for template instantiations
 // Cryptonight
-#define cn_v1_hash_t cn_slow_hash<2*1024*1024, 0x80000, 0>
-// Cryptonight-heavy
-#define cn_v2_hash_t cn_slow_hash<4*1024*1024, 0x40000, 1>
+#define cn_v1_hash_t  cn_slow_hash<2 * 1024 * 1024, 0x80000, 0>
+// Cryptonight-v7
+#define cn_v7l_hash_t cn_slow_hash<1 * 1024 * 1024, 0x40000, 1>
 // Cryptonight-GPU
-#define cn_v3_hash_t cn_slow_hash<2*1024*1024, 0x10000, 2>
+#define cn_gpu_hash_t cn_slow_hash<2 * 1024 * 1024, 0xC000,  2>
 
-// Use the types below 
-template<size_t MEMORY, size_t ITER, size_t VERSION> class cn_slow_hash;
-using cn_pow_hash_v1 = cn_v1_hash_t;
-using cn_pow_hash_v2 = cn_v2_hash_t;
-using cn_pow_hash_v3 = cn_v3_hash_t;
+// Use the types below
+template <size_t MEMORY, size_t ITER, size_t VERSION>
+class cn_slow_hash;
+using cn_v1_hash = cn_v1_hash_t;
+using cn_v7l_hash = cn_v7l_hash_t;
+using cn_gpu_hash = cn_gpu_hash_t;
 
 #ifdef HAS_INTEL_HW
 inline void cpuid(uint32_t eax, int32_t ecx, int32_t val[4])
@@ -115,54 +118,49 @@ inline bool hw_check_aes()
 // This cruft avoids casting-galore and allows us not to worry about sizeof(void*)
 class cn_sptr
 {
-public:
+  public:
 	cn_sptr() : base_ptr(nullptr) {}
 	cn_sptr(uint64_t* ptr) { base_ptr = ptr; }
 	cn_sptr(uint32_t* ptr) { base_ptr = ptr; }
 	cn_sptr(uint8_t* ptr) { base_ptr = ptr; }
-#ifdef HAS_INTEL_HW
-	cn_sptr(__m128i* ptr) { base_ptr = ptr; }
-#endif
 
-	inline void set(void* ptr) { base_ptr = ptr; }
-	inline cn_sptr offset(size_t i) { return reinterpret_cast<uint8_t*>(base_ptr)+i; }
-	inline const cn_sptr offset(size_t i) const { return reinterpret_cast<uint8_t*>(base_ptr)+i; }
+	inline void set(void* ptr)
+	{
+		base_ptr = ptr;
+	}
+	inline cn_sptr offset(size_t i) { return reinterpret_cast<uint8_t*>(base_ptr) + i; }
+	inline const cn_sptr offset(size_t i) const { return reinterpret_cast<uint8_t*>(base_ptr) + i; }
 
 	inline void* as_void() { return base_ptr; }
-	inline uint8_t& as_byte(size_t i) { return *(reinterpret_cast<uint8_t*>(base_ptr)+i); }
+	inline uint8_t& as_byte(size_t i) { return *(reinterpret_cast<uint8_t*>(base_ptr) + i); }
 	inline uint8_t* as_byte() { return reinterpret_cast<uint8_t*>(base_ptr); }
-	inline uint64_t& as_uqword(size_t i) { return *(reinterpret_cast<uint64_t*>(base_ptr)+i); }
-	inline const uint64_t& as_uqword(size_t i) const { return *(reinterpret_cast<uint64_t*>(base_ptr)+i); } 
+	inline uint64_t& as_uqword(size_t i) { return *(reinterpret_cast<uint64_t*>(base_ptr) + i); }
+	inline const uint64_t& as_uqword(size_t i) const { return *(reinterpret_cast<uint64_t*>(base_ptr) + i); }
 	inline uint64_t* as_uqword() { return reinterpret_cast<uint64_t*>(base_ptr); }
 	inline const uint64_t* as_uqword() const { return reinterpret_cast<uint64_t*>(base_ptr); }
-	inline int64_t& as_qword(size_t i) { return *(reinterpret_cast<int64_t*>(base_ptr)+i); }
-	inline int32_t& as_dword(size_t i) { return *(reinterpret_cast<int32_t*>(base_ptr)+i); }
-	inline uint32_t& as_udword(size_t i) { return *(reinterpret_cast<uint32_t*>(base_ptr)+i); }
-	inline const uint32_t& as_udword(size_t i) const { return *(reinterpret_cast<uint32_t*>(base_ptr)+i); }
-#ifdef HAS_INTEL_HW
-	inline __m128i* as_xmm() { return reinterpret_cast<__m128i*>(base_ptr); }
-	inline __m256i* as_xmm256() { return reinterpret_cast<__m256i*>(base_ptr); }
-#endif
-private:
+	inline int64_t& as_qword(size_t i) { return *(reinterpret_cast<int64_t*>(base_ptr) + i); }
+	inline int32_t& as_dword(size_t i) { return *(reinterpret_cast<int32_t*>(base_ptr) + i); }
+	inline uint32_t& as_udword(size_t i) { return *(reinterpret_cast<uint32_t*>(base_ptr) + i); }
+	inline const uint32_t& as_udword(size_t i) const { return *(reinterpret_cast<uint32_t*>(base_ptr) + i); }
+	
+	template <typename cast_t>
+	inline cast_t* as_ptr() { return reinterpret_cast<cast_t*>(base_ptr); }
+
+  private:
 	void* base_ptr;
 };
 
-template<size_t MEMORY, size_t ITER, size_t VERSION>
+template <size_t MEMORY, size_t ITER, size_t VERSION>
 class cn_slow_hash
 {
-public:
+  public:
 	cn_slow_hash() : borrowed_pad(false)
 	{
-#if !defined(HAS_WIN_INTRIN_API)
-		lpad.set(aligned_alloc(4096, MEMORY));
-		spad.set(aligned_alloc(4096, 4096));
-#else
-		lpad.set(_aligned_malloc(MEMORY, 4096));
-		spad.set(_aligned_malloc(4096, 4096));
-#endif
+		lpad.set(boost::alignment::aligned_alloc(4096, MEMORY));
+		spad.set(boost::alignment::aligned_alloc(4096, 4096));
 	}
 
-	cn_slow_hash (cn_slow_hash&& other) noexcept : lpad(other.lpad.as_byte()), spad(other.spad.as_byte()), borrowed_pad(other.borrowed_pad)
+	cn_slow_hash(cn_slow_hash&& other) noexcept : lpad(other.lpad.as_byte()), spad(other.spad.as_byte()), borrowed_pad(other.borrowed_pad)
 	{
 		other.lpad.set(nullptr);
 		other.spad.set(nullptr);
@@ -170,18 +168,18 @@ public:
 
 	// Factory function enabling to temporaliy turn v2 object into v1
 	// It is caller's responsibility to ensure that v2 object is not hashing at the same time!!
-	static cn_pow_hash_v1 make_borrowed(cn_pow_hash_v2& t)
+	static cn_v7l_hash make_borrowed(cn_v1_hash& t)
 	{
-		return cn_pow_hash_v1(t.lpad.as_void(), t.spad.as_void());
+		return cn_v7l_hash(t.lpad.as_void(), t.spad.as_void());
 	}
 
-	static cn_pow_hash_v3 make_borrowed(cn_pow_hash_v2& t)
+	static cn_gpu_hash make_borrowed_v3(cn_v1_hash& t)
 	{
-		return cn_pow_hash_v3(t.lpad.as_void(), t.spad.as_void());
+		return cn_gpu_hash(t.lpad.as_void(), t.spad.as_void());
 	}
 
-	cn_slow_hash& operator= (cn_slow_hash&& other) noexcept
-    {
+	cn_slow_hash& operator=(cn_slow_hash&& other) noexcept
+	{
 		if(this == &other)
 			return *this;
 
@@ -194,7 +192,7 @@ public:
 
 	// Copying is going to be really inefficient
 	cn_slow_hash(const cn_slow_hash& other) = delete;
-	cn_slow_hash& operator= (const cn_slow_hash& other) = delete;
+	cn_slow_hash& operator=(const cn_slow_hash& other) = delete;
 
 	~cn_slow_hash()
 	{
@@ -223,7 +221,10 @@ public:
 	void software_hash_3(const void* in, size_t len, void* pout);
 
 #if !defined(HAS_INTEL_HW) && !defined(HAS_ARM_HW)
-	inline void hardware_hash(const void* in, size_t len, void* out) { assert(false); }
+	inline void hardware_hash(const void* in, size_t len, void* out)
+	{
+		assert(false);
+	}
 	inline void hardware_hash_3(const void* in, size_t len, void* out) { assert(false); }
 #else
 	void hardware_hash(const void* in, size_t len, void* out);
@@ -231,11 +232,11 @@ public:
 #endif
 
 private:
-	static constexpr size_t MASK = VERSION <= 1 ? ((MEMORY-1) >> 4) << 4 : ((MEMORY-1) >> 6) << 6;
+	static constexpr size_t MASK = VERSION <= 1 ? ((MEMORY - 1) >> 4) << 4 : ((MEMORY - 1) >> 6) << 6;
 
-	friend cn_pow_hash_v1;
-	friend cn_pow_hash_v2;
-	friend cn_pow_hash_v3;
+	friend cn_v1_hash;
+	friend cn_v7l_hash;
+	friend cn_gpu_hash;
 
 	// Constructor enabling v1 hash to borrow v2's buffer
 	cn_slow_hash(void* lptr, void* sptr)
@@ -247,14 +248,17 @@ private:
 
 	inline bool check_override()
 	{
-		const char *env = getenv("SUMO_USE_SOFTWARE_AES");
-		if (!env) {
+		const char* env = getenv("RYO_USE_SOFTWARE_AES");
+		if(!env)
+		{
 			return false;
 		}
-		else if (!strcmp(env, "0") || !strcmp(env, "no")) {
+		else if(!strcmp(env, "0") || !strcmp(env, "no"))
+		{
 			return false;
 		}
-		else {
+		else
+		{
 			return true;
 		}
 	}
@@ -263,17 +267,10 @@ private:
 	{
 		if(!borrowed_pad)
 		{
-#if !defined(HAS_WIN_INTRIN_API)
 			if(lpad.as_void() != nullptr)
-				free(lpad.as_void());
+				boost::alignment::aligned_free(lpad.as_void());
 			if(lpad.as_void() != nullptr)
-				free(spad.as_void());
-#else
-			if(lpad.as_void() != nullptr)
-				_aligned_free(lpad.as_void());
-			if(lpad.as_void() != nullptr)
-				_aligned_free(spad.as_void());
-#endif
+				boost::alignment::aligned_free(spad.as_void());
 		}
 
 		lpad.set(nullptr);
@@ -281,10 +278,13 @@ private:
 	}
 
 	inline cn_sptr scratchpad_ptr(uint32_t idx) { return lpad.as_byte() + (idx & MASK); }
-	inline cn_sptr scratchpad_ptr(uint32_t idx, size_t n) { return lpad.as_byte() + (idx & MASK) + n*16; }
+	inline cn_sptr scratchpad_ptr(uint32_t idx, size_t n) { return lpad.as_byte() + (idx & MASK) + n * 16; }
 
 #if !defined(HAS_INTEL_HW) && !defined(HAS_ARM_HW)
-	inline void explode_scratchpad_hard() { assert(false); }
+	inline void explode_scratchpad_hard()
+	{
+		assert(false);
+	}
 	inline void implode_scratchpad_hard() { assert(false); }
 #else
 	void explode_scratchpad_hard();
@@ -304,5 +304,5 @@ private:
 };
 
 extern template class cn_v1_hash_t;
-extern template class cn_v2_hash_t;
-extern template class cn_v3_hash_t;
+extern template class cn_v7l_hash_t;
+extern template class cn_gpu_hash_t;
