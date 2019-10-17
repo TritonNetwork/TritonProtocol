@@ -176,6 +176,7 @@ static_assert(STAKING_PORTIONS % 3 == 0, "Use a multiple of three, so that it di
 #define HF_VERSION_MIN_MIXIN_15                 6
 #define HF_VERSION_ENFORCE_RCT                  4
 #define HF_VERSION_PER_BYTE_FEE                 6
+#define HF_VERSION_SMALLER_BP                   6
 
 #define PER_KB_FEE_QUANTIZATION_DECIMALS       4
 

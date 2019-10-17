@@ -140,7 +140,10 @@ static rct::key get_exponent(const rct::key &base, size_t idx)
 {
   static const std::string salt("bulletproof");
   std::string hashed = std::string((const char*)base.bytes, sizeof(base)) + salt + tools::get_varint_data(idx);
-  const rct::key e = rct::hashToPoint(rct::hash2rct(crypto::cn_fast_hash(hashed.data(), hashed.size())));
+  rct::key e;
+  ge_p3 e_p3;
+  rct::hash_to_p3(e_p3, rct::hash2rct(crypto::cn_fast_hash(hashed.data(), hashed.size())));
+  ge_p3_tobytes(e.bytes, &e_p3);
   CHECK_AND_ASSERT_THROW_MES(!(e == rct::identity()), "Exponent is point at infinity");
   return e;
 }
@@ -1103,8 +1106,10 @@ bool bulletproof_VERIFY(const std::vector<const Bulletproof*> &proofs)
       multiexp_data.emplace_back(zpow[j+2], proof8_V[j]);
     }
     rct::addKeys(Y2, Y2, rct::scalarmultKey(multiexp(multiexp_data, false), weight));
-    sc_mul(tmp.bytes, x.bytes, weight.bytes);
-    rct::addKeys(Y3, Y3, rct::scalarmultKey(proof8_T1, tmp));
+    rct::key weight8;
+    sc_mul(weight8.bytes, weight.bytes, EIGHT.bytes);
+    sc_mul(tmp.bytes, x.bytes, weight8.bytes);
+    rct::addKeys(Y3, Y3, rct::scalarmultKey(proof.T1, tmp));
     rct::key xsq;
     sc_mul(xsq.bytes, x.bytes, x.bytes);
     sc_mul(tmp.bytes, xsq.bytes, weight.bytes);
@@ -1113,7 +1118,8 @@ bool bulletproof_VERIFY(const std::vector<const Bulletproof*> &proofs)
 
     PERF_TIMER_START_BP(VERIFY_line_62);
     // PAPER LINE 62
-    rct::addKeys(Z0, Z0, rct::scalarmultKey(rct::addKeys(rct::scalarmult8(proof.A), rct::scalarmultKey(proof8_S, x)), weight));
+    sc_mul(tmp.bytes, x.bytes, EIGHT.bytes);
+    rct::addKeys(Z0, Z0, rct::scalarmultKey(rct::addKeys(rct::scalarmult8(proof.A), rct::scalarmultKey(proof.S, tmp)), weight));
     PERF_TIMER_STOP(VERIFY_line_62);
 
     // Compute the number of rounds for the inner product
