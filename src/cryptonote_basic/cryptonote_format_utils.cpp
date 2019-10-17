@@ -1362,16 +1362,22 @@ void add_tx_secret_key_to_tx_extra(std::vector<uint8_t>& tx_extra, const crypto:
     return p;
   }
   //---------------------------------------------------------------
-  bool get_block_longhash(const block& b, crypto::hash& res, uint64_t height)
+  bool get_block_longhash(const block& b, crypto::hash& res, cn_v1_hash &ctx)
   {
     // block 202612 bug workaround
-    blobdata bd = get_block_hashing_blob(b);
-    const int cn_variant = 1;
-    const int light = 1;
-    if(b.major_version <= 6)
-        crypto::cn_slow_hash(bd.data(), bd.size(), res, light, cn_variant, height);
+    block b_local = b; //workaround to avoid const errors with do_serialize
+  	blobdata bd = get_block_hashing_blob(b);
+
+    if(b.major_version <= 6){
+      ctx.hash(bd.data(), bd.size(), res.data);
+      cn_v7l_hash ctx_v2 = cn_v7l_hash::make_borrowed(ctx);
+		  ctx_v2.hash(bd.data(), bd.size(), res.data);
+    }
     else
-        crypto::cn_slow_hash(bd.data(), bd.size(), res, light, 4, height);
+    {
+      cn_gpu_hash_t ctx_v3 = cn_gpu_hash_t::make_borrowed_v3(ctx);
+		  ctx_v3.hash(bd.data(), bd.size(), res.data);
+    }
 
     return true;
   }
@@ -1394,13 +1400,6 @@ void add_tx_secret_key_to_tx_extra(std::vector<uint8_t>& tx_extra, const crypto:
       res[i] -= res[i-1];
 
     return res;
-  }
-  //---------------------------------------------------------------
-  crypto::hash get_block_longhash(const block& b, uint64_t height)
-  {
-    crypto::hash p = null_hash;
-    get_block_longhash(b, p, height);
-    return p;
   }
   //---------------------------------------------------------------
   bool parse_and_validate_block_from_blob(const blobdata& b_blob, block& b)
@@ -1477,7 +1476,8 @@ void add_tx_secret_key_to_tx_extra(std::vector<uint8_t>& tx_extra, const crypto:
   crypto::secret_key encrypt_key(crypto::secret_key key, const epee::wipeable_string &passphrase)
   {
     crypto::hash hash;
-    crypto::cn_slow_hash(passphrase.data(), passphrase.size(), hash);
+    cn_v1_hash kdf_hash;
+    kdf_hash.hash(passphrase.data(), passphrase.size(), hash.data);
     sc_add((unsigned char*)key.data, (const unsigned char*)key.data, (const unsigned char*)hash.data);
     return key;
   }
@@ -1485,7 +1485,8 @@ void add_tx_secret_key_to_tx_extra(std::vector<uint8_t>& tx_extra, const crypto:
   crypto::secret_key decrypt_key(crypto::secret_key key, const epee::wipeable_string &passphrase)
   {
     crypto::hash hash;
-    crypto::cn_slow_hash(passphrase.data(), passphrase.size(), hash);
+    cn_v1_hash kdf_hash;
+    kdf_hash.hash(passphrase.data(), passphrase.size(), hash.data);
     sc_sub((unsigned char*)key.data, (const unsigned char*)key.data, (const unsigned char*)hash.data);
     return key;
   }
