@@ -93,49 +93,6 @@ static bool is_reduced(const rct::key &scalar)
   return scalar == reduced;
 }
 
-static void addKeys_acc_p3(ge_p3 *acc_p3, const rct::key &a, const rct::key &point)
-{
-    ge_p3 p3;
-    CHECK_AND_ASSERT_THROW_MES(ge_frombytes_vartime(&p3, point.bytes) == 0, "ge_frombytes_vartime failed");
-    ge_scalarmult_p3(&p3, a.bytes, &p3);
-    ge_cached cached;
-    ge_p3_to_cached(&cached, acc_p3);
-    ge_p1p1 p1;
-    ge_add(&p1, &p3, &cached);
-    ge_p1p1_to_p3(acc_p3, &p1);
-}
-
-static void add_acc_p3(ge_p3 *acc_p3, const rct::key &point)
-{
-    ge_p3 p3;
-    CHECK_AND_ASSERT_THROW_MES(ge_frombytes_vartime(&p3, point.bytes) == 0, "ge_frombytes_vartime failed");
-    ge_cached cached;
-    ge_p3_to_cached(&cached, &p3);
-    ge_p1p1 p1;
-    ge_add(&p1, acc_p3, &cached);
-    ge_p1p1_to_p3(acc_p3, &p1);
-}
-
-static void sub_acc_p3(ge_p3 *acc_p3, const rct::key &point)
-{
-    ge_p3 p3;
-    CHECK_AND_ASSERT_THROW_MES(ge_frombytes_vartime(&p3, point.bytes) == 0, "ge_frombytes_vartime failed");
-    ge_cached cached;
-    ge_p3_to_cached(&cached, &p3);
-    ge_p1p1 p1;
-    ge_sub(&p1, acc_p3, &cached);
-    ge_p1p1_to_p3(acc_p3, &p1);
-}
-
-static rct::key scalarmultKey(const ge_p3 &P, const rct::key &a)
-{
-  ge_p2 R;
-  ge_scalarmult(&R, a.bytes, &P);
-  rct::key aP;
-  ge_tobytes(aP.bytes, &R);
-  return aP;
-}
-
 static rct::key get_exponent(const rct::key &base, size_t idx)
 {
   static const std::string salt("bulletproof");
@@ -1016,6 +973,7 @@ bool bulletproof_VERIFY(const std::vector<const Bulletproof*> &proofs)
 
   // sanity and figure out which proof is longest
   size_t max_length = 0;
+  size_t nV = 0;
   for (const Bulletproof *p: proofs)
   {
     const Bulletproof &proof = *p;
@@ -1032,6 +990,7 @@ bool bulletproof_VERIFY(const std::vector<const Bulletproof*> &proofs)
     CHECK_AND_ASSERT_MES(proof.L.size() > 0, false, "Empty proof");
 
     max_length = std::max(max_length, proof.L.size());
+    nV += proof.V.size();
   }
   CHECK_AND_ASSERT_MES(max_length < 32, false, "At least one proof is too large");
   size_t maxMN = 1u << max_length;
@@ -1040,13 +999,13 @@ bool bulletproof_VERIFY(const std::vector<const Bulletproof*> &proofs)
   const size_t N = 1 << logN;
   rct::key tmp;
 
+  std::vector<MultiexpData> multiexp_data;
+  multiexp_data.reserve(nV + (2 * (10/*logM*/ + logN) + 4) * proofs.size() + 2 * maxMN);
+
   // setup weighted aggregates
-  rct::key Z0 = rct::identity();
   rct::key z1 = rct::zero();
-  rct::key Z2 = rct::identity();
   rct::key z3 = rct::zero();
   rct::keyV z4(maxMN, rct::zero()), z5(maxMN, rct::zero());
-  rct::key Y2 = rct::identity(), Y3 = rct::identity(), Y4 = rct::identity();
   rct::key y0 = rct::zero(), y1 = rct::zero();
   for (const Bulletproof *p: proofs)
   {
@@ -1056,7 +1015,8 @@ bool bulletproof_VERIFY(const std::vector<const Bulletproof*> &proofs)
     for (logM = 0; (M = 1<<logM) <= maxM && M < proof.V.size(); ++logM);
     CHECK_AND_ASSERT_MES(proof.L.size() == 6+logM, false, "Proof is not the expected size");
     const size_t MN = M*N;
-    rct::key weight = rct::skGen();
+    const rct::key weight_y = rct::skGen();
+    const rct::key weight_z = rct::skGen();
 
     // Reconstruct the challenges
     PERF_TIMER_START_BP(VERIFY_start);
@@ -1078,10 +1038,11 @@ bool bulletproof_VERIFY(const std::vector<const Bulletproof*> &proofs)
     rct::key proof8_T1 = rct::scalarmult8(proof.T1);
     rct::key proof8_T2 = rct::scalarmult8(proof.T2);
     rct::key proof8_S = rct::scalarmult8(proof.S);
+    rct::key proof8_A = rct::scalarmult8(proof.A);
 
     PERF_TIMER_START_BP(VERIFY_line_61);
     // PAPER LINE 61
-    sc_muladd(y0.bytes, proof.taux.bytes, weight.bytes, y0.bytes);
+    sc_muladd(y0.bytes, proof.taux.bytes, weight_y.bytes, y0.bytes);
 
     const rct::keyV zpow = vector_powers(z, M+3);
 
@@ -1097,29 +1058,26 @@ bool bulletproof_VERIFY(const std::vector<const Bulletproof*> &proofs)
 
     PERF_TIMER_START_BP(VERIFY_line_61rl_new);
     sc_muladd(tmp.bytes, z.bytes, ip1y.bytes, k.bytes);
-    std::vector<MultiexpData> multiexp_data;
-    multiexp_data.reserve(proof.V.size());
     sc_sub(tmp.bytes, proof.t.bytes, tmp.bytes);
-    sc_muladd(y1.bytes, tmp.bytes, weight.bytes, y1.bytes);
+    sc_muladd(y1.bytes, tmp.bytes, weight_y.bytes, y1.bytes);
     for (size_t j = 0; j < proof8_V.size(); j++)
     {
-      multiexp_data.emplace_back(zpow[j+2], proof8_V[j]);
+      sc_mul(tmp.bytes, zpow[j+2].bytes, weight_y.bytes);
+      multiexp_data.emplace_back(tmp, proof8_V[j]);
     }
-    rct::addKeys(Y2, Y2, rct::scalarmultKey(multiexp(multiexp_data, false), weight));
-    rct::key weight8;
-    sc_mul(weight8.bytes, weight.bytes, EIGHT.bytes);
-    sc_mul(tmp.bytes, x.bytes, weight8.bytes);
-    rct::addKeys(Y3, Y3, rct::scalarmultKey(proof.T1, tmp));
+    sc_mul(tmp.bytes, x.bytes, weight_y.bytes);
+    multiexp_data.emplace_back(tmp, proof8_T1);
     rct::key xsq;
     sc_mul(xsq.bytes, x.bytes, x.bytes);
-    sc_mul(tmp.bytes, xsq.bytes, weight.bytes);
-    rct::addKeys(Y4, Y4, rct::scalarmultKey(proof8_T2, tmp));
+    sc_mul(tmp.bytes, xsq.bytes, weight_y.bytes);
+    multiexp_data.emplace_back(tmp, proof8_T2);
     PERF_TIMER_STOP(VERIFY_line_61rl_new);
 
     PERF_TIMER_START_BP(VERIFY_line_62);
     // PAPER LINE 62
-    sc_mul(tmp.bytes, x.bytes, EIGHT.bytes);
-    rct::addKeys(Z0, Z0, rct::scalarmultKey(rct::addKeys(rct::scalarmult8(proof.A), rct::scalarmultKey(proof.S, tmp)), weight));
+    multiexp_data.emplace_back(weight_z, proof8_A);
+    sc_mul(tmp.bytes, x.bytes, weight_z.bytes);
+    multiexp_data.emplace_back(tmp, proof8_S);
     PERF_TIMER_STOP(VERIFY_line_62);
 
     // Compute the number of rounds for the inner product
@@ -1181,8 +1139,8 @@ bool bulletproof_VERIFY(const std::vector<const Bulletproof*> &proofs)
       sc_muladd(tmp.bytes, z.bytes, ypow.bytes, tmp.bytes);
       sc_mulsub(h_scalar.bytes, tmp.bytes, yinvpow.bytes, h_scalar.bytes);
 
-      sc_muladd(z4[i].bytes, g_scalar.bytes, weight.bytes, z4[i].bytes);
-      sc_muladd(z5[i].bytes, h_scalar.bytes, weight.bytes, z5[i].bytes);
+      sc_muladd(z4[i].bytes, g_scalar.bytes, weight_z.bytes, z4[i].bytes);
+      sc_muladd(z5[i].bytes, h_scalar.bytes, weight_z.bytes, z5[i].bytes);
 
       if (i != MN-1)
       {
@@ -1195,46 +1153,29 @@ bool bulletproof_VERIFY(const std::vector<const Bulletproof*> &proofs)
 
     // PAPER LINE 26
     PERF_TIMER_START_BP(VERIFY_line_26_new);
-    multiexp_data.clear();
-    multiexp_data.reserve(2*rounds);
-
-    sc_muladd(z1.bytes, proof.mu.bytes, weight.bytes, z1.bytes);
+    sc_muladd(z1.bytes, proof.mu.bytes, weight_z.bytes, z1.bytes);
     for (size_t i = 0; i < rounds; ++i)
     {
       sc_mul(tmp.bytes, w[i].bytes, w[i].bytes);
+      sc_mul(tmp.bytes, tmp.bytes, weight_z.bytes);
       multiexp_data.emplace_back(tmp, proof8_L[i]);
       sc_mul(tmp.bytes, winv[i].bytes, winv[i].bytes);
+      sc_mul(tmp.bytes, tmp.bytes, weight_z.bytes);
       multiexp_data.emplace_back(tmp, proof8_R[i]);
     }
-    rct::key acc = multiexp(multiexp_data, false);
-    rct::addKeys(Z2, Z2, rct::scalarmultKey(acc, weight));
     sc_mulsub(tmp.bytes, proof.a.bytes, proof.b.bytes, proof.t.bytes);
     sc_mul(tmp.bytes, tmp.bytes, x_ip.bytes);
-    sc_muladd(z3.bytes, tmp.bytes, weight.bytes, z3.bytes);
+    sc_muladd(z3.bytes, tmp.bytes, weight_z.bytes, z3.bytes);
     PERF_TIMER_STOP(VERIFY_line_26_new);
   }
 
   // now check all proofs at once
   PERF_TIMER_START_BP(VERIFY_step2_check);
-  ge_p3 check1;
-  ge_scalarmult_base(&check1, y0.bytes);
-  addKeys_acc_p3(&check1, y1, rct::H);
-  sub_acc_p3(&check1, Y2);
-  sub_acc_p3(&check1, Y3);
-  sub_acc_p3(&check1, Y4);
-  if (!ge_p3_is_point_at_infinity(&check1))
-  {
-    MERROR("Verification failure at step 1");
-    return false;
-  }
-  ge_p3 check2;
-  sc_sub(tmp.bytes, rct::zero().bytes, z1.bytes);
-  ge_double_scalarmult_base_vartime_p3(&check2, z3.bytes, &ge_p3_H, tmp.bytes);
-  add_acc_p3(&check2, Z0);
-  add_acc_p3(&check2, Z2);
-
-  std::vector<MultiexpData> multiexp_data;
-  multiexp_data.reserve(2 * maxMN);
+  sc_sub(tmp.bytes, rct::zero().bytes, y0.bytes);
+  sc_sub(tmp.bytes, tmp.bytes, z1.bytes);
+  multiexp_data.emplace_back(tmp, rct::G);
+  sc_sub(tmp.bytes, z3.bytes, y1.bytes);
+  multiexp_data.emplace_back(tmp, rct::H);
   for (size_t i = 0; i < maxMN; ++i)
   {
     sc_sub(tmp.bytes, rct::zero().bytes, z4[i].bytes);
@@ -1242,14 +1183,13 @@ bool bulletproof_VERIFY(const std::vector<const Bulletproof*> &proofs)
     sc_sub(tmp.bytes, rct::zero().bytes, z5[i].bytes);
     multiexp_data.emplace_back(tmp, Hi_p3[i]);
   }
-  add_acc_p3(&check2, multiexp(multiexp_data, true));
-  PERF_TIMER_STOP(VERIFY_step2_check);
-
-  if (!ge_p3_is_point_at_infinity(&check2))
+  if (!(multiexp(multiexp_data, false) == rct::identity()))
   {
-    MERROR("Verification failure at step 2");
+    PERF_TIMER_STOP(VERIFY_step2_check);
+    MERROR("Verification failure");
     return false;
   }
+  PERF_TIMER_STOP(VERIFY_step2_check);
 
   PERF_TIMER_STOP(VERIFY);
   return true;
