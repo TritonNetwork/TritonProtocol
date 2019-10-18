@@ -1,35 +1,20 @@
 // Copyright (c) 2019, Ryo Currency Project
 //
-// Portions of this file are available under BSD-3 license. Please see ORIGINAL-LICENSE for details
 // All rights reserved.
 //
-// Authors and copyright holders give permission for following:
+// Redistribution and use in source and binary forms, with or without modification, are
+// permitted provided that the following conditions are met:
 //
-// 1. Redistribution and use in source and binary forms WITHOUT modification.
+// 1. Redistributions of source code must retain the above copyright notice, this list of
+//    conditions and the following disclaimer.
 //
-// 2. Modification of the source form for your own personal use.
+// 2. Redistributions in binary form must reproduce the above copyright notice, this list
+//    of conditions and the following disclaimer in the documentation and/or other
+//    materials provided with the distribution.
 //
-// As long as the following conditions are met:
-//
-// 3. You must not distribute modified copies of the work to third parties. This includes
-//    posting the work online, or hosting copies of the modified work for download.
-//
-// 4. Any derivative version of this work is also covered by this license, including point 8.
-//
-// 5. Neither the name of the copyright holders nor the names of the authors may be
+// 3. Neither the name of the copyright holder nor the names of its contributors may be
 //    used to endorse or promote products derived from this software without specific
 //    prior written permission.
-//
-// 6. You agree that this licence is governed by and shall be construed in accordance
-//    with the laws of England and Wales.
-//
-// 7. You agree to submit all disputes arising out of or in connection with this licence
-//    to the exclusive jurisdiction of the Courts of England and Wales.
-//
-// Authors and copyright holders agree that:
-//
-// 8. This licence expires and the work covered by it is released into the
-//    public domain on 1st of February 2019
 //
 // THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND ANY
 // EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF
@@ -48,8 +33,8 @@
 #pragma once
 
 #if defined(_WIN32) || defined(_WIN64)
-#include <malloc.h>
 #include <intrin.h>
+#include <malloc.h>
 #define HAS_WIN_INTRIN_API
 #endif
 
@@ -67,7 +52,7 @@
 
 #if defined(__arm__) || defined(__aarch64__)
 #define HAS_ARM
-#endif 
+#endif
 
 #if defined(__aarch64__)
 #include <asm/hwcap.h>
@@ -81,14 +66,25 @@
 
 #if defined(CN_ADD_TARGETS_AND_HEADERS)
 #if defined(__aarch64__)
-#pragma GCC target ("+crypto")
+#ifndef __ARM_FEATURE_CRYPTO
+#define __ARM_FEATURE_CRYPTO 1
+#endif
+#ifndef __clang__
+#pragma GCC target("+crypto")
+#endif
 #include "arm8_neon.hpp"
 #elif defined(__arm__)
-#pragma GCC target ("fpu=vfpv4")
+#ifndef __clang__
+#pragma GCC target("fpu=vfpv4")
+#endif
 #include "arm_vfp.hpp"
 #elif defined(HAS_INTEL_HW) && defined(INTEL_AVX2)
-#pragma GCC target ("aes,avx2")
+#ifndef __clang__
+#pragma GCC target("aes,avx2")
+#endif
 #elif defined(HAS_INTEL_HW)
-#pragma GCC target ("aes,ssse3")
+#ifndef __clang__
+#pragma GCC target("aes,sse2")
+#endif
 #endif
 #endif

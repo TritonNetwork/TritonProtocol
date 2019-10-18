@@ -1,35 +1,20 @@
 // Copyright (c) 2019, Ryo Currency Project
 //
-// Portions of this file are available under BSD-3 license. Please see ORIGINAL-LICENSE for details
 // All rights reserved.
 //
-// Authors and copyright holders give permission for following:
+// Redistribution and use in source and binary forms, with or without modification, are
+// permitted provided that the following conditions are met:
 //
-// 1. Redistribution and use in source and binary forms WITHOUT modification.
+// 1. Redistributions of source code must retain the above copyright notice, this list of
+//    conditions and the following disclaimer.
 //
-// 2. Modification of the source form for your own personal use.
+// 2. Redistributions in binary form must reproduce the above copyright notice, this list
+//    of conditions and the following disclaimer in the documentation and/or other
+//    materials provided with the distribution.
 //
-// As long as the following conditions are met:
-//
-// 3. You must not distribute modified copies of the work to third parties. This includes
-//    posting the work online, or hosting copies of the modified work for download.
-//
-// 4. Any derivative version of this work is also covered by this license, including point 8.
-//
-// 5. Neither the name of the copyright holders nor the names of the authors may be
+// 3. Neither the name of the copyright holder nor the names of its contributors may be
 //    used to endorse or promote products derived from this software without specific
 //    prior written permission.
-//
-// 6. You agree that this licence is governed by and shall be construed in accordance
-//    with the laws of England and Wales.
-//
-// 7. You agree to submit all disputes arising out of or in connection with this licence
-//    to the exclusive jurisdiction of the Courts of England and Wales.
-//
-// Authors and copyright holders agree that:
-//
-// 8. This licence expires and the work covered by it is released into the
-//    public domain on 1st of February 2019
 //
 // THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND ANY
 // EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF
@@ -46,8 +31,8 @@
 // Parts of this file are originally copyright (c) 2012-2013, The Cryptonote developers
 
 #pragma once
-#include <stddef.h>
 #include <inttypes.h>
+#include <stddef.h>
 
 // This header emulates NEON instructions in IEEE 754 compilant way
 // Don't expect to use this code for anything other than verificaiton
@@ -115,21 +100,21 @@ inline uint32x4_t vdupq_n_u32(uint32_t a)
 	return r;
 }
 
-template<size_t v>
+template <size_t v>
 inline void vrot_si32(int32x4_t& r)
 {
 	uint8_t tmp[v];
 	uint8_t* vt = (uint8_t*)&r;
-	for(size_t i=0; i < v; i++)
+	for(size_t i = 0; i < v; i++)
 		tmp[i] = vt[i];
-	for(size_t i=0; i < 16-v; i++)
-		vt[i] = vt[i+v];
-	size_t e = 16-v;
-	for(size_t i=e; i < 16; i++)
-		vt[i] = tmp[i-e];
+	for(size_t i = 0; i < 16 - v; i++)
+		vt[i] = vt[i + v];
+	size_t e = 16 - v;
+	for(size_t i = e; i < 16; i++)
+		vt[i] = tmp[i - e];
 }
 
-template<>
+template <>
 inline void vrot_si32<0>(int32x4_t& r)
 {
 }

@@ -1,35 +1,20 @@
 // Copyright (c) 2019, Ryo Currency Project
 //
-// Portions of this file are available under BSD-3 license. Please see ORIGINAL-LICENSE for details
 // All rights reserved.
 //
-// Authors and copyright holders give permission for following:
+// Redistribution and use in source and binary forms, with or without modification, are
+// permitted provided that the following conditions are met:
 //
-// 1. Redistribution and use in source and binary forms WITHOUT modification.
+// 1. Redistributions of source code must retain the above copyright notice, this list of
+//    conditions and the following disclaimer.
 //
-// 2. Modification of the source form for your own personal use.
+// 2. Redistributions in binary form must reproduce the above copyright notice, this list
+//    of conditions and the following disclaimer in the documentation and/or other
+//    materials provided with the distribution.
 //
-// As long as the following conditions are met:
-//
-// 3. You must not distribute modified copies of the work to third parties. This includes
-//    posting the work online, or hosting copies of the modified work for download.
-//
-// 4. Any derivative version of this work is also covered by this license, including point 8.
-//
-// 5. Neither the name of the copyright holders nor the names of the authors may be
+// 3. Neither the name of the copyright holder nor the names of its contributors may be
 //    used to endorse or promote products derived from this software without specific
 //    prior written permission.
-//
-// 6. You agree that this licence is governed by and shall be construed in accordance
-//    with the laws of England and Wales.
-//
-// 7. You agree to submit all disputes arising out of or in connection with this licence
-//    to the exclusive jurisdiction of the Courts of England and Wales.
-//
-// Authors and copyright holders agree that:
-//
-// 8. This licence expires and the work covered by it is released into the
-//    public domain on 1st of February 2019
 //
 // THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND ANY
 // EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF
@@ -45,8 +30,8 @@
 // Parts of this file are originally copyright (c) 2014-2017, The Monero Project
 // Parts of this file are originally copyright (c) 2012-2013, The Cryptonote developers
 
-#include "../keccak.h"
-#include "aux_hash.h"
+#include "../crypto/keccak.h"
+#include "../crypto/aux_hash.h"
 #include "cn_slow_hash.hpp"
 
 /*
@@ -320,6 +305,50 @@ void cn_slow_hash<MEMORY, ITER, VERSION>::implode_scratchpad_soft()
 		aes_round8(k7, x0, x1, x2, x3, x4, x5, x6, x7);
 		aes_round8(k8, x0, x1, x2, x3, x4, x5, x6, x7);
 		aes_round8(k9, x0, x1, x2, x3, x4, x5, x6, x7);
+
+		if(VERSION == 2)
+			xor_shift(x0, x1, x2, x3, x4, x5, x6, x7);
+	}
+
+	for(size_t i = 0; VERSION == 2 && i < MEMORY / sizeof(uint64_t); i += 16)
+	{
+		x0.xor_load(lpad.as_uqword() + i + 0);
+		x1.xor_load(lpad.as_uqword() + i + 2);
+		x2.xor_load(lpad.as_uqword() + i + 4);
+		x3.xor_load(lpad.as_uqword() + i + 6);
+		x4.xor_load(lpad.as_uqword() + i + 8);
+		x5.xor_load(lpad.as_uqword() + i + 10);
+		x6.xor_load(lpad.as_uqword() + i + 12);
+		x7.xor_load(lpad.as_uqword() + i + 14);
+
+		aes_round8(k0, x0, x1, x2, x3, x4, x5, x6, x7);
+		aes_round8(k1, x0, x1, x2, x3, x4, x5, x6, x7);
+		aes_round8(k2, x0, x1, x2, x3, x4, x5, x6, x7);
+		aes_round8(k3, x0, x1, x2, x3, x4, x5, x6, x7);
+		aes_round8(k4, x0, x1, x2, x3, x4, x5, x6, x7);
+		aes_round8(k5, x0, x1, x2, x3, x4, x5, x6, x7);
+		aes_round8(k6, x0, x1, x2, x3, x4, x5, x6, x7);
+		aes_round8(k7, x0, x1, x2, x3, x4, x5, x6, x7);
+		aes_round8(k8, x0, x1, x2, x3, x4, x5, x6, x7);
+		aes_round8(k9, x0, x1, x2, x3, x4, x5, x6, x7);
+		
+		xor_shift(x0, x1, x2, x3, x4, x5, x6, x7);
+	}
+
+	for(size_t i = 0; VERSION == 2 && i < 16; i++)
+	{
+		aes_round8(k0, x0, x1, x2, x3, x4, x5, x6, x7);
+		aes_round8(k1, x0, x1, x2, x3, x4, x5, x6, x7);
+		aes_round8(k2, x0, x1, x2, x3, x4, x5, x6, x7);
+		aes_round8(k3, x0, x1, x2, x3, x4, x5, x6, x7);
+		aes_round8(k4, x0, x1, x2, x3, x4, x5, x6, x7);
+		aes_round8(k5, x0, x1, x2, x3, x4, x5, x6, x7);
+		aes_round8(k6, x0, x1, x2, x3, x4, x5, x6, x7);
+		aes_round8(k7, x0, x1, x2, x3, x4, x5, x6, x7);
+		aes_round8(k8, x0, x1, x2, x3, x4, x5, x6, x7);
+		aes_round8(k9, x0, x1, x2, x3, x4, x5, x6, x7);
+		
+		xor_shift(x0, x1, x2, x3, x4, x5, x6, x7);
 	}
 
 	x0.write(spad.as_uqword() + 8);
@@ -439,10 +468,36 @@ inline uint64_t _umul128(uint64_t a, uint64_t b, uint64_t* hi)
 #endif
 #endif
 
+inline void cryptonight_monero_tweak(uint64_t* mem_out, aesdata tmp)
+{
+	mem_out[0] = tmp.v64x0;
+	uint64_t vh = tmp.v64x1;
+
+	uint8_t x = vh >> 24;
+	static const uint16_t table = 0x7531;
+	const uint8_t index = (((x >> 3) & 6) | (x & 1)) << 1;
+	vh ^= ((table >> index) & 0x3) << 28;
+
+	mem_out[1] = vh;
+}
+
 template <size_t MEMORY, size_t ITER, size_t VERSION>
 void cn_slow_hash<MEMORY, ITER, VERSION>::software_hash(const void* in, size_t len, void* out)
 {
+	if(VERSION == 1 && len < 43)
+	{
+		memset(out, 0, 32);
+		return;
+	}
+
 	keccak((const uint8_t*)in, len, spad.as_byte(), 200);
+
+	uint64_t mc0;
+	if(VERSION == 1)
+	{
+		mc0  =  *reinterpret_cast<const uint64_t*>(reinterpret_cast<const uint8_t*>(in) + 35);
+		mc0 ^=  *(spad.as_uqword()+24);
+	}
 
 	explode_scratchpad_soft();
 
@@ -467,7 +522,11 @@ void cn_slow_hash<MEMORY, ITER, VERSION>::software_hash(const void* in, size_t l
 		aes_round(cx, ax);
 
 		bx ^= cx;
-		bx.write(idx);
+		if(VERSION == 1)
+			cryptonight_monero_tweak(idx.template as_ptr<uint64_t>(), bx);
+		else
+			bx.write(idx);
+
 		idx = scratchpad_ptr(cx.v64x0);
 		bx.load(idx);
 
@@ -475,8 +534,14 @@ void cn_slow_hash<MEMORY, ITER, VERSION>::software_hash(const void* in, size_t l
 
 		ax.v64x0 += hi;
 		ax.v64x1 += lo;
-		ax.write(idx);
 
+		if(VERSION == 1)
+		{
+			ax.v64x1 ^= mc0;
+			bx.v64x1 ^= mc0;
+		}
+
+		ax.write(idx);
 		ax ^= bx;
 		idx = scratchpad_ptr(ax.v64x0);
 
@@ -485,7 +550,11 @@ void cn_slow_hash<MEMORY, ITER, VERSION>::software_hash(const void* in, size_t l
 		aes_round(bx, ax);
 
 		cx ^= bx;
-		cx.write(idx);
+		if(VERSION == 1)
+			cryptonight_monero_tweak(idx.template as_ptr<uint64_t>(), cx);
+		else
+			cx.write(idx);
+
 		idx = scratchpad_ptr(bx.v64x0);
 		cx.load(idx);
 
@@ -493,6 +562,13 @@ void cn_slow_hash<MEMORY, ITER, VERSION>::software_hash(const void* in, size_t l
 
 		ax.v64x0 += hi;
 		ax.v64x1 += lo;
+
+		if(VERSION == 1)
+		{
+			ax.v64x1 ^= mc0;
+			cx.v64x1 ^= mc0;
+		}
+
 		ax.write(idx);
 		ax ^= cx;
 		idx = scratchpad_ptr(ax.v64x0);
