@@ -33,8 +33,8 @@
 #define CN_ADD_TARGETS_AND_HEADERS
 #define INTEL_AVX2
 
-#include "../crypto/keccak.h"
-#include "../crypto/aux_hash.h"
+#include "../keccak.h"
+#include "aux_hash.h"
 #include "cn_slow_hash.hpp"
 
 #ifdef HAS_INTEL_HW

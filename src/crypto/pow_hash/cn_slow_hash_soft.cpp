@@ -30,8 +30,8 @@
 // Parts of this file are originally copyright (c) 2014-2017, The Monero Project
 // Parts of this file are originally copyright (c) 2012-2013, The Cryptonote developers
 
-#include "../crypto/keccak.h"
-#include "../crypto/aux_hash.h"
+#include "../keccak.h"
+#include "aux_hash.h"
 #include "cn_slow_hash.hpp"
 
 /*
