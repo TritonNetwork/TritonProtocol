@@ -89,7 +89,7 @@ namespace cryptonote {
   }
   int get_emission_speed_factor(uint8_t version){
     if(version >= 6){
-      return EMISSION_SPEED_FACTOR_PER_MINUTE + 1; /// halves
+      return EMISSION_SPEED_FACTOR_PER_MINUTE + 2;
     }else{
       return EMISSION_SPEED_FACTOR_PER_MINUTE;
     }
