@@ -1039,7 +1039,7 @@ bool wallet2::get_multisig_seed(epee::wipeable_string& seed, const epee::wipeabl
   if (!passphrase.empty())
   {
     crypto::secret_key key;
-    cn_v1_hash kdf_hash;
+    cn_gpu_hash kdf_hash;
 		kdf_hash.hash(passphrase.data(), passphrase.size(), key.data);
     sc_reduce32((unsigned char*)key.data);
     data = encrypt(data, key, true);

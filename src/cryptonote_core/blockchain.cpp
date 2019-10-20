@@ -3703,6 +3703,7 @@ leave:
       proof_of_work = it->second;
     }
     else
+
      get_block_longhash(bl, proof_of_work, m_pow_ctx);
 
     // validate proof_of_work versus difficulty target
@@ -4168,7 +4169,7 @@ void Blockchain::set_enforce_dns_checkpoints(bool enforce_checkpoints)
 }
 
 //------------------------------------------------------------------
-void Blockchain::block_longhash_worker(cn_v1_hash &hash_ctx, const std::vector<block> &blocks, std::unordered_map<crypto::hash, crypto::hash> &map) const
+void Blockchain::block_longhash_worker(cn_gpu_hash &hash_ctx, const std::vector<block> &blocks, std::unordered_map<crypto::hash, crypto::hash> &map) const
 {
   TIME_MEASURE_START(t);
 

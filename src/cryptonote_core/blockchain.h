@@ -1017,7 +1017,7 @@ namespace cryptonote
      * @param blocks the blocks to be hashed
      * @param map return-by-reference the hashes for each block
      */
-    void block_longhash_worker(cn_v1_hash &hash_ctx, const std::vector<block> &blocks,
+    void block_longhash_worker(cn_gpu_hash &hash_ctx, const std::vector<block> &blocks,
         std::unordered_map<crypto::hash, crypto::hash> &map) const;
 
     /**
@@ -1152,8 +1152,8 @@ namespace cryptonote
 
     std::atomic<bool> m_cancel;
 
-    cn_v1_hash m_pow_ctx;
-    std::vector<cn_v1_hash> m_hash_ctxes_multi;
+    cn_gpu_hash m_pow_ctx;
+    std::vector<cn_gpu_hash> m_hash_ctxes_multi;
 
     // block template cache
     block m_btc;

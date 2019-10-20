@@ -153,10 +153,6 @@ class cn_slow_hash
 
 	// Factory function enabling to temporaliy turn v2 object into v1
 	// It is caller's responsibility to ensure that v2 object is not hashing at the same time!!
-	static cn_v7l_hash make_borrowed(cn_v1_hash& t)
-	{
-		return cn_v7l_hash(t.lpad.as_void(), t.spad.as_void());
-	}
 
 	static cn_v7l_hash make_borrowed(cn_gpu_hash& t)
 	{
