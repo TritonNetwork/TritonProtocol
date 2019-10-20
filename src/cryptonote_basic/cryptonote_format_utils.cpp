@@ -1367,15 +1367,14 @@ void add_tx_secret_key_to_tx_extra(std::vector<uint8_t>& tx_extra, const crypto:
     // block 202612 bug workaround
     block b_local = b; //workaround to avoid const errors with do_serialize
   	blobdata bd = get_block_hashing_blob(b);
+    cn_gpu_hash ctx_v3 = cn_gpu_hash::make_borrowed_v3(ctx);
 
     if(b.major_version <= 6){
-      ctx.hash(bd.data(), bd.size(), res.data);
-      cn_v7l_hash ctx_v2 = cn_v7l_hash::make_borrowed(ctx);
+      cn_v7l_hash ctx_v2 = cn_v7l_hash::make_borrowed(ctx_v3);
 		  ctx_v2.hash(bd.data(), bd.size(), res.data);
     }
     else
     {
-      cn_gpu_hash_t ctx_v3 = cn_gpu_hash_t::make_borrowed_v3(ctx);
 		  ctx_v3.hash(bd.data(), bd.size(), res.data);
     }
 
