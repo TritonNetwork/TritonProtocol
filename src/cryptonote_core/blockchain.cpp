@@ -799,7 +799,12 @@ difficulty_type Blockchain::get_difficulty_for_next_block()
   CRITICAL_REGION_LOCAL(m_blockchain_lock);
   std::vector<uint64_t> timestamps;
   std::vector<difficulty_type> difficulties;
+  size_t difficulty_blocks_count;
+  size_t target;
+
   auto height = m_db->height();
+  uint8_t version = get_current_hard_fork_version();
+  difficulty_blocks_count = DIFFICULTY_BLOCKS_COUNT_V3;
 
   if (m_fixed_difficulty) {
     return m_db->height() ? m_fixed_difficulty : 1;
@@ -808,10 +813,6 @@ difficulty_type Blockchain::get_difficulty_for_next_block()
   if (height == 0) {
 	  return 1000;
   }
-
-  uint8_t version = get_current_hard_fork_version();
-  size_t difficulty_blocks_count;
-    difficulty_blocks_count = DIFFICULTY_BLOCKS_COUNT_V3;
 
   // ND: Speedup
   // 1. Keep a list of the last 735 (or less) blocks that is used to compute difficulty,
@@ -851,16 +852,22 @@ difficulty_type Blockchain::get_difficulty_for_next_block()
     m_timestamps = timestamps;
     m_difficulties = difficulties;
   }
-  size_t target;
 
-  if(get_current_hard_fork_version() < 6){
+  if(version < 6){
     target = DIFFICULTY_TARGET_V2;
-  }else if(get_current_hard_fork_version() >= 6){
+  }else if(version >= 6){
     target = DIFFICULTY_TARGET_V3;
   }
 
+  std::vector<HardFork::Params> hf_params = get_hard_fork_heights(m_nettype);
+  if(height == hf_params[6].height){
+    const uint64_t num_ignored_blocks = timestamps.size() - (height - hf_params[6].height);
+    timestamps.erase(timestamps.begin(), timestamps.begin() + num_ignored_blocks);
+    difficulties.erase(difficulties.begin(), difficulties.begin() + num_ignored_blocks);
+  }
+
   difficulty_type diff = 0;
-  if (get_current_hard_fork_version() != 0 && get_current_hard_fork_version() < 4 && m_db->height() < 235) {
+  if (version < 4 && height < 235) {
 	  diff = 1000;
   }
   else {
@@ -1031,6 +1038,8 @@ difficulty_type Blockchain::get_next_difficulty_for_alternative_chain(const std:
   LOG_PRINT_L3("Blockchain::" << __func__);
   std::vector<uint64_t> timestamps;
   std::vector<difficulty_type> cumulative_difficulties;
+  uint64_t height = m_db->height();
+  uint8_t version = get_current_hard_fork_version();
 
   // if the alt chain isn't long enough to calculate the difficulty target
   // based on its blocks alone, need to get more blocks from the main chain
@@ -1082,12 +1091,20 @@ difficulty_type Blockchain::get_next_difficulty_for_alternative_chain(const std:
     }
   }
 
+  std::vector<HardFork::Params> hf_params = get_hard_fork_heights(m_nettype);
+  if(height == hf_params[6].height){
+    const uint64_t num_ignored_blocks = timestamps.size() - (height - hf_params[6].height);
+    timestamps.erase(timestamps.begin(), timestamps.begin() + num_ignored_blocks);
+    cumulative_difficulties.erase(cumulative_difficulties.begin(), cumulative_difficulties.begin() + num_ignored_blocks);
+  }
+
+
   // FIXME: This will fail if fork activation heights are subject to voting
   size_t target = get_ideal_hard_fork_version(bei.height) < 6 ? DIFFICULTY_TARGET_V2 : DIFFICULTY_TARGET_V3;
 
   // calculate the difficulty target for the block and return it
   uint64_t diff = 0;
-  if(get_current_hard_fork_version() != 0 && get_current_hard_fork_version() < 4 && m_db->height() < 235){
+  if(version != 0 && version < 4 && m_db->height() < 235){
     diff = 1000;
   }else{
     diff = next_difficulty(timestamps,cumulative_difficulties,target);
@@ -3707,7 +3724,7 @@ leave:
      get_block_longhash(bl, proof_of_work, m_pow_ctx);
 
     // validate proof_of_work versus difficulty target
-    if(!check_hash(proof_of_work, current_diffic) && get_current_hard_fork_version() != 1)
+    if(!check_hash(proof_of_work, current_diffic))
     {
       MERROR_VER("Block with id: " << id << std::endl << "does not have enough proof of work: " << proof_of_work << std::endl << "unexpected difficulty: " << current_diffic);
       bvc.m_verifivation_failed = true;
