@@ -108,7 +108,7 @@ namespace cryptonote {
 	   }
 
      static_assert(DIFFICULTY_TARGET_V2 % 60 == 0 && DIFFICULTY_TARGET_V1 % 60 == 0, "difficulty targets must be a multiple of 60");
-	   int target; 
+	   int target = DIFFICULTY_TARGET_V2; 
       if(version < 6)
       {
         target = DIFFICULTY_TARGET_V2;

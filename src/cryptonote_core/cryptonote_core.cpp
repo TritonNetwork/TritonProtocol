@@ -1642,7 +1642,7 @@ namespace cryptonote
     m_check_disk_space_interval.do_call(boost::bind(&core::check_disk_space, this));
 	time_t const lifetime = time(nullptr) - get_start_time();
 
-  int target;
+  int target = DIFFICULTY_TARGET_V2; 
   if(get_ideal_hard_fork_version() < 6){
     target = DIFFICULTY_TARGET_V2;
   } else if(get_ideal_hard_fork_version() >= 6){
@@ -1868,7 +1868,7 @@ namespace cryptonote
       return true;
     }
 
-    int target;
+    int target = DIFFICULTY_TARGET_V2;
     if(get_ideal_hard_fork_version() < 6){
       target = DIFFICULTY_TARGET_V2;
     } else if(get_ideal_hard_fork_version() >= 6){
