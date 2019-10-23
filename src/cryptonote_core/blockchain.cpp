@@ -110,13 +110,10 @@ static const struct {
 
   { 2, 10, 0, 1445355000 },
 
-  { 3, 25, 0, 1472415034 },
-  { 4, 50, 0, 1472415035 },
-  { 5, 130, 0, 1551499880 },
-  { 6, 153, 0, 1571531327  },
-  { 7, 155, 0, 1574531327  },
-
-
+  { 3, 20, 0, 1472415034 },
+  { 4, 25, 0, 1472415035 },
+  { 5, 30, 0, 1551499880 },
+  { 6, 35, 0, 1571531327  }
 };
 static const uint64_t testnet_hard_fork_version_1_till = 10;
 
@@ -810,10 +807,6 @@ difficulty_type Blockchain::get_difficulty_for_next_block()
     return m_db->height() ? m_fixed_difficulty : 1;
   }
 
-  if (height == 0) {
-	  return 1000;
-  }
-
   // ND: Speedup
   // 1. Keep a list of the last 735 (or less) blocks that is used to compute difficulty,
   //    then when the next block difficulty is queried, push the latest height data and
@@ -867,7 +860,7 @@ difficulty_type Blockchain::get_difficulty_for_next_block()
   }
 
   difficulty_type diff = 0;
-  if (version < 4 && height < 235) {
+  if ((version < 4 && height < 235)) {
 	  diff = 1000;
   }
   else {
@@ -1104,7 +1097,7 @@ difficulty_type Blockchain::get_next_difficulty_for_alternative_chain(const std:
 
   // calculate the difficulty target for the block and return it
   uint64_t diff = 0;
-  if(version != 0 && version < 4 && m_db->height() < 235){
+  if(version < 4 && m_db->height() < 235){
     diff = 1000;
   }else{
     diff = next_difficulty(timestamps,cumulative_difficulties,target);
@@ -3032,7 +3025,7 @@ bool Blockchain::check_tx_inputs(transaction& tx, tx_verification_context &tvc, 
 		}
 		case rct::RCTTypeSimple:
 		case rct::RCTTypeBulletproof:
-        case rct::RCTTypeBulletproof2:
+    case rct::RCTTypeBulletproof2:
 		{
 			// check all this, either reconstructed (so should really pass), or not
 			{
@@ -3724,7 +3717,7 @@ leave:
      get_block_longhash(bl, proof_of_work, m_pow_ctx);
 
     // validate proof_of_work versus difficulty target
-    if(!check_hash(proof_of_work, current_diffic))
+    if(!check_hash(proof_of_work, current_diffic) && bl.major_version != 1)
     {
       MERROR_VER("Block with id: " << id << std::endl << "does not have enough proof of work: " << proof_of_work << std::endl << "unexpected difficulty: " << current_diffic);
       bvc.m_verifivation_failed = true;

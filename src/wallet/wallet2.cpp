@@ -6300,7 +6300,7 @@ uint64_t wallet2::get_min_ring_size() const
 uint64_t wallet2::get_max_ring_size() const
 {
   if (use_fork_rules(6, 10))
-    return 15;
+    return 16;
   return 0;
 }
 //------------------------------------------------------------------------------------------------------------------------------
@@ -6726,7 +6726,7 @@ std::vector<wallet2::pending_tx> wallet2::create_stake_tx(const crypto::public_k
   std::set<uint32_t> subaddr_indices;
 
   try {
-    auto ptx_vector = create_transactions_2(dsts, 5, unlock_at_block, priority, extra, m_current_subaddress_account, subaddr_indices, true);
+    auto ptx_vector = create_transactions_2(dsts, get_min_ring_size(), unlock_at_block, priority, extra, m_current_subaddress_account, subaddr_indices, true);
     if (ptx_vector.size() == 1) { return ptx_vector; }
   } catch (const std::exception& e) {
     LOG_ERROR("Exception raised on creating tx: " << e.what());

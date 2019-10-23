@@ -107,7 +107,7 @@ typedef cryptonote::simple_wallet sw;
 
 #define DEFAULT_MIX 15
 
-#define MIN_RING_SIZE 14 // Used to inform user about min ring size -- does not track actual protocol
+#define MIN_RING_SIZE 15 // Used to inform user about min ring size -- does not track actual protocol
 
 #define LOCK_IDLE_SCOPE() \
   bool auto_refresh_enabled = m_auto_refresh_enabled.load(std::memory_order_relaxed); \
