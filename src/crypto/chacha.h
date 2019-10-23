@@ -77,7 +77,7 @@ namespace crypto {
     tools::scrubbed_arr<char, HASH_SIZE> pwd_hash;
     cn_gpu_hash kdf_hash;
     kdf_hash.hash(data, size, pwd_hash.data());
-    memcpy(&unwrap(key), pwd_hash.data(), sizeof(key));
+    memcpy(&unwrap(unwrap(key)), pwd_hash.data(), sizeof(key));
   }
 
   inline void generate_chacha_key_prehashed(const void *data, size_t size, chacha_key& key, uint64_t kdf_rounds) {
@@ -85,7 +85,7 @@ namespace crypto {
     tools::scrubbed_arr<char, HASH_SIZE> pwd_hash;
     cn_gpu_hash kdf_hash;
     kdf_hash.hash(data, size, pwd_hash.data());
-    memcpy(&unwrap(key), pwd_hash.data(), sizeof(key));
+    memcpy(&unwrap(unwrap(key)), pwd_hash.data(), sizeof(key));
   }
 
   inline void generate_chacha_key(std::string password, chacha_key& key, uint64_t kdf_rounds) {
