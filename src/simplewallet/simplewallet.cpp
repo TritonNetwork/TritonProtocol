@@ -9358,12 +9358,12 @@ int main(int argc, char* argv[])
   bool should_terminate = false;
   std::tie(vm, should_terminate) = wallet_args::main(
    argc, argv,
-   "equilibria-wallet-cli [--wallet-file=<file>|--generate-new-wallet=<file>] [<COMMAND>]",
+   "wallet-cli [--wallet-file=<file>|--generate-new-wallet=<file>] [<COMMAND>]",
     sw::tr("This is the command line equilibria wallet. It needs to connect to a equilibria\ndaemon to work correctly.\nWARNING: Do not reuse your equilibria keys on another fork, UNLESS this fork has key reuse mitigations built in. Doing so will harm your privacy."),
     desc_params,
     positional_options,
     [](const std::string &s, bool emphasis){ tools::scoped_message_writer(emphasis ? epee::console_color_white : epee::console_color_default, true) << s; },
-    "equilibria-wallet-cli.log"
+    "wallet-cli.log"
   );
 
   if (!vm)

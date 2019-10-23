@@ -111,6 +111,10 @@ endfunction ()
 include(Version)
 monero_add_library(version SOURCES ${CMAKE_BINARY_DIR}/version.cpp DEPENDS genversion)
 
+if(NOT EXISTS "${CMAKE_BINARY_DIR}/bin/misc")
+  file(MAKE_DIRECTORY "${CMAKE_BINARY_DIR}/bin/misc")
+endif()
+
 add_subdirectory(common)
 add_subdirectory(crypto)
 add_subdirectory(ringct)
