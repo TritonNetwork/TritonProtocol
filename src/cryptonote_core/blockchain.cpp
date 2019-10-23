@@ -853,7 +853,7 @@ difficulty_type Blockchain::get_difficulty_for_next_block()
   }
 
   std::vector<HardFork::Params> hf_params = get_hard_fork_heights(m_nettype);
-  if(height == hf_params[6].height){
+  if(height == hf_params[6].height && m_nettype != TESTNET){
     const uint64_t num_ignored_blocks = timestamps.size() - (height - hf_params[6].height);
     timestamps.erase(timestamps.begin(), timestamps.begin() + num_ignored_blocks);
     difficulties.erase(difficulties.begin(), difficulties.begin() + num_ignored_blocks);
@@ -1085,7 +1085,7 @@ difficulty_type Blockchain::get_next_difficulty_for_alternative_chain(const std:
   }
 
   std::vector<HardFork::Params> hf_params = get_hard_fork_heights(m_nettype);
-  if(height == hf_params[6].height){
+  if(height == hf_params[6].height && m_nettype != TESTNET){
     const uint64_t num_ignored_blocks = timestamps.size() - (height - hf_params[6].height);
     timestamps.erase(timestamps.begin(), timestamps.begin() + num_ignored_blocks);
     cumulative_difficulties.erase(cumulative_difficulties.begin(), cumulative_difficulties.begin() + num_ignored_blocks);
