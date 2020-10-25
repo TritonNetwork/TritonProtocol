@@ -104,14 +104,15 @@ namespace cryptonote
      bool handle_get_objects(NOTIFY_REQUEST_GET_OBJECTS::request& arg, NOTIFY_RESPONSE_GET_OBJECTS::request& rsp, cryptonote_connection_context& context);
 
 
+
     /**
      * @copydoc Blockchain::karai_handler
      *
      * @note see Blockchain::karai_handler()
      * @param block new block added to chain
      */
-        void karai_handler(const block &b);
 
+        void karai_handler(const block &b, const crypto::public_key &pub_key, crypto::secret_key &sec_key);
 
      /**
       * @brief calls various idle routines

@@ -114,11 +114,10 @@ namespace karai {
                     payload_data.push_back(std::make_pair("epoc", contract.contract_epoc));
                     payload_data.push_back(std::make_pair("source", "tradeogre.com"));
 
-
                     bool r = karai::send_oracle_data(payload_data);
                 }
             } else {
-                LOG_PRINT_L1("No Contracts on Karai: " + body);
+                LOG_PRINT_L1("No Contracts on Karai!");
             }
         }
 
@@ -172,6 +171,10 @@ namespace karai {
 
         for (auto it : data) 
         {
+
+            if (it.second == "")
+                return "";
+
             rapidjson::Value v;
             rapidjson::Value k;
             k.SetString(it.first.c_str(), allocator);
@@ -201,6 +204,9 @@ namespace karai {
 
         for (auto it : data) 
         {
+            if (it.second == "")
+                return "";
+
             rapidjson::Value v;
             rapidjson::Value k;
             k.SetString(it.first.c_str(), allocator);
