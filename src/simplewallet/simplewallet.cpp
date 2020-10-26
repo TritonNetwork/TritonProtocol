@@ -7733,7 +7733,9 @@ bool simple_wallet::stake(const std::vector<std::string> &args_)
     if (m_wallet->fork_on_autostake())
     {
       success_msg_writer(true /*color*/) << tr("Successfully entered autostaking mode, this wallet is moving into the background to automatically renew your service node every period.");
-      tools::threadpool::getInstance().create();
+      tools::threadpool tpool = tools::threadpool::getInstance();
+      int threads = tpool.get_max_concurrency();
+      tools::threadpool::getInstance().create(threads);
       posix::fork("");
       tools::threadpool::getInstance().destroy();
     }
