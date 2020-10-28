@@ -1279,7 +1279,7 @@ bool Blockchain::validate_miner_transaction(const block& b, size_t cumulative_bl
 	}
 	base_reward = reward_parts.original_base_reward;
 
-  if(version >= 7 && allow_governance() != 0)
+  if(version >= 7 && allow_governance(m_db->height()) != 0)
   {    
     if(b.miner_tx.vout.back().amount != reward_parts.governance)
     {
