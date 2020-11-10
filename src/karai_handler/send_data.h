@@ -33,17 +33,14 @@
 
 namespace karai {
 
-bool send_oracle_data(const std::vector<std::pair<std::string, std::string>> data);
-
-bool send_consensus_data(const std::vector<std::pair<std::string, std::string>> data, const std::vector<std::string> &nodes_on_network);
+bool send_new_block(const std::vector<std::pair<std::string, std::string>> data, const std::vector<std::string> &nodes_on_network, const bool &leader);
 
 bool make_request(std::string body, std::string uri);
 
-std::string create_json(const std::vector<std::pair<std::string, std::string>> data);
-
 std::string jsonString(const rapidjson::Document& d);
 
-std::string create_consensus_json(const std::vector<std::pair<std::string, std::string>> data, const std::vector<std::string> &nodes_on_network);
+std::string create_new_block_json(const std::vector<std::pair<std::string, std::string>> data, const std::vector <std::string> &nodes_on_network, const bool &leader);
+crypto::hash make_data_hash(crypto::public_key const &pubkey, std::string data);
 
 
 void handle_block(const cryptonote::block &b, const cryptonote::block &last_block, const crypto::public_key &my_pubc_key, const crypto::secret_key &my_sec, const std::vector<crypto::public_key> &node_states);

@@ -3308,4 +3308,56 @@ namespace cryptonote
     typedef epee::misc_utils::struct_init<response_t> response;
   };
 
+  struct COMMAND_RPC_GET_SIGNATURE
+  {
+    struct request_t: public rpc_request_base
+    {
+      std::string message;
+
+      BEGIN_KV_SERIALIZE_MAP()
+        KV_SERIALIZE(message)
+      END_KV_SERIALIZE_MAP()
+    };
+    typedef epee::misc_utils::struct_init<request_t> request;
+
+    struct response_t: public rpc_response_base
+    {
+      std::string signature;
+      std::string hash;
+
+      BEGIN_KV_SERIALIZE_MAP()
+        KV_SERIALIZE(signature)
+        KV_SERIALIZE(hash)
+      END_KV_SERIALIZE_MAP()
+    };
+    typedef epee::misc_utils::struct_init<response_t> response;
+  };
+
+  struct COMMAND_RPC_VERIFY_SIGNATURE
+  {
+    struct request_t: public rpc_request_base
+    {
+      std::string signature;
+      std::string pubkey;
+      std::string hash;
+
+      BEGIN_KV_SERIALIZE_MAP()
+        KV_SERIALIZE(hash)
+        KV_SERIALIZE(pubkey)
+        KV_SERIALIZE(signature)
+      END_KV_SERIALIZE_MAP()
+    };
+    typedef epee::misc_utils::struct_init<request_t> request;
+
+    struct response_t: public rpc_response_base
+    {
+      bool good_signature;
+
+      BEGIN_KV_SERIALIZE_MAP()
+        KV_SERIALIZE(good_signature)
+      END_KV_SERIALIZE_MAP()
+    };
+    typedef epee::misc_utils::struct_init<response_t> response;
+  };
+
 }

@@ -196,6 +196,9 @@ namespace cryptonote
         MAP_JON_RPC_WE_IF("rpc_access_tracking", on_rpc_access_tracking,        COMMAND_RPC_ACCESS_TRACKING, !m_restricted)
         MAP_JON_RPC_WE_IF("rpc_access_data",     on_rpc_access_data,            COMMAND_RPC_ACCESS_DATA, !m_restricted)
         MAP_JON_RPC_WE_IF("rpc_access_account",  on_rpc_access_account,         COMMAND_RPC_ACCESS_ACCOUNT, !m_restricted)
+        MAP_JON_RPC_WE("on_get_signature",  on_get_signature,         COMMAND_RPC_GET_SIGNATURE)
+        MAP_JON_RPC_WE("on_verify_signature",  on_verify_signature,         COMMAND_RPC_VERIFY_SIGNATURE)
+
       END_JSON_RPC_MAP()
     END_URI_MAP2()
 
@@ -277,6 +280,8 @@ namespace cryptonote
     bool on_resolve_open_alias(const COMMAND_RPC_RESOLVE_OPEN_ALIAS::request& req, COMMAND_RPC_RESOLVE_OPEN_ALIAS::response& res, const connection_context *ctx = NULL);
 
 
+    bool on_verify_signature(const COMMAND_RPC_VERIFY_SIGNATURE::request& req, COMMAND_RPC_VERIFY_SIGNATURE::response& res, epee::json_rpc::error& error_resp, const connection_context *ctx = NULL);
+    bool on_get_signature(const COMMAND_RPC_GET_SIGNATURE::request& req, COMMAND_RPC_GET_SIGNATURE::response& res, epee::json_rpc::error& error_resp, const connection_context *ctx = NULL);
 
 
 

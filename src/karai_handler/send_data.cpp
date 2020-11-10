@@ -43,7 +43,7 @@
 
 namespace karai {
 
-    static crypto::hash make_data_hash(crypto::public_key const &pubkey, std::string data)
+    crypto::hash make_data_hash(crypto::public_key const &pubkey, std::string data)
 	{
 		char buf[256] = "SUP"; // Meaningless magic bytes
 		crypto::hash result;
@@ -60,88 +60,31 @@ namespace karai {
         crypto::public_key last_winner_pubkey = cryptonote::get_service_node_winner_from_tx_extra(last_block.miner_tx.extra);
         crypto::public_key winner_pubkey = cryptonote::get_service_node_winner_from_tx_extra(b.miner_tx.extra);
 
-        std::vector<price_provider::contract_data> contracts = price_provider::getContractKarai();
+        bool leader = epee::string_tools::pod_to_hex(my_pubc_key) == epee::string_tools::pod_to_hex(last_winner_pubkey);
+    
+        std::vector<std::pair<std::string, std::string>> payload_data;
+        std::vector <std::string> nodes_on_network;
+        nodes_on_network.reserve(node_keys.size());
 
-        
-
-        if (epee::string_tools::pod_to_hex(my_pubc_key) == epee::string_tools::pod_to_hex(last_winner_pubkey)) 
+        for (auto key : node_keys) 
         {
-            //we are winner send consensus tx
-
-            std::vector<std::pair<std::string, std::string>> payload_data;
-            std::string nodes_json_string;
-            std::vector <std::string> nodes_on_network;
-            nodes_on_network.reserve(node_keys.size());
-
-            for (auto key : node_keys) 
-            {
-                nodes_on_network.push_back(epee::string_tools::pod_to_hex(key));
-                nodes_json_string += epee::string_tools::pod_to_hex(key);
-            }
-
-            crypto::hash nodes_hash = make_data_hash(my_pubc_key, nodes_json_string);
-
-            crypto::signature signature;
-            crypto::generate_signature(nodes_hash, my_pubc_key, my_sec, signature);
-
-            payload_data.push_back(std::make_pair("hash", epee::string_tools::pod_to_hex(nodes_hash)));
-            payload_data.push_back(std::make_pair("height", std::to_string(cryptonote::get_block_height(b))));
-            payload_data.push_back(std::make_pair("pubkey", epee::string_tools::pod_to_hex(my_pubc_key)));
-            payload_data.push_back(std::make_pair("signature", epee::string_tools::pod_to_hex(signature)));
-            payload_data.push_back(std::make_pair("task", "Consensus"));
-
-            //bool 
-            bool r = karai::send_consensus_data(payload_data, nodes_on_network);
-        } 
-        else 
-        {
-            if (contracts.size() > 0) {
-                for (auto contract : contracts) {
-                    std::string price = price_provider::getTradeOgrePrice(std::make_pair(contract.pair.second, contract.pair.first));
-                    crypto::hash price_hash = make_data_hash(my_pubc_key, price);
-
-                    crypto::signature signature;
-                    crypto::generate_signature(price_hash, my_pubc_key, my_sec, signature);
-
-                    std::vector<std::pair<std::string, std::string>> payload_data;
-
-                    payload_data.push_back(std::make_pair("hash", epee::string_tools::pod_to_hex(price_hash)));
-                    payload_data.push_back(std::make_pair("height", std::to_string(cryptonote::get_block_height(b))));
-                    payload_data.push_back(std::make_pair("pubkey", epee::string_tools::pod_to_hex(my_pubc_key)));
-                    payload_data.push_back(std::make_pair("signature", epee::string_tools::pod_to_hex(signature)));
-                    payload_data.push_back(std::make_pair("data", price));
-                    payload_data.push_back(std::make_pair("task", contract.pair.first + "/" + contract.pair.second));
-                    payload_data.push_back(std::make_pair("epoc", contract.contract_epoc));
-                    payload_data.push_back(std::make_pair("source", "tradeogre.com"));
-
-                    bool r = karai::send_oracle_data(payload_data);
-                }
-            } else {
-                LOG_PRINT_L1("No Contracts on Karai!");
-            }
+            nodes_on_network.push_back(epee::string_tools::pod_to_hex(key));
         }
 
+        payload_data.push_back(std::make_pair("height", std::to_string(cryptonote::get_block_height(b))));
+        payload_data.push_back(std::make_pair("pubkey", epee::string_tools::pod_to_hex(my_pubc_key)));
 
+        //bool 
+        bool r = karai::send_new_block(payload_data, nodes_on_network, leader);
     }
 
-
-    bool send_oracle_data(const std::vector<std::pair<std::string, std::string>> data)
+    bool send_new_block(const std::vector<std::pair<std::string, std::string>> data, const std::vector<std::string> &nodes_on_network, const bool &leader)
     {
-
-        LOG_PRINT_L1("Sending Oracle data!");
-        std::string body = create_json(data);
-        bool r = make_request(body, "/api/v1/new_tx");
-        return r;
-    }
-
-    bool send_consensus_data(const std::vector<std::pair<std::string, std::string>> data, const std::vector<std::string> &nodes_on_network)
-    {
-        LOG_PRINT_L1("Sending Consensus data!");
-        std::string body = create_consensus_json(data, nodes_on_network);
+        std::string body = create_new_block_json(data, nodes_on_network, leader);
         
         LOG_PRINT_L1("Data: " + body);
 
-        bool r = make_request(body, "/api/v1/new_consensus_tx");
+        bool r = make_request(body, "/api/v1/new_block");
 
         return r;
     }
@@ -161,31 +104,7 @@ namespace karai {
         return r;
     }
 
-
-    std::string create_json(const std::vector<std::pair<std::string, std::string>> data)
-    {
-        rapidjson::Document d;
-
-        d.SetObject();
-        rapidjson::Document::AllocatorType& allocator = d.GetAllocator();
-
-        for (auto it : data) 
-        {
-
-            if (it.second == "")
-                return "";
-
-            rapidjson::Value v;
-            rapidjson::Value k;
-            k.SetString(it.first.c_str(), allocator);
-            v.SetString(it.second.c_str(), allocator);
-            d.AddMember(k, v, allocator);
-        }
-
-        return jsonString(d);
-    }
-
-     std::string create_consensus_json(const std::vector<std::pair<std::string, std::string>> data, const std::vector <std::string> &nodes_on_network)
+     std::string create_new_block_json(const std::vector<std::pair<std::string, std::string>> data, const std::vector <std::string> &nodes_on_network, const bool &leader)
     {
         rapidjson::Document d;
 
@@ -214,7 +133,11 @@ namespace karai {
             d.AddMember(k, v, allocator);
         }
 
-        d.AddMember("data", node_json, allocator);
+        d.AddMember("nodes", node_json, allocator);
+
+        rapidjson::Value l;
+        l.SetBool(leader);
+        d.AddMember("leader", l, allocator);
 
         return jsonString(d);
     }
