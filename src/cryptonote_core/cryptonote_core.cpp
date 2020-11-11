@@ -1391,7 +1391,22 @@ namespace cryptonote
 
 	  if (relayed)
 		  MGINFO("Submitted uptime-proof for service node (yours): " << m_service_node_pubkey);
-	}
+	  }
+    return true;
+  }
+  //-----------------------------------------------------------------------------------------------
+  bool core::send_oracle_data(const COMMAND_RPC_RELAY_ORACLE_DATA::request& req)
+  {
+    cryptonote_connection_context fake_context = AUTO_VAL_INIT(fake_context);
+    NOTIFY_ORACLE_DATA::request r;
+
+    r.price_feed = req.pair;
+    r.xeq_usd = req.price;
+	  bool relayed = get_protocol()->relay_oracle_data(r, fake_context);
+
+	  if (relayed)
+		  MGINFO("Submitted oracle data");
+
     return true;
   }
   //-----------------------------------------------------------------------------------------------
@@ -1404,6 +1419,58 @@ namespace cryptonote
   bool core::handle_uptime_proof(const NOTIFY_UPTIME_PROOF::request &proof, bool &my_uptime_proof_confirmation)
   {
 	  return m_quorum_cop.handle_uptime_proof(proof, my_uptime_proof_confirmation);
+  }
+
+  //-----------------------------------------------------------------------------------------------
+  void core::get_oracle_price(const uint64_t &height) {
+    std::stringstream ss;
+
+		cryptonote::oracle_data_to_store data_in;
+		std::string blob;
+
+		m_blockchain_storage.get_db().block_wtxn_start();
+		if (!m_blockchain_storage.get_db().get_oracle_data(blob, height))
+		{
+			m_blockchain_storage.get_db().block_wtxn_stop();
+			return;
+		}
+		m_blockchain_storage.get_db().block_wtxn_stop();
+
+		ss << blob;
+		binary_archive<false> ba(ss);
+		bool r = ::serialization::serialize(ba, data_in);
+    if (!r) 
+    {
+      std::cout << "Unable to get data" << std::endl;
+      return;
+    }
+
+    for (auto price_feed : data_in.price_feed) {
+      std::cout << price_feed.first << " " << price_feed.second << std::endl;
+    }
+  }
+
+  //-----------------------------------------------------------------------------------------------
+  bool core::handle_oracle_data(const NOTIFY_ORACLE_DATA::request &oracle_data)
+  {
+    MGINFO("Handle oracle data");
+    cryptonote::oracle_data_to_store data_to_store;
+
+    data_to_store.price_feed.push_back(std::make_pair(oracle_data.xeq_usd, oracle_data.price_feed));
+    data_to_store.timestamp = time(nullptr);
+
+		std::stringstream ss;
+		binary_archive<true> ba(ss);
+
+		bool r = ::serialization::serialize(ba, data_to_store);
+		CHECK_AND_ASSERT_MES(r, false, "Failed to store oracle_data info: failed to serialize data");
+
+		std::string blob = ss.str();
+    std::cout << blob << std::endl;
+		m_blockchain_storage.get_db().block_wtxn_start();
+		m_blockchain_storage.get_db().set_oracle_data(blob, m_blockchain_storage.get_db().height());
+		m_blockchain_storage.get_db().block_wtxn_stop();
+    return true;
   }
   //-----------------------------------------------------------------------------------------------
   void core::on_transactions_relayed(const epee::span<const cryptonote::blobdata> tx_blobs, const relay_method tx_relay)
@@ -1579,6 +1646,8 @@ namespace cryptonote
 
     block last_block;
     get_block_by_hash(last_block_hash, last_block);
+
+    get_oracle_price(get_block_height(last_block));
 
     karai::handle_block(b, last_block, m_service_node_pubkey, m_service_node_key, m_service_node_list.get_service_nodes_pubkeys());
   }

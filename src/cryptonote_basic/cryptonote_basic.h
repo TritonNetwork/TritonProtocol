@@ -54,6 +54,18 @@ namespace cryptonote
 {
   typedef std::vector<crypto::signature> ring_signature;
 
+ /* oracle_data */
+  struct oracle_data_to_store
+  {
+    std::vector<std::pair<uint64_t, std::string>> price_feed;
+    uint64_t timestamp;
+
+    BEGIN_SERIALIZE()
+      FIELD(price_feed)
+      FIELD(timestamp)
+    END_SERIALIZE()
+  };
+
 
   /* outputs */
 
@@ -79,7 +91,6 @@ namespace cryptonote
     txout_to_key(const crypto::public_key &_key) : key(_key) { }
     crypto::public_key key;
   };
-
 
   /* inputs */
 
