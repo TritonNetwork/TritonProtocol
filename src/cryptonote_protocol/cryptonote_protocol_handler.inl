@@ -829,7 +829,7 @@ namespace cryptonote
     (void)context;
     if (m_core.handle_oracle_data(arg))
     {
-      return 0;
+      return 1;
     }
     return 1;
  }

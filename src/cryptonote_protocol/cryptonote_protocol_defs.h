@@ -420,22 +420,21 @@ namespace cryptonote
     typedef epee::misc_utils::struct_init<request_t> request;
   };
 
-     /************************************************************************/
+  /************************************************************************/
   /*                                                                      */
   /************************************************************************/
   struct NOTIFY_ORACLE_DATA
   {
-    const static int ID = BC_COMMANDS_POOL_BASE + 11;
+    const static int ID = BC_COMMANDS_POOL_BASE + 13;
 
     struct request_t
     {
-
-    std::string price_feed;
-		uint64_t xeq_usd;
+      std::string price_feed;
+      uint64_t xeq_usd;
 
       BEGIN_KV_SERIALIZE_MAP()
-		  KV_SERIALIZE(price_feed)
-		  KV_SERIALIZE(xeq_usd)
+        KV_SERIALIZE(price_feed)
+        KV_SERIALIZE(xeq_usd)
       END_KV_SERIALIZE_MAP()
     };
     typedef epee::misc_utils::struct_init<request_t> request;
