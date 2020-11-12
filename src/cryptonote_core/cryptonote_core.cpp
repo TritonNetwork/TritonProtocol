@@ -1468,7 +1468,7 @@ namespace cryptonote
 		std::string blob = ss.str();
     std::cout << blob << std::endl;
 		m_blockchain_storage.get_db().block_wtxn_start();
-		m_blockchain_storage.get_db().set_oracle_data(blob, m_blockchain_storage.get_db().height());
+		m_blockchain_storage.get_db().set_oracle_data(blob, m_blockchain_storage.get_db().height() - 1);
 		m_blockchain_storage.get_db().block_wtxn_stop();
     return true;
   }
