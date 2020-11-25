@@ -2536,6 +2536,7 @@ namespace cryptonote
       uint64_t fee_amount;
       std::string wide_fee_amount;
       uint64_t fee_amount_top64;
+      uint64_t burn_amount;
 
       BEGIN_KV_SERIALIZE_MAP()
         KV_SERIALIZE_PARENT(rpc_access_response_base)
@@ -2545,6 +2546,7 @@ namespace cryptonote
         KV_SERIALIZE(fee_amount)
         KV_SERIALIZE(wide_fee_amount)
         KV_SERIALIZE(fee_amount_top64)
+        KV_SERIALIZE(burn_amount)
       END_KV_SERIALIZE_MAP()
     };
     typedef epee::misc_utils::struct_init<response_t> response;

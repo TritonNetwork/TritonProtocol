@@ -304,10 +304,6 @@ namespace cryptonote
     LOG_PRINT_L0("Failed to calculate block reward");
     return false;
   }
-#if defined(DEBUG_CREATE_BLOCK_TEMPLATE)
-    LOG_PRINT_L1("Creating block template: reward " << block_reward <<
-      ", fee " << fee);
-#endif
 
 	uint64_t summary_amounts = 0;
 	// Miner Reward

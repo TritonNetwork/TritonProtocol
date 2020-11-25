@@ -2796,9 +2796,11 @@ namespace cryptonote
       return true;
     }
     CHECK_PAYMENT_MIN1(req, res, COST_PER_COINBASE_TX_SUM_BLOCK * req.count, false);
-    std::pair<boost::multiprecision::uint128_t, boost::multiprecision::uint128_t> amounts = m_core.get_coinbase_tx_sum(req.height, req.count);
-    store_128(amounts.first, res.emission_amount, res.wide_emission_amount, res.emission_amount_top64);
-    store_128(amounts.second, res.fee_amount, res.wide_fee_amount, res.fee_amount_top64);
+    std::tuple<uint64_t, boost::multiprecision::uint128_t, boost::multiprecision::uint128_t> amounts = m_core.get_coinbase_tx_sum(req.height, req.count);
+    store_128(std::get<1>(amounts), res.emission_amount, res.wide_emission_amount, res.emission_amount_top64);
+    store_128(std::get<2>(amounts), res.fee_amount, res.wide_fee_amount, res.fee_amount_top64);
+
+    res.burn_amount = std::get<0>(amounts);
     res.status = CORE_RPC_STATUS_OK;
     return true;
   }

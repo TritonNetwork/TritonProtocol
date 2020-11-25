@@ -54,7 +54,8 @@ const hardfork_t testnet_hard_forks[] = {
   { 4, 235, 0, 1472415035 },
   { 5, 250, 0, 1551499880 },
   { 6, 300, 0, 1571531327},
-  { 7, 350, 0, 1581531327}
+  { 7, 350, 0, 1581531327},
+  { 8, 5262, 0, 1591531327}
 
 };
 const size_t num_testnet_hard_forks = sizeof(testnet_hard_forks) / sizeof(testnet_hard_forks[0]);
