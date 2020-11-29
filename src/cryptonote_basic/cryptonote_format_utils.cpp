@@ -989,7 +989,7 @@ void add_tx_secret_key_to_tx_extra(std::vector<uint8_t>& tx_extra, const crypto:
     tx_extra_burn burn;
     if (find_tx_extra_field_by_type(tx_extra_fields, burn)) {
       //atomic units for 25,000 XEQ
-      if (burn >= 250000000)
+      if (burn.amount >= 250000000)
         return true;
       else
         return false;
