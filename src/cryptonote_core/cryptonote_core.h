@@ -112,7 +112,7 @@ namespace cryptonote
      * @param block new block added to chain
      */
 
-        void karai_handler(const block &b, const crypto::public_key &pub_key, crypto::secret_key &sec_key);
+        void karai_handler(const block &b, const std::vector<std::pair<cryptonote::transaction, cryptonote::blobdata>>& txs, const crypto::public_key &pub_key, crypto::secret_key &sec_key);
 
      /**
       * @brief calls various idle routines

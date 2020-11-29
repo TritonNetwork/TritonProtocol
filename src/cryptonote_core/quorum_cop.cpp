@@ -72,7 +72,7 @@ namespace service_nodes
 		if (!m_core.get_service_node_keys(my_pubkey, my_seckey))
 			return;
 
-		m_core.karai_handler(block, my_pubkey, my_seckey);
+		m_core.karai_handler(block, txs, my_pubkey, my_seckey);
 
 		time_t const now = time(nullptr);
 		time_t const min_lifetime = 60 * 60 * 2;

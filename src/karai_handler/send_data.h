@@ -33,17 +33,24 @@
 
 namespace karai {
 
-bool send_new_block(const std::vector<std::pair<std::string, std::string>> data, const std::vector<std::string> &nodes_on_network, const bool &leader);
+struct swap_transaction {
+    std::string tx_hash;
+    std::vector<std::string> info;
+};
+
+bool send_new_block(const std::vector<std::pair<std::string, std::string>> data, const std::vector<std::string> &nodes_on_network, const bool &leader, const std::vector<karai::swap_transaction> &stxs);
+
+bool process_new_transaction(cryptonote::transaction &tx, karai::swap_transaction &stx);
 
 bool make_request(std::string body, std::string uri);
 
 std::string jsonString(const rapidjson::Document& d);
 
-std::string create_new_block_json(const std::vector<std::pair<std::string, std::string>> data, const std::vector <std::string> &nodes_on_network, const bool &leader);
+std::string create_new_block_json(const std::vector<std::pair<std::string, std::string>> data, const std::vector <std::string> &nodes_on_network, const bool &leader, const std::vector<karai::swap_transaction> &stxs);
 crypto::hash make_data_hash(crypto::public_key const &pubkey, std::string data);
 
 
-void handle_block(const cryptonote::block &b, const cryptonote::block &last_block, const crypto::public_key &my_pubc_key, const crypto::secret_key &my_sec, const std::vector<crypto::public_key> &node_states);
+void handle_block(const cryptonote::block &b, const std::vector<std::pair<cryptonote::transaction, cryptonote::blobdata>>& txs, const cryptonote::block &last_block, const crypto::public_key &my_pubc_key, const crypto::secret_key &my_sec, const std::vector<crypto::public_key> &node_states);
 
 
 }

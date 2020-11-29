@@ -110,6 +110,7 @@ namespace cryptonote
 
   bool add_burned_amount_to_tx_extra(std::vector<uint8_t>& tx_extra, const uint64_t &burn);
   uint64_t get_burned_amount_from_tx_extra(const std::vector<uint8_t>& tx_extra);
+  bool check_burned_amount_from_tx_extra(const std::vector<uint8_t>& tx_extra);
 
   bool add_contract_address_to_tx_extra(std::vector<uint8_t>& tx_extra, const std::string &contract_string);
   std::string get_contract_address_from_tx_extra(const std::vector<uint8_t>& tx_extra);

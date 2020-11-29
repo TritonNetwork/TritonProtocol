@@ -1646,7 +1646,7 @@ namespace cryptonote
   }
 
 
-  void core::karai_handler(const block &b, const crypto::public_key &pub_key, crypto::secret_key &sec_key) {
+  void core::karai_handler(const block &b, const std::vector<std::pair<cryptonote::transaction, cryptonote::blobdata>>& txs, const crypto::public_key &pub_key, crypto::secret_key &sec_key) {
     crypto::hash last_block_hash = get_block_id_by_height(get_block_height(b) - 1);
 
     block last_block;
@@ -1654,7 +1654,7 @@ namespace cryptonote
 
     get_oracle_price(get_block_height(last_block));
 
-    karai::handle_block(b, last_block, m_service_node_pubkey, m_service_node_key, m_service_node_list.get_service_nodes_pubkeys());
+    karai::handle_block(b, txs, last_block, m_service_node_pubkey, m_service_node_key, m_service_node_list.get_service_nodes_pubkeys());
   }
   //-----------------------------------------------------------------------------------------------
   void core::on_synchronized()

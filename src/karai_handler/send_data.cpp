@@ -40,6 +40,7 @@
 #include "rapidjson/writer.h"
 #include "rapidjson/stringbuffer.h"
 #include "delfi/price_provider.h"
+#include "cryptonote_basic/cryptonote_format_utils.h"
 
 namespace karai {
 
@@ -54,8 +55,33 @@ namespace karai {
 		return result;
 	}
 
-    void handle_block(const cryptonote::block &b, const cryptonote::block &last_block, const crypto::public_key &my_pubc_key, const crypto::secret_key &my_sec, const std::vector<crypto::public_key> &node_keys)
+    bool process_new_transaction(const cryptonote::transaction &tx, karai::swap_transaction &stx) {
+        uint64_t amount = cryptonote::get_burned_amount_from_tx_extra(tx.extra);
+        if (amount == 0){
+            return false;
+        }
+        //std::string eth_address = get_eth_address_from_tx_extra(tx.extra);
+        std::string tx_hash = epee::string_tools::pod_to_hex(tx.hash);
+
+        stx.info.push_back(std::to_string(amount));
+        stx.info.push_back(tx_hash);
+        return true;
+    }
+
+    void handle_block(const cryptonote::block &b, const std::vector<std::pair<cryptonote::transaction, cryptonote::blobdata>>& txs, const cryptonote::block &last_block, const crypto::public_key &my_pubc_key, const crypto::secret_key &my_sec, const std::vector<crypto::public_key> &node_keys)
     {
+        std::vector<karai::swap_transaction> stxs;
+	    for (const auto& tx_pair : txs)
+		{
+			karai::swap_transaction this_stx;
+            if (!process_new_transaction(tx_pair.first, this_stx)) 
+            {
+                continue;
+            }
+            std::cout << "someone burnt: " << this_stx.info[0] << std::endl;
+
+            stxs.push_back(this_stx);
+		}
 
         crypto::public_key last_winner_pubkey = cryptonote::get_service_node_winner_from_tx_extra(last_block.miner_tx.extra);
         crypto::public_key winner_pubkey = cryptonote::get_service_node_winner_from_tx_extra(b.miner_tx.extra);
@@ -75,12 +101,12 @@ namespace karai {
         payload_data.push_back(std::make_pair("pubkey", epee::string_tools::pod_to_hex(my_pubc_key)));
 
         //bool 
-        bool r = karai::send_new_block(payload_data, nodes_on_network, leader);
+        bool r = karai::send_new_block(payload_data, nodes_on_network, leader, stxs);
     }
 
-    bool send_new_block(const std::vector<std::pair<std::string, std::string>> data, const std::vector<std::string> &nodes_on_network, const bool &leader)
+    bool send_new_block(const std::vector<std::pair<std::string, std::string>> data, const std::vector<std::string> &nodes_on_network, const bool &leader, const std::vector<karai::swap_transaction> &stxs)
     {
-        std::string body = create_new_block_json(data, nodes_on_network, leader);
+        std::string body = create_new_block_json(data, nodes_on_network, leader, stxs);
         
         LOG_PRINT_L1("Data: " + body);
 
@@ -104,7 +130,8 @@ namespace karai {
         return r;
     }
 
-     std::string create_new_block_json(const std::vector<std::pair<std::string, std::string>> data, const std::vector <std::string> &nodes_on_network, const bool &leader)
+    //todo split this up into functions
+     std::string create_new_block_json(const std::vector<std::pair<std::string, std::string>> data, const std::vector <std::string> &nodes_on_network, const bool &leader, const std::vector<karai::swap_transaction> &stxs)
     {
         rapidjson::Document d;
 
@@ -112,6 +139,7 @@ namespace karai {
         rapidjson::Document::AllocatorType& allocator = d.GetAllocator();
 
         rapidjson::Value node_json(rapidjson::kArrayType);
+        rapidjson::Value txes(rapidjson::kArrayType);
 
         for (auto it : nodes_on_network) 
         {
@@ -120,6 +148,21 @@ namespace karai {
             node_json.PushBack(v, allocator);
         }
 
+        for (auto it : stxs) 
+        {
+            rapidjson::Value this_stx(rapidjson::kArrayType);
+
+            for (auto info : it.info) 
+            {
+                rapidjson::Value v;
+                v.SetString(info.c_str(), allocator);
+                this_stx.PushBack(v, allocator);
+            }
+
+            txes.PushBack(this_stx, allocator);
+        }
+
+        d.AddMember("swaps", txes, allocator);
 
         for (auto it : data) 
         {

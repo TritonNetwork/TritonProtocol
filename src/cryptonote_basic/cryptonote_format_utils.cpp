@@ -980,6 +980,23 @@ void add_tx_secret_key_to_tx_extra(std::vector<uint8_t>& tx_extra, const crypto:
       return burn.amount;
     return 0;
   }
+
+  bool check_burned_amount_from_tx_extra(const std::vector<uint8_t>& tx_extra) 
+  {
+    std::vector<tx_extra_field> tx_extra_fields;
+    parse_tx_extra(tx_extra, tx_extra_fields);
+
+    tx_extra_burn burn;
+    if (find_tx_extra_field_by_type(tx_extra_fields, burn)) {
+      //atomic units for 25,000 XEQ
+      if (burn >= 250000000)
+        return true;
+      else
+        return false;
+    }
+    return true;
+  }
+
   //---------------------------------------------------------------
   bool add_burned_amount_to_tx_extra(std::vector<uint8_t>& tx_extra, const uint64_t &burn)
   {
