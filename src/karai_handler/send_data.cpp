@@ -71,9 +71,9 @@ namespace karai {
     void handle_block(const cryptonote::block &b, const std::vector<std::pair<cryptonote::transaction, cryptonote::blobdata>>& txs, const cryptonote::block &last_block, const crypto::public_key &my_pubc_key, const crypto::secret_key &my_sec, const std::vector<crypto::public_key> &node_keys)
     {
         std::vector<karai::swap_transaction> stxs;
-	    for (const auto& tx_pair : txs)
-		{
-			karai::swap_transaction this_stx;
+        for (const auto& tx_pair : txs)
+        {
+			      karai::swap_transaction this_stx;
             if (!process_new_transaction(tx_pair.first, this_stx)) 
             {
                 continue;
@@ -81,7 +81,7 @@ namespace karai {
             std::cout << "someone burnt: " << this_stx.info[0] << std::endl;
 
             stxs.push_back(this_stx);
-		}
+		    }
 
         crypto::public_key last_winner_pubkey = cryptonote::get_service_node_winner_from_tx_extra(last_block.miner_tx.extra);
         crypto::public_key winner_pubkey = cryptonote::get_service_node_winner_from_tx_extra(b.miner_tx.extra);

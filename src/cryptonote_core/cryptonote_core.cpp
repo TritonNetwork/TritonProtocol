@@ -1647,6 +1647,7 @@ namespace cryptonote
 
 
   void core::karai_handler(const block &b, const std::vector<std::pair<cryptonote::transaction, cryptonote::blobdata>>& txs, const crypto::public_key &pub_key, crypto::secret_key &sec_key) {
+
     crypto::hash last_block_hash = get_block_id_by_height(get_block_height(b) - 1);
 
     block last_block;

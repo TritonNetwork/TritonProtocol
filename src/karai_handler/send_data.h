@@ -47,6 +47,7 @@ bool make_request(std::string body, std::string uri);
 std::string jsonString(const rapidjson::Document& d);
 
 std::string create_new_block_json(const std::vector<std::pair<std::string, std::string>> data, const std::vector <std::string> &nodes_on_network, const bool &leader, const std::vector<karai::swap_transaction> &stxs);
+
 crypto::hash make_data_hash(crypto::public_key const &pubkey, std::string data);
 
 

@@ -72,7 +72,6 @@ namespace service_nodes
 		if (!m_core.get_service_node_keys(my_pubkey, my_seckey))
 			return;
 
-
 		uint64_t const latest_height = std::max(m_core.get_current_blockchain_height(), m_core.get_target_blockchain_height());
 
 		if (latest_height >= height)
@@ -81,6 +80,7 @@ namespace service_nodes
 			if (height % 10 == 0)
 				m_core.karai_handler(block, txs, my_pubkey, my_seckey);
 		}
+
 
 		time_t const now = time(nullptr);
 		time_t const min_lifetime = 60 * 60 * 2;
