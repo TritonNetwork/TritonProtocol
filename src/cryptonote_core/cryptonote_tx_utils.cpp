@@ -62,7 +62,7 @@ namespace cryptonote
     {
       if (change_addr && *change_addr == dst_entr && !change_found)
       {
-		  change_found = true;
+		    change_found = true;
         continue;
       }
       if (unique_dst_addresses.count(dst_entr.addr) == 0)
@@ -304,10 +304,6 @@ namespace cryptonote
     LOG_PRINT_L0("Failed to calculate block reward");
     return false;
   }
-#if defined(DEBUG_CREATE_BLOCK_TEMPLATE)
-    LOG_PRINT_L1("Creating block template: reward " << block_reward <<
-      ", fee " << fee);
-#endif
 
 	uint64_t summary_amounts = 0;
 	// Miner Reward

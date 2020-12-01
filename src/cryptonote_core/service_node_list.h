@@ -263,7 +263,7 @@ namespace service_nodes
 				FIELD(infos)
 				FIELD(events)
 				FIELD(height)
-				END_SERIALIZE()
+			END_SERIALIZE()
 		};
 
 	private:

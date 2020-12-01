@@ -45,6 +45,7 @@ namespace cryptonote
     virtual bool relay_transactions(NOTIFY_NEW_TRANSACTIONS::request& arg, const boost::uuids::uuid& source, epee::net_utils::zone zone, relay_method tx_relay)=0;
     //virtual bool request_objects(NOTIFY_REQUEST_GET_OBJECTS::request& arg, cryptonote_connection_context& context)=0;
     virtual bool relay_deregister_votes(NOTIFY_NEW_DEREGISTER_VOTE::request& arg, cryptonote_connection_context& exclude_context)=0;
+    virtual bool relay_oracle_data(NOTIFY_ORACLE_DATA::request& arg, cryptonote_connection_context& exclude_context)=0;
   };
 
   /************************************************************************/
@@ -65,6 +66,10 @@ namespace cryptonote
       return false;
     }
     virtual bool relay_uptime_proof(NOTIFY_UPTIME_PROOF::request& arg, cryptonote_connection_context& exclude_context)
+    {
+      return false;
+    }
+    virtual bool relay_oracle_data(NOTIFY_ORACLE_DATA::request& arg, cryptonote_connection_context& exclude_context)
     {
       return false;
     }

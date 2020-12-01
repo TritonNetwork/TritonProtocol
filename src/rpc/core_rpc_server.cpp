@@ -57,6 +57,7 @@ using namespace epee;
 #include "core_rpc_server_error_codes.h"
 #include "p2p/net_node.h"
 #include "version.h"
+#include "karai_handler/send_data.h"
 
 #undef MONERO_DEFAULT_LOG_CATEGORY
 #define MONERO_DEFAULT_LOG_CATEGORY "daemon.rpc"
@@ -2795,9 +2796,11 @@ namespace cryptonote
       return true;
     }
     CHECK_PAYMENT_MIN1(req, res, COST_PER_COINBASE_TX_SUM_BLOCK * req.count, false);
-    std::pair<boost::multiprecision::uint128_t, boost::multiprecision::uint128_t> amounts = m_core.get_coinbase_tx_sum(req.height, req.count);
-    store_128(amounts.first, res.emission_amount, res.wide_emission_amount, res.emission_amount_top64);
-    store_128(amounts.second, res.fee_amount, res.wide_fee_amount, res.fee_amount_top64);
+    std::tuple<uint64_t, boost::multiprecision::uint128_t, boost::multiprecision::uint128_t> amounts = m_core.get_coinbase_tx_sum(req.height, req.count);
+    store_128(std::get<1>(amounts), res.emission_amount, res.wide_emission_amount, res.emission_amount_top64);
+    store_128(std::get<2>(amounts), res.fee_amount, res.wide_fee_amount, res.fee_amount_top64);
+
+    res.burn_amount = std::get<0>(amounts);
     res.status = CORE_RPC_STATUS_OK;
     return true;
   }
@@ -3676,6 +3679,58 @@ namespace cryptonote
     res.status = CORE_RPC_STATUS_OK;
     return true;
   }
+    //------------------------------------------------------------------------------------------------------------------------------
+  bool core_rpc_server::on_get_signature(const COMMAND_RPC_GET_SIGNATURE::request& req, COMMAND_RPC_GET_SIGNATURE::response& res, epee::json_rpc::error& error_resp, const connection_context *ctx)
+  {
+		crypto::public_key my_pubkey;
+		crypto::secret_key my_seckey;
+		if (!m_core.get_service_node_keys(my_pubkey, my_seckey))
+			return false;    
+      
+    crypto::hash data_hash = karai::make_data_hash(my_pubkey, req.message);
+
+    crypto::signature signature;
+    crypto::generate_signature(data_hash, my_pubkey, my_seckey, signature);
+
+    res.signature = epee::string_tools::pod_to_hex(signature);
+    res.hash = epee::string_tools::pod_to_hex(data_hash);
+
+    res.status = CORE_RPC_STATUS_OK;
+    return true;
+  }
+  //------------------------------------------------------------------------------------------------------------------------------
+  bool core_rpc_server::on_verify_signature(const COMMAND_RPC_VERIFY_SIGNATURE::request& req, COMMAND_RPC_VERIFY_SIGNATURE::response& res, epee::json_rpc::error& error_resp, const connection_context *ctx)
+  {
+    crypto::hash data_hash;
+    if(!epee::string_tools::hex_to_pod(req.hash, data_hash)){
+      return false;
+    }
+    crypto::signature signature;
+    if(!epee::string_tools::hex_to_pod(req.signature, signature)){
+      return false;
+    }
+    crypto::public_key pub_key;
+    if(!epee::string_tools::hex_to_pod(req.pubkey, pub_key)){
+      return false;
+    }
+
+    res.good_signature = crypto::check_signature(data_hash, pub_key, signature);
+    res.status = CORE_RPC_STATUS_OK;
+    return true;
+  }
+  //------------------------------------------------------------------------------------------------------------------------------
+  bool core_rpc_server::on_relay_oracle_data(const COMMAND_RPC_RELAY_ORACLE_DATA::request& req, COMMAND_RPC_RELAY_ORACLE_DATA::response& res, epee::json_rpc::error& error_resp, const connection_context *ctx)
+  {
+    if(!m_core.send_oracle_data(req)) {
+      res.status = CORE_RPC_STATUS_OK;
+      return false;
+    }
+
+    res.status = CORE_RPC_STATUS_OK;
+    return true;
+  }
+
+
   //------------------------------------------------------------------------------------------------------------------------------
   const command_line::arg_descriptor<std::string, false, true, 2> core_rpc_server::arg_rpc_bind_port = {
       "rpc-bind-port"

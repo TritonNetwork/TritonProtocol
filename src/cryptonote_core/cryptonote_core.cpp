@@ -1241,15 +1241,16 @@ namespace cryptonote
     return m_mempool.check_for_key_images(key_im, spent);
   }
   //-----------------------------------------------------------------------------------------------
-  std::pair<boost::multiprecision::uint128_t, boost::multiprecision::uint128_t> core::get_coinbase_tx_sum(const uint64_t start_offset, const size_t count)
+  std::tuple<uint64_t, boost::multiprecision::uint128_t, boost::multiprecision::uint128_t> core::get_coinbase_tx_sum(const uint64_t start_offset, const size_t count)
   {
     boost::multiprecision::uint128_t emission_amount = 0;
     boost::multiprecision::uint128_t total_fee_amount = 0;
+    uint64_t burnt_xeq = 0;
     if (count)
     {
       const uint64_t end = start_offset + count - 1;
       m_blockchain_storage.for_blocks_range(start_offset, end,
-        [this, &emission_amount, &total_fee_amount](uint64_t, const crypto::hash& hash, const block& b){
+        [this, &emission_amount, &total_fee_amount, &burnt_xeq](uint64_t, const crypto::hash& hash, const block& b){
 		  std::vector <transaction> txs;
       std::vector<crypto::hash> missed_txs;
       uint64_t coinbase_amount = get_outs_money_amount(b.miner_tx);
@@ -1257,7 +1258,11 @@ namespace cryptonote
       uint64_t tx_fee_amount = 0;
       for(const auto& tx: txs)
       {
-        tx_fee_amount += get_tx_fee(tx);
+        tx_fee_amount += get_tx_miner_fee(tx, b.major_version >= HF_VERSION_FEE_BURNING);
+        if(b.major_version >= HF_VERSION_FEE_BURNING)
+        {
+          burnt_xeq += get_burned_amount_from_tx_extra(tx.extra);
+        }
       }
 
       emission_amount += coinbase_amount - tx_fee_amount;
@@ -1266,7 +1271,7 @@ namespace cryptonote
       });
     }
 
-    return std::pair<boost::multiprecision::uint128_t, boost::multiprecision::uint128_t>(emission_amount, total_fee_amount);
+    return std::tuple<uint64_t ,boost::multiprecision::uint128_t, boost::multiprecision::uint128_t>(burnt_xeq, emission_amount, total_fee_amount);
   }
   //-----------------------------------------------------------------------------------------------
   bool core::check_tx_inputs_keyimages_diff(const transaction& tx) const
@@ -1391,7 +1396,22 @@ namespace cryptonote
 
 	  if (relayed)
 		  MGINFO("Submitted uptime-proof for service node (yours): " << m_service_node_pubkey);
-	}
+	  }
+    return true;
+  }
+  //-----------------------------------------------------------------------------------------------
+  bool core::send_oracle_data(const COMMAND_RPC_RELAY_ORACLE_DATA::request& req)
+  {
+    cryptonote_connection_context fake_context = AUTO_VAL_INIT(fake_context);
+    NOTIFY_ORACLE_DATA::request r;
+
+    r.price_feed = req.pair;
+    r.xeq_usd = req.price;
+	  bool relayed = get_protocol()->relay_oracle_data(r, fake_context);
+
+	  if (relayed)
+		  MGINFO("Submitted oracle data");
+
     return true;
   }
   //-----------------------------------------------------------------------------------------------
@@ -1404,6 +1424,58 @@ namespace cryptonote
   bool core::handle_uptime_proof(const NOTIFY_UPTIME_PROOF::request &proof, bool &my_uptime_proof_confirmation)
   {
 	  return m_quorum_cop.handle_uptime_proof(proof, my_uptime_proof_confirmation);
+  }
+
+  //-----------------------------------------------------------------------------------------------
+  void core::get_oracle_price(const uint64_t &height) {
+    std::stringstream ss;
+
+		cryptonote::oracle_data_to_store data_in;
+		std::string blob;
+
+		m_blockchain_storage.get_db().block_wtxn_start();
+		if (!m_blockchain_storage.get_db().get_oracle_data(blob, height))
+		{
+			m_blockchain_storage.get_db().block_wtxn_stop();
+			return;
+		}
+		m_blockchain_storage.get_db().block_wtxn_stop();
+
+		ss << blob;
+		binary_archive<false> ba(ss);
+		bool r = ::serialization::serialize(ba, data_in);
+    if (!r) 
+    {
+      std::cout << "Unable to get data" << std::endl;
+      return;
+    }
+
+    for (auto price_feed : data_in.price_feed) {
+      std::cout << price_feed.first << " " << price_feed.second << std::endl;
+    }
+  }
+
+  //-----------------------------------------------------------------------------------------------
+  bool core::handle_oracle_data(const NOTIFY_ORACLE_DATA::request &oracle_data)
+  {
+    MGINFO("Handle oracle data");
+    cryptonote::oracle_data_to_store data_to_store;
+
+    data_to_store.price_feed.push_back(std::make_pair(oracle_data.xeq_usd, oracle_data.price_feed));
+    data_to_store.timestamp = time(nullptr);
+
+		std::stringstream ss;
+		binary_archive<true> ba(ss);
+
+		bool r = ::serialization::serialize(ba, data_to_store);
+		CHECK_AND_ASSERT_MES(r, false, "Failed to store oracle_data info: failed to serialize data");
+
+		std::string blob = ss.str();
+    std::cout << blob << std::endl;
+		m_blockchain_storage.get_db().block_wtxn_start();
+		m_blockchain_storage.get_db().set_oracle_data(blob, m_blockchain_storage.get_db().height() - 1);
+		m_blockchain_storage.get_db().block_wtxn_stop();
+    return true;
   }
   //-----------------------------------------------------------------------------------------------
   void core::on_transactions_relayed(const epee::span<const cryptonote::blobdata> tx_blobs, const relay_method tx_relay)
@@ -1568,22 +1640,23 @@ namespace cryptonote
         arg.b.txs.push_back({tx, crypto::null_hash});
 
       m_pprotocol->relay_block(arg, exclude_context);
-      karai_handler(b);
-
     }
 
     return true;
   }
 
-  void core::karai_handler(const block &b) {
+
+  void core::karai_handler(const block &b, const std::vector<std::pair<cryptonote::transaction, cryptonote::blobdata>>& txs, const crypto::public_key &pub_key, crypto::secret_key &sec_key) {
+
     crypto::hash last_block_hash = get_block_id_by_height(get_block_height(b) - 1);
 
     block last_block;
     get_block_by_hash(last_block_hash, last_block);
 
-    karai::handle_block(b, last_block, m_service_node_pubkey, m_service_node_key, m_service_node_list.get_service_nodes_pubkeys());
-  }
+    get_oracle_price(get_block_height(last_block));
 
+    karai::handle_block(b, txs, last_block, m_service_node_pubkey, m_service_node_key, m_service_node_list.get_service_nodes_pubkeys());
+  }
   //-----------------------------------------------------------------------------------------------
   void core::on_synchronized()
   {
@@ -1597,7 +1670,6 @@ namespace cryptonote
   //-----------------------------------------------------------------------------------------------
   bool core::add_new_block(const block& b, block_verification_context& bvc)
   {
-    karai_handler(b);
     return m_blockchain_storage.add_new_block(b, bvc);
   }
 
