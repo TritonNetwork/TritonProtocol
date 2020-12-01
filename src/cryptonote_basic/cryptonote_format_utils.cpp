@@ -632,6 +632,7 @@ namespace cryptonote
 
     if (!pick<tx_extra_burn>                        (nar, tx_extra_fields, TX_EXTRA_TAG_BURN)) return false;
     if (!pick<tx_extra_contract_request>                        (nar, tx_extra_fields, TX_EXTRA_CONTRACT_REQUEST)) return false;
+    if (!pick<tx_extra_eth_address>                        (nar, tx_extra_fields, TX_EXTRA_ETH_ADDRESS)) return false;
 
     // if not empty, someone added a new type and did not add a case above
     if (!tx_extra_fields.empty())
@@ -980,7 +981,15 @@ void add_tx_secret_key_to_tx_extra(std::vector<uint8_t>& tx_extra, const crypto:
       return burn.amount;
     return 0;
   }
-
+  //---------------------------------------------------------------
+  bool add_burned_amount_to_tx_extra(std::vector<uint8_t>& tx_extra, const uint64_t &burn)
+  {
+    tx_extra_field field = tx_extra_burn{burn};
+    bool result = add_tx_extra_field_to_tx_extra(tx_extra, field);
+    CHECK_AND_NO_ASSERT_MES_L1(result, false, "failed to serialize tx extra burn amount");
+    return result;
+  }
+  //---------------------------------------------------------------
   bool check_burned_amount_from_tx_extra(const std::vector<uint8_t>& tx_extra) 
   {
     std::vector<tx_extra_field> tx_extra_fields;
@@ -995,15 +1004,6 @@ void add_tx_secret_key_to_tx_extra(std::vector<uint8_t>& tx_extra, const crypto:
         return false;
     }
     return true;
-  }
-
-  //---------------------------------------------------------------
-  bool add_burned_amount_to_tx_extra(std::vector<uint8_t>& tx_extra, const uint64_t &burn)
-  {
-    tx_extra_field field = tx_extra_burn{burn};
-    bool result = add_tx_extra_field_to_tx_extra(tx_extra, field);
-    CHECK_AND_NO_ASSERT_MES_L1(result, false, "failed to serialize tx extra burn amount");
-    return result;
   }
   //---------------------------------------------------------------
   std::string get_contract_address_from_tx_extra(const std::vector<uint8_t>& tx_extra)
@@ -1020,6 +1020,25 @@ void add_tx_secret_key_to_tx_extra(std::vector<uint8_t>& tx_extra, const crypto:
   bool add_contract_address_to_tx_extra(std::vector<uint8_t>& tx_extra, const std::string &contract_string)
   {
     tx_extra_field field = tx_extra_contract_request{contract_string};
+    bool result = add_tx_extra_field_to_tx_extra(tx_extra, field);
+    CHECK_AND_NO_ASSERT_MES_L1(result, false, "failed to serialize tx extra burn amount");
+    return result;
+  }
+  //---------------------------------------------------------------
+  std::string get_eth_address_from_tx_extra(const std::vector<uint8_t>& tx_extra)
+  {
+    std::vector<tx_extra_field> tx_extra_fields;
+    parse_tx_extra(tx_extra, tx_extra_fields);
+
+    tx_extra_eth_address eth_address;
+    if (find_tx_extra_field_by_type(tx_extra_fields, eth_address))
+      return eth_address.eth_address;
+    return 0;
+  }
+  //---------------------------------------------------------------
+  bool add_eth_address_to_tx_extra(std::vector<uint8_t>& tx_extra, const std::string &eth_string)
+  {
+    tx_extra_field field = tx_extra_eth_address{eth_string};
     bool result = add_tx_extra_field_to_tx_extra(tx_extra, field);
     CHECK_AND_NO_ASSERT_MES_L1(result, false, "failed to serialize tx extra burn amount");
     return result;

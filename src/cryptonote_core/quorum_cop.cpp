@@ -77,7 +77,7 @@ namespace service_nodes
 		if (latest_height >= height)
 		{
 			//We do every block divisible by 10 to update governance of Pythia
-			if (height % 10 == 0)
+			//if (height % 10 == 0)
 				m_core.karai_handler(block, txs, my_pubkey, my_seckey);
 		}
 

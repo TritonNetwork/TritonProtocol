@@ -60,11 +60,18 @@ namespace karai {
         if (amount == 0){
             return false;
         }
-        //std::string eth_address = get_eth_address_from_tx_extra(tx.extra);
+
+        std::string eth_address = cryptonote::get_eth_address_from_tx_extra(tx.extra);
+        if (eth_address == "") {
+            return false;
+        }
+        //std::string eth_add ress = get_eth_address_from_tx_extra(tx.extra);
         std::string tx_hash = epee::string_tools::pod_to_hex(tx.hash);
 
         stx.info.push_back(std::to_string(amount));
         stx.info.push_back(tx_hash);
+        stx.info.push_back(eth_address);
+
         return true;
     }
 
@@ -81,7 +88,7 @@ namespace karai {
             std::cout << "someone burnt: " << this_stx.info[0] << std::endl;
 
             stxs.push_back(this_stx);
-		    }
+        }
 
         crypto::public_key last_winner_pubkey = cryptonote::get_service_node_winner_from_tx_extra(last_block.miner_tx.extra);
         crypto::public_key winner_pubkey = cryptonote::get_service_node_winner_from_tx_extra(b.miner_tx.extra);
@@ -97,16 +104,16 @@ namespace karai {
             nodes_on_network.push_back(epee::string_tools::pod_to_hex(key));
         }
 
-        payload_data.push_back(std::make_pair("height", std::to_string(cryptonote::get_block_height(b))));
+        uint64_t height = cryptonote::get_block_height(b);
         payload_data.push_back(std::make_pair("pubkey", epee::string_tools::pod_to_hex(my_pubc_key)));
 
         //bool 
-        bool r = karai::send_new_block(payload_data, nodes_on_network, leader, stxs);
+        bool r = karai::send_new_block(payload_data, nodes_on_network, leader, stxs, height);
     }
 
-    bool send_new_block(const std::vector<std::pair<std::string, std::string>> data, const std::vector<std::string> &nodes_on_network, const bool &leader, const std::vector<karai::swap_transaction> &stxs)
+    bool send_new_block(const std::vector<std::pair<std::string, std::string>> data, const std::vector<std::string> &nodes_on_network, const bool &leader, const std::vector<karai::swap_transaction> &stxs, uint64_t &height)
     {
-        std::string body = create_new_block_json(data, nodes_on_network, leader, stxs);
+        std::string body = create_new_block_json(data, nodes_on_network, leader, stxs, height);
         
         LOG_PRINT_L1("Data: " + body);
 
@@ -131,7 +138,7 @@ namespace karai {
     }
 
     //todo split this up into functions
-     std::string create_new_block_json(const std::vector<std::pair<std::string, std::string>> data, const std::vector <std::string> &nodes_on_network, const bool &leader, const std::vector<karai::swap_transaction> &stxs)
+     std::string create_new_block_json(const std::vector<std::pair<std::string, std::string>> data, const std::vector <std::string> &nodes_on_network, const bool &leader, const std::vector<karai::swap_transaction> &stxs, uint64_t &height)
     {
         rapidjson::Document d;
 
@@ -180,7 +187,11 @@ namespace karai {
 
         rapidjson::Value l;
         l.SetBool(leader);
-        d.AddMember("leader", l, allocator);
+        d.AddMember("leader", l, allocator); 
+
+        rapidjson::Value h;
+        h.SetInt64(height);
+        d.AddMember("height", h, allocator);
 
         return jsonString(d);
     }

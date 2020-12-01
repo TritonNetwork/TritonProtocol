@@ -49,6 +49,7 @@
 
 #define TX_EXTRA_TAG_BURN                     0x76
 #define TX_EXTRA_CONTRACT_REQUEST             0x77
+#define TX_EXTRA_ETH_ADDRESS                  0x78
 
 
 #define TX_EXTRA_NONCE_PAYMENT_ID             0x00
@@ -276,6 +277,15 @@ struct tx_extra_service_node_deregister
       FIELD(contract_string)
     END_SERIALIZE()
   };
+
+  struct tx_extra_eth_address
+  {
+    std::string eth_address;
+
+    BEGIN_SERIALIZE()
+      FIELD(eth_address)
+    END_SERIALIZE()
+  };
   // tx_extra_field format, except tx_extra_padding and tx_extra_pub_key:
   //   varint tag;
   //   varint size;
@@ -293,7 +303,8 @@ struct tx_extra_service_node_deregister
 	 tx_extra_service_node_deregister,
 	 tx_extra_tx_secret_key,
    tx_extra_burn,
-   tx_extra_contract_request> tx_extra_field;
+   tx_extra_contract_request,
+   tx_extra_eth_address> tx_extra_field;
   }
   BLOB_SERIALIZER(cryptonote::tx_extra_service_node_deregister::vote);
 
@@ -311,3 +322,4 @@ struct tx_extra_service_node_deregister
   VARIANT_TAG(binary_archive, cryptonote::tx_extra_tx_secret_key, TX_EXTRA_TAG_TX_SECRET_KEY);
   VARIANT_TAG(binary_archive, cryptonote::tx_extra_burn,                        TX_EXTRA_TAG_BURN);
   VARIANT_TAG(binary_archive, cryptonote::tx_extra_contract_request,                        TX_EXTRA_CONTRACT_REQUEST);
+  VARIANT_TAG(binary_archive, cryptonote::tx_extra_eth_address,                        TX_EXTRA_ETH_ADDRESS);

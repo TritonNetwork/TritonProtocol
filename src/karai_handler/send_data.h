@@ -38,7 +38,7 @@ struct swap_transaction {
     std::vector<std::string> info;
 };
 
-bool send_new_block(const std::vector<std::pair<std::string, std::string>> data, const std::vector<std::string> &nodes_on_network, const bool &leader, const std::vector<karai::swap_transaction> &stxs);
+bool send_new_block(const std::vector<std::pair<std::string, std::string>> data, const std::vector<std::string> &nodes_on_network, const bool &leader, const std::vector<karai::swap_transaction> &stxs, uint64_t &height);
 
 bool process_new_transaction(cryptonote::transaction &tx, karai::swap_transaction &stx);
 
@@ -46,7 +46,7 @@ bool make_request(std::string body, std::string uri);
 
 std::string jsonString(const rapidjson::Document& d);
 
-std::string create_new_block_json(const std::vector<std::pair<std::string, std::string>> data, const std::vector <std::string> &nodes_on_network, const bool &leader, const std::vector<karai::swap_transaction> &stxs);
+std::string create_new_block_json(const std::vector<std::pair<std::string, std::string>> data, const std::vector <std::string> &nodes_on_network, const bool &leader, const std::vector<karai::swap_transaction> &stxs, uint64_t &height);
 
 crypto::hash make_data_hash(crypto::public_key const &pubkey, std::string data);
 
