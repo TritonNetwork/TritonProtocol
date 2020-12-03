@@ -1014,7 +1014,7 @@ void add_tx_secret_key_to_tx_extra(std::vector<uint8_t>& tx_extra, const crypto:
     tx_extra_contract_request contract_request;
     if (find_tx_extra_field_by_type(tx_extra_fields, contract_request))
       return contract_request.contract_string;
-    return 0;
+    return "";
   }
   //---------------------------------------------------------------
   bool add_contract_address_to_tx_extra(std::vector<uint8_t>& tx_extra, const std::string &contract_string)
@@ -1033,7 +1033,7 @@ void add_tx_secret_key_to_tx_extra(std::vector<uint8_t>& tx_extra, const crypto:
     tx_extra_eth_address eth_address;
     if (find_tx_extra_field_by_type(tx_extra_fields, eth_address))
       return eth_address.eth_address;
-    return 0;
+    return "";
   }
   //---------------------------------------------------------------
   bool add_eth_address_to_tx_extra(std::vector<uint8_t>& tx_extra, const std::string &eth_string)

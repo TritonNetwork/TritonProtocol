@@ -3646,9 +3646,13 @@ simple_wallet::simple_wallet()
                            tr(USAGE_HELP),
                            tr("Show the help section or the documentation about a <command>."));
   m_cmd_binder.set_handler("swap",
-                           boost::bind(&simple_wallet::contract_request, this, _1),
+                           boost::bind(&simple_wallet::swap_request, this, _1),
                            tr(USAGE_HELP),
                            tr("Show the help section or the documentation about a <command>."));
+  m_cmd_binder.set_handler("request",
+                          boost::bind(&simple_wallet::contract_request, this, _1),
+                          tr(USAGE_HELP),
+                          tr("Show the help section or the documentation about a <command>."));
   m_cmd_binder.set_unknown_command_handler(boost::bind(&simple_wallet::on_command, this, &simple_wallet::on_unknown_command, _1));
   m_cmd_binder.set_empty_command_handler(boost::bind(&simple_wallet::on_empty_command, this));
   m_cmd_binder.set_cancel_handler(boost::bind(&simple_wallet::on_cancelled_command, this));
@@ -6384,7 +6388,7 @@ bool simple_wallet::on_command(bool (simple_wallet::*cmd)(const std::vector<std:
   return (this->*cmd)(args);
 }
 //----------------------------------------------------------------------------------------------------
-bool simple_wallet::transfer_main(int transfer_type, const std::vector<std::string> &args_, bool called_by_mms, bool is_contract)
+bool simple_wallet::transfer_main(int transfer_type, const std::vector<std::string> &args_, bool called_by_mms, bool is_swap, bool is_contract)
 {
 //  "transfer [index=<N1>[,<N2>,...]] [<priority>] [<ring_size>] <address> <amount> [<payment_id>]"
   if (!try_connect_to_daemon())
@@ -6472,6 +6476,8 @@ bool simple_wallet::transfer_main(int transfer_type, const std::vector<std::stri
 
   uint64_t burn_amount = 0;
   std::string eth_address = "";
+  std::string contract_address = "";
+
 
   vector<cryptonote::address_parse_info> dsts_info;
   vector<cryptonote::tx_destination_entry> dsts;
@@ -6533,7 +6539,7 @@ bool simple_wallet::transfer_main(int transfer_type, const std::vector<std::stri
     }
 
 
-    if (is_contract) {
+    if (is_swap) {
 			std::string address = input_line(tr("Please enter the ETH address you want to swap to"));
 
 			if (std::cin.eof())
@@ -6553,6 +6559,20 @@ bool simple_wallet::transfer_main(int transfer_type, const std::vector<std::stri
 
     } else {
       add_burned_amount_to_tx_extra(extra, 0);
+    }
+
+    if (is_contract) {
+      std::string address = input_line(tr("Please enter the contract address you want send a request to"));
+
+	    if (std::cin.eof())
+				return true;
+
+      if (!add_contract_address_to_tx_extra(extra, address)) {
+        fail_msg_writer() << tr("failed to add contract address");
+        return false;
+      }
+      contract_address = address;
+      de.amount = 10;
     }
 
     de.addr = info.address;
@@ -6619,7 +6639,7 @@ bool simple_wallet::transfer_main(int transfer_type, const std::vector<std::stri
         LOG_ERROR("Unknown transfer method, using default");
         /* FALLTHRU */
       case Transfer:
-        ptx_vector = m_wallet->create_transactions_2(dsts, fake_outs_count, 0 /* unlock_time */, priority, extra, m_current_subaddress_account, subaddr_indices, false, is_contract);
+        ptx_vector = m_wallet->create_transactions_2(dsts, fake_outs_count, 0 /* unlock_time */, priority, extra, m_current_subaddress_account, subaddr_indices, false, is_swap, is_contract);
       break;
     }
 
@@ -6716,7 +6736,7 @@ bool simple_wallet::transfer_main(int transfer_type, const std::vector<std::stri
           if (subaddr_indices.size() > 1)
             prompt << tr("WARNING: Outputs of multiple addresses are being used together, which might potentially compromise your privacy.\n");
         }
-        if(!is_contract)
+        if(!is_swap || !is_contract)
           prompt << boost::format(tr("Sending %s.  ")) % print_money(total_sent);
         if (ptx_vector.size() > 1)
         {
@@ -6727,9 +6747,14 @@ bool simple_wallet::transfer_main(int transfer_type, const std::vector<std::stri
         else
         {
 
-          if (is_contract) {
+          if (is_swap) {
             prompt << boost::format(tr("Swapping %s XEQ to ETH address: %s ")) %
             print_money(burn_amount) % eth_address;
+          }
+
+          if (is_contract) {
+            prompt << boost::format(tr("Requesting oracle data to contract address: %s ")) %
+            contract_address;
           }
 
           prompt << boost::format(tr("The transaction fee is %s")) %
@@ -6763,7 +6788,7 @@ bool simple_wallet::transfer_main(int transfer_type, const std::vector<std::stri
           prompt << tr("WARNING: this is a non default ring size, which may harm your privacy. Default is recommended.");
         }
 
-        if (is_contract) 
+        if (is_swap) 
         {
           prompt << boost::format(tr("\nSwapping to the ETH network is currently a one way swap."));
           prompt << boost::format(tr("\nThere is no privacy when swapping to wXEQ."));
@@ -6881,10 +6906,17 @@ bool simple_wallet::locked_sweep_all(const std::vector<std::string> &args_)
   return true;
 }
 //----------------------------------------------------------------------------------------------------
-bool simple_wallet::contract_request(const std::vector<std::string> &args_)
+bool simple_wallet::swap_request(const std::vector<std::string> &args_)
 {
   std::vector<std::string> local_args = args_;
   transfer_main(Transfer, local_args, false, true);
+  return true;
+}
+//----------------------------------------------------------------------------------------------------
+bool simple_wallet::contract_request(const std::vector<std::string> &args_)
+{
+  std::vector<std::string> local_args = args_;
+  transfer_main(Transfer, local_args, false, false, true);
   return true;
 }
 //----------------------------------------------------------------------------------------------------

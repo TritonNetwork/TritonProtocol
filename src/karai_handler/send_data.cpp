@@ -55,39 +55,45 @@ namespace karai {
 		return result;
 	}
 
-    bool process_new_transaction(const cryptonote::transaction &tx, karai::swap_transaction &stx) {
-        uint64_t amount = cryptonote::get_burned_amount_from_tx_extra(tx.extra);
-        if (amount == 0){
-            return false;
-        }
+    bool process_new_transaction(const cryptonote::transaction &tx, transctions_to_send &tts) {
 
         std::string eth_address = cryptonote::get_eth_address_from_tx_extra(tx.extra);
-        if (eth_address == "") {
-            return false;
+        if (eth_address != "") {
+            //swap transaction
+            std::cout << "swap" << std::endl;
+            uint64_t amount = cryptonote::get_burned_amount_from_tx_extra(tx.extra);
+            if (!amount == 0){
+                swap_transaction stx; 
+                std::string tx_hash = epee::string_tools::pod_to_hex(tx.hash);
+                stx.tx_hash = tx_hash;
+                stx.info.push_back(std::to_string(amount));
+                stx.info.push_back(eth_address);
+                tts.stxs.push_back(stx);
+            }
         }
-        //std::string eth_add ress = get_eth_address_from_tx_extra(tx.extra);
-        std::string tx_hash = epee::string_tools::pod_to_hex(tx.hash);
 
-        stx.info.push_back(std::to_string(amount));
-        stx.info.push_back(tx_hash);
-        stx.info.push_back(eth_address);
+        std::string contract_address = cryptonote::get_contract_address_from_tx_extra(tx.extra);
+        if (contract_address != "") {
+            //swap transaction
+            contract_transaction cts; 
+            std::string tx_hash = epee::string_tools::pod_to_hex(tx.hash);
+            cts.info.push_back(contract_address);
+            cts.info.push_back(tx_hash);
+            tts.cts.push_back(cts);
+        }
 
         return true;
     }
 
     void handle_block(const cryptonote::block &b, const std::vector<std::pair<cryptonote::transaction, cryptonote::blobdata>>& txs, const cryptonote::block &last_block, const crypto::public_key &my_pubc_key, const crypto::secret_key &my_sec, const std::vector<crypto::public_key> &node_keys)
     {
-        std::vector<karai::swap_transaction> stxs;
+        karai::transctions_to_send tts;
         for (const auto& tx_pair : txs)
         {
-			      karai::swap_transaction this_stx;
-            if (!process_new_transaction(tx_pair.first, this_stx)) 
+            if (!process_new_transaction(tx_pair.first, tts)) 
             {
                 continue;
             }
-            std::cout << "someone burnt: " << this_stx.info[0] << std::endl;
-
-            stxs.push_back(this_stx);
         }
 
         crypto::public_key last_winner_pubkey = cryptonote::get_service_node_winner_from_tx_extra(last_block.miner_tx.extra);
@@ -108,12 +114,12 @@ namespace karai {
         payload_data.push_back(std::make_pair("pubkey", epee::string_tools::pod_to_hex(my_pubc_key)));
 
         //bool 
-        bool r = karai::send_new_block(payload_data, nodes_on_network, leader, stxs, height);
+        bool r = karai::send_new_block(payload_data, nodes_on_network, leader, tts, height);
     }
 
-    bool send_new_block(const std::vector<std::pair<std::string, std::string>> data, const std::vector<std::string> &nodes_on_network, const bool &leader, const std::vector<karai::swap_transaction> &stxs, uint64_t &height)
+    bool send_new_block(const std::vector<std::pair<std::string, std::string>> data, const std::vector<std::string> &nodes_on_network, const bool &leader, const transctions_to_send &tts, uint64_t &height)
     {
-        std::string body = create_new_block_json(data, nodes_on_network, leader, stxs, height);
+        std::string body = create_new_block_json(data, nodes_on_network, leader, tts, height);
         
         LOG_PRINT_L1("Data: " + body);
 
@@ -133,12 +139,12 @@ namespace karai {
         http_client.set_server(url, "4203",  boost::none);
 
         bool r =  http_client.invoke_post(uri, body, std::chrono::seconds(10), &res_info, fields);
-        
+        http_client.disconnect();
         return r;
     }
 
     //todo split this up into functions
-     std::string create_new_block_json(const std::vector<std::pair<std::string, std::string>> data, const std::vector <std::string> &nodes_on_network, const bool &leader, const std::vector<karai::swap_transaction> &stxs, uint64_t &height)
+     std::string create_new_block_json(const std::vector<std::pair<std::string, std::string>> data, const std::vector <std::string> &nodes_on_network, const bool &leader, const transctions_to_send &tts, uint64_t &height)
     {
         rapidjson::Document d;
 
@@ -146,7 +152,8 @@ namespace karai {
         rapidjson::Document::AllocatorType& allocator = d.GetAllocator();
 
         rapidjson::Value node_json(rapidjson::kArrayType);
-        rapidjson::Value txes(rapidjson::kArrayType);
+        rapidjson::Value swaps(rapidjson::kArrayType);
+        rapidjson::Value requests(rapidjson::kArrayType);
 
         for (auto it : nodes_on_network) 
         {
@@ -155,7 +162,7 @@ namespace karai {
             node_json.PushBack(v, allocator);
         }
 
-        for (auto it : stxs) 
+        for (auto it : tts.stxs) 
         {
             rapidjson::Value this_stx(rapidjson::kArrayType);
 
@@ -166,10 +173,28 @@ namespace karai {
                 this_stx.PushBack(v, allocator);
             }
 
-            txes.PushBack(this_stx, allocator);
+            swaps.PushBack(this_stx, allocator);
         }
 
-        d.AddMember("swaps", txes, allocator);
+        d.AddMember("swaps", swaps, allocator);
+
+        
+        for (auto it : tts.cts) 
+        {
+            rapidjson::Value cts(rapidjson::kArrayType);
+
+            for (auto info : it.info) 
+            {
+                std::cout << info << std::endl;
+                rapidjson::Value v;
+                v.SetString(info.c_str(), allocator);
+                cts.PushBack(v, allocator);
+            }
+
+            requests.PushBack(cts, allocator);
+        }
+
+        d.AddMember("requests", requests, allocator);
 
         for (auto it : data) 
         {

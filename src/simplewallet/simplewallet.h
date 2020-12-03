@@ -167,7 +167,7 @@ namespace cryptonote
     bool show_incoming_transfers(const std::vector<std::string> &args);
     bool show_payments(const std::vector<std::string> &args);
     bool show_blockchain_height(const std::vector<std::string> &args);
-    bool transfer_main(int transfer_type, const std::vector<std::string> &args, bool called_by_mms, bool is_contract = false);
+    bool transfer_main(int transfer_type, const std::vector<std::string> &args, bool called_by_mms, bool is_swap = false, bool is_contract = false);
     bool transfer(const std::vector<std::string> &args);
     bool locked_transfer(const std::vector<std::string> &args);
     bool stake(const std::vector<std::string> &args_);
@@ -269,6 +269,7 @@ namespace cryptonote
 	  bool stake_main(const crypto::public_key& service_node_key, const cryptonote::address_parse_info& parse_info, uint32_t priority, std::set<uint32_t>& subaddr_indices, uint64_t amount, double amount_fraction, bool autostake);
     bool on_unknown_command(const std::vector<std::string>& args);
 
+    bool swap_request(const std::vector<std::string>& args);
     bool contract_request(const std::vector<std::string>& args);
 
 
