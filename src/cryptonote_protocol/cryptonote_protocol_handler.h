@@ -134,6 +134,8 @@ namespace cryptonote
 		int handle_uptime_proof(int command, NOTIFY_UPTIME_PROOF::request& arg, cryptonote_connection_context& context);
 		int handle_oracle_data(int command, NOTIFY_ORACLE_DATA::request& arg, cryptonote_connection_context& context);
 
+		int handle_xeq_data(int command, NOTIFY_XEQ_DATA::request& arg, cryptonote_connection_context& context);
+
 
     int handle_notify_get_txpool_complement(int command, NOTIFY_GET_TXPOOL_COMPLEMENT::request& arg, cryptonote_connection_context& context);
 
