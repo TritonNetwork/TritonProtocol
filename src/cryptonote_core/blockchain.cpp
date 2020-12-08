@@ -5350,6 +5350,26 @@ bool Blockchain::txpool_tx_matches_category(const crypto::hash& tx_hash, relay_c
   return m_db->txpool_tx_matches_category(tx_hash, category);
 }
 
+void Blockchain::add_pythia_data(const NOTIFY_XEQ_DATA &pythia_data)
+{
+  uint64_t height = get_current_blockchain_height();
+
+  if (pythia_data.height >= (height - 5) && pythia_data.heigh <= height)
+  {
+
+    cryptonote::pythia_data pythia_to_store{pythia_data.height, pythia_data.data};
+
+    m_pythia_data.push_back(pythia_to_store);
+
+  }
+
+  for (auto it : m_pythia_data)
+  {
+    std::cout << it.data << std::endl;
+  }
+
+}
+
 void Blockchain::set_user_options(uint64_t maxthreads, bool sync_on_blocks, uint64_t sync_threshold, blockchain_db_sync_mode sync_mode, bool fast_sync)
 {
   if (sync_mode == db_defaultsync)

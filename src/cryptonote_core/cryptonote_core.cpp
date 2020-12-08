@@ -1400,18 +1400,18 @@ namespace cryptonote
     return true;
   }
   //-----------------------------------------------------------------------------------------------
-  bool core::send_oracle_data(const COMMAND_RPC_RELAY_ORACLE_DATA::request& req)
+  bool core::submit_xeq_data()
   {
+    if (m_service_node)
+    {
     cryptonote_connection_context fake_context = AUTO_VAL_INIT(fake_context);
-    NOTIFY_ORACLE_DATA::request r;
-
-    r.price_feed = req.pair;
-    r.xeq_usd = req.price;
-	  bool relayed = get_protocol()->relay_oracle_data(r, fake_context);
+    NOTIFY_UPTIME_PROOF::request r;
+	  service_nodes::generate_uptime_proof_request(m_service_node_pubkey, m_service_node_key, r);
+	  bool relayed = get_protocol()->relay_uptime_proof(r, fake_context);
 
 	  if (relayed)
-		  MGINFO("Submitted oracle data");
-
+		  MGINFO("Submitted uptime-proof for service node (yours): " << m_service_node_pubkey);
+	  }
     return true;
   }
   //-----------------------------------------------------------------------------------------------
@@ -1609,7 +1609,6 @@ namespace cryptonote
       m_miner.resume();
       return false;
     }
-
     m_blockchain_storage.add_new_block(b, bvc);
     cleanup_handle_incoming_blocks(true);
     //anyway - update miner template
@@ -1641,21 +1640,7 @@ namespace cryptonote
 
       m_pprotocol->relay_block(arg, exclude_context);
     }
-
     return true;
-  }
-
-
-  void core::karai_handler(const block &b, const std::vector<std::pair<cryptonote::transaction, cryptonote::blobdata>>& txs, const crypto::public_key &pub_key, crypto::secret_key &sec_key) {
-
-    crypto::hash last_block_hash = get_block_id_by_height(get_block_height(b) - 1);
-
-    block last_block;
-    get_block_by_hash(last_block_hash, last_block);
-
-    get_oracle_price(get_block_height(last_block));
-
-    karai::handle_block(b, txs, last_block, m_service_node_pubkey, m_service_node_key, m_service_node_list.get_service_nodes_pubkeys());
   }
   //-----------------------------------------------------------------------------------------------
   void core::on_synchronized()
@@ -1915,14 +1900,11 @@ namespace cryptonote
 		do_uptime_proof_call();
 	}
 
-  //karai
-  
-
-  m_uptime_proof_pruner.do_call(boost::bind(&service_nodes::quorum_cop::prune_uptime_proof, &m_quorum_cop));
-  m_block_rate_interval.do_call(boost::bind(&core::check_block_rate, this));
-  m_blockchain_pruning_interval.do_call(boost::bind(&core::update_blockchain_pruning, this));
-  m_miner.on_idle();
-  m_mempool.on_idle();
+	m_uptime_proof_pruner.do_call(boost::bind(&service_nodes::quorum_cop::prune_uptime_proof, &m_quorum_cop));
+    m_block_rate_interval.do_call(boost::bind(&core::check_block_rate, this));
+    m_blockchain_pruning_interval.do_call(boost::bind(&core::update_blockchain_pruning, this));
+    m_miner.on_idle();
+    m_mempool.on_idle();
     return true;
   }
   //-----------------------------------------------------------------------------------------------

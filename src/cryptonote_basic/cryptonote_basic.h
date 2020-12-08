@@ -52,19 +52,19 @@
 
 namespace cryptonote
 {
-  typedef std::vector<crypto::signature> ring_signature;
 
- /* oracle_data */
-  struct oracle_data_to_store
-  {
-    std::vector<std::pair<uint64_t, std::string>> price_feed;
-    uint64_t timestamp;
+  struct pythia_data {
+    uint64_t height;
+    std::vector<std::tuple<crypto::signature, crypto::pubkey, std::string>> data;
 
-    BEGIN_SERIALIZE()
-      FIELD(price_feed)
-      FIELD(timestamp)
+    BEGIN_SERIALIZE_OBJECT()
+      FIELD(data)
+      VARINT_FIELD(height)
     END_SERIALIZE()
-  };
+  }
+
+
+  typedef std::vector<crypto::signature> ring_signature;
 
 
   /* outputs */
@@ -91,6 +91,7 @@ namespace cryptonote
     txout_to_key(const crypto::public_key &_key) : key(_key) { }
     crypto::public_key key;
   };
+
 
   /* inputs */
 

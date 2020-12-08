@@ -820,16 +820,16 @@ namespace cryptonote
     }
     return 1;
  }
-   //------------------------------------------------------------------------------------------------------------------------
+ //------------------------------------------------------------------------------------------------------------------------
   template<class t_core>
-  int t_cryptonote_protocol_handler<t_core>::handle_oracle_data(int command, NOTIFY_ORACLE_DATA::request& arg, cryptonote_connection_context& context)
+  int t_cryptonote_protocol_handler<t_core>::handle_xeq_data(int command, NOTIFY_XEQ_DATA::request& arg, cryptonote_connection_context& context)
  {
-    MLOG_P2P_MESSAGE("Received NOTIFY_ORACLE_DATA");
-
+    MLOG_P2P_MESSAGE("Received NOTIFY_XEQ_DATA");
     (void)context;
-    if (m_core.handle_oracle_data(arg))
+    if (m_core.handle_xeq_data(arg))
     {
-      return 1;
+        cryptonote_connection_context empty_context = {};
+        relay_xeq_data(arg, empty_context);
     }
     return 1;
  }
@@ -2631,15 +2631,14 @@ skip:
  {
     bool result = relay_to_synchronized_peers<NOTIFY_UPTIME_PROOF>(arg, exclude_context);
     return result;
-}
-
+  }
+  //------------------------------------------------------------------------------------------------------------------------
   template<class t_core>
-  bool t_cryptonote_protocol_handler<t_core>::relay_oracle_data(NOTIFY_ORACLE_DATA::request& arg, cryptonote_connection_context& exclude_context)
+  bool t_cryptonote_protocol_handler<t_core>::relay_xeq_data(NOTIFY_XEQ_DATA::request& arg, cryptonote_connection_context& exclude_context)
   {
-    bool result = relay_to_synchronized_peers<NOTIFY_ORACLE_DATA>(arg, exclude_context);
+    bool result = relay_to_synchronized_peers<NOTIFY_XEQ_DATA>(arg, exclude_context);
     return result;
   }
-
  //------------------------------------------------------------------------------------------------------------------------
  template<class t_core>
   bool t_cryptonote_protocol_handler<t_core>::request_txpool_complement(cryptonote_connection_context &context)

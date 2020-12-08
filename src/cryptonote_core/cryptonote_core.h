@@ -130,20 +130,9 @@ namespace cryptonote
      *
      * @return true if we haven't seen it before and thus need to relay.
      */
-	 bool handle_uptime_proof(const NOTIFY_UPTIME_PROOF::request &proof, bool &my_uptime_proof_confirmation);
-
-   bool send_oracle_data(const COMMAND_RPC_RELAY_ORACLE_DATA::request& req);
-   void get_oracle_price(const uint64_t &height);
-
-    /*
-      *
-      * @brief handles an incoming oracle data from oracles
-      *
-      * Parses an incoming oracle data
-      *
-      * @return true if we haven't seen it before and thus need to relay.
-    */
-    bool handle_oracle_data(const NOTIFY_ORACLE_DATA::request &oradle_data);
+	  bool handle_uptime_proof(const NOTIFY_UPTIME_PROOF::request &proof, bool &my_uptime_proof_confirmation);
+      
+      bool handle_xeq_data(const NOTIFY_XEQ_DATA::request &pythia_data);
 
 	 /**
       * @brief handles an incoming transaction
@@ -808,7 +797,7 @@ namespace cryptonote
       *
       * @return the number of blocks to sync in one go
       */
-     std::tuple<uint64_t, boost::multiprecision::uint128_t, boost::multiprecision::uint128_t> get_coinbase_tx_sum(const uint64_t start_offset, const size_t count);
+     std::pair<boost::multiprecision::uint128_t, boost::multiprecision::uint128_t> get_coinbase_tx_sum(const uint64_t start_offset, const size_t count);
      
      /**
       * @brief get the network type we're on
@@ -998,7 +987,6 @@ namespace cryptonote
       * to the transaction pool
       */
      bool add_new_tx(transaction& tx, tx_verification_context& tvc, relay_method tx_relay, bool relayed);
-
 
      /**
       * @copydoc Blockchain::add_new_block

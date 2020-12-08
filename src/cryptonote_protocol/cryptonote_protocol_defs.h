@@ -419,22 +419,21 @@ namespace cryptonote
     };
     typedef epee::misc_utils::struct_init<request_t> request;
   };
-
-  /************************************************************************/
+     /************************************************************************/
   /*                                                                      */
   /************************************************************************/
-  struct NOTIFY_ORACLE_DATA
+  struct NOTIFY_XEQ_DATA
   {
     const static int ID = BC_COMMANDS_POOL_BASE + 13;
 
     struct request_t
     {
-      std::string price_feed;
-      uint64_t xeq_usd;
+      uint64_t height;
+      std::vector<std::tuple<crypto::signature, crypto::public_key, std::string>> data;
 
       BEGIN_KV_SERIALIZE_MAP()
-        KV_SERIALIZE(price_feed)
-        KV_SERIALIZE(xeq_usd)
+        KV_SERIALIZE(height)
+        KV_SERIALIZE(data)
       END_KV_SERIALIZE_MAP()
     };
     typedef epee::misc_utils::struct_init<request_t> request;

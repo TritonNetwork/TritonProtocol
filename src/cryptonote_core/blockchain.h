@@ -1111,6 +1111,12 @@ namespace cryptonote
      */
     void flush_invalid_blocks();
 
+    /**
+     * @brief add pythia data to put into blocks
+     */
+    void add_pythia_data(const NOTIFY_XEQ_DATA &pythia_data);
+
+
 #ifndef IN_UNIT_TESTS
   private:
 #endif
@@ -1210,6 +1216,9 @@ namespace cryptonote
     std::shared_ptr<tools::Notify> m_block_notify;
     std::shared_ptr<tools::Notify> m_reorg_notify;
 
+    //pythia
+    std::vector<pythia_data> m_pythia_data;
+    
     // for prepare_handle_incoming_blocks
     uint64_t m_prepare_height;
     uint64_t m_prepare_nblocks;

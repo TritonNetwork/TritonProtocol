@@ -189,6 +189,10 @@ namespace cryptonote
     void skip_unneeded_hashes(cryptonote_connection_context& context, bool check_block_queue) const;
     bool request_txpool_complement(cryptonote_connection_context &context);
 
+    //pythia - should probably make the generic relay channel
+    virtual bool relay_xeq_data(NOTIFY_XEQ_DATA::request& arg, cryptonote_connection_context& exclude_context);
+
+
     t_core& m_core;
 
     nodetool::p2p_endpoint_stub<connection_context> m_p2p_stub;
