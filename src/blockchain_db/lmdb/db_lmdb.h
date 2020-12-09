@@ -72,8 +72,6 @@ typedef struct mdb_txn_cursors
   MDB_cursor *m_txc_hf_versions;
   MDB_cursor *m_txc_service_node_data;
 
-  MDB_cursor *m_txc_oracle_data;
-
   MDB_cursor *m_txc_properties;
 } mdb_txn_cursors;
 
@@ -96,7 +94,6 @@ typedef struct mdb_txn_cursors
 #define m_cur_hf_versions	m_cursors->m_txc_hf_versions
 #define m_cur_service_node_data	m_cursors->m_txc_service_node_data
 #define m_cur_properties	m_cursors->m_txc_properties
-#define m_cur_oracle_data	m_cursors->m_txc_oracle_data
 
 typedef struct mdb_rflags
 {
@@ -119,7 +116,6 @@ typedef struct mdb_rflags
   bool m_rf_alt_blocks;
   bool m_rf_hf_versions;
   bool m_rf_service_node_data;
-  bool m_rf_oracle_data;
 
   bool m_rf_properties;
 } mdb_rflags;
@@ -453,10 +449,6 @@ private:
   virtual bool get_service_node_data(std::string& data);
   virtual void clear_service_node_data();
 
-
-  virtual void set_oracle_data(const std::string& data, const uint64_t &height);
-  virtual bool get_oracle_data(std::string& data, const uint64_t &height);
-  virtual void clear_oracle_data();
 private:
   MDB_env* m_env;
 
@@ -485,8 +477,6 @@ private:
   MDB_dbi m_hf_starting_heights;
   MDB_dbi m_hf_versions;
   MDB_dbi m_service_node_data;
-
-  MDB_dbi m_oracle_data;
 
   MDB_dbi m_properties;
 

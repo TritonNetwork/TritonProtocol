@@ -4477,6 +4477,26 @@ leave:
   return true;
 }
 //------------------------------------------------------------------
+void Blockchain::add_pythia_data(const NOTIFY_XEQ_DATA::request &rpc_data)
+{
+  uint64_t height = get_current_blockchain_height();
+
+  if (rpc_data.height >= (height - 5) && rpc_data.height <= height)
+  {
+
+    cryptonote::pythia_data pythia_to_store{rpc_data.height, rpc_data.verifications, rpc_data.data};
+
+    m_pythia_data.push_back(pythia_to_store);
+
+  }
+
+  for (auto it : m_pythia_data)
+  {
+    std::cout << it.data << std::endl;
+  }
+
+}
+//------------------------------------------------------------------
 bool Blockchain::prune_blockchain(uint32_t pruning_seed)
 {
   m_tx_pool.lock();
@@ -5348,26 +5368,6 @@ bool Blockchain::for_all_txpool_txes(std::function<bool(const crypto::hash&, con
 bool Blockchain::txpool_tx_matches_category(const crypto::hash& tx_hash, relay_category category)
 {
   return m_db->txpool_tx_matches_category(tx_hash, category);
-}
-
-void Blockchain::add_pythia_data(const NOTIFY_XEQ_DATA &pythia_data)
-{
-  uint64_t height = get_current_blockchain_height();
-
-  if (pythia_data.height >= (height - 5) && pythia_data.heigh <= height)
-  {
-
-    cryptonote::pythia_data pythia_to_store{pythia_data.height, pythia_data.data};
-
-    m_pythia_data.push_back(pythia_to_store);
-
-  }
-
-  for (auto it : m_pythia_data)
-  {
-    std::cout << it.data << std::endl;
-  }
-
 }
 
 void Blockchain::set_user_options(uint64_t maxthreads, bool sync_on_blocks, uint64_t sync_threshold, blockchain_db_sync_mode sync_mode, bool fast_sync)

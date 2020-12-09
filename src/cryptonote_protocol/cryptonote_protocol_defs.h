@@ -429,10 +429,11 @@ namespace cryptonote
     struct request_t
     {
       uint64_t height;
-      std::vector<std::tuple<crypto::signature, crypto::public_key, std::string>> data;
-
+      std::vector<pythia_verifications> verifications;
+      std::string data;
       BEGIN_KV_SERIALIZE_MAP()
         KV_SERIALIZE(height)
+        KV_SERIALIZE_CONTAINER_POD_AS_BLOB(verifications)
         KV_SERIALIZE(data)
       END_KV_SERIALIZE_MAP()
     };

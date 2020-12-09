@@ -1400,18 +1400,37 @@ namespace cryptonote
     return true;
   }
   //-----------------------------------------------------------------------------------------------
-  bool core::submit_xeq_data()
+  void core::karai_handler(const block &b, const std::vector<std::pair<cryptonote::transaction, cryptonote::blobdata>>& txs, const crypto::public_key &pub_key, crypto::secret_key &sec_key) {
+
+    crypto::hash last_block_hash = get_block_id_by_height(get_block_height(b) - 1);
+
+    block last_block;
+    get_block_by_hash(last_block_hash, last_block);
+
+    karai::handle_block(b, txs, last_block, m_service_node_pubkey, m_service_node_key, m_service_node_list.get_service_nodes_pubkeys());
+  }
+  //-----------------------------------------------------------------------------------------------
+  bool core::submit_xeq_data(const COMMAND_RPC_RELAY_XEQ_DATA::request& req)
   {
     if (m_service_node)
     {
     cryptonote_connection_context fake_context = AUTO_VAL_INIT(fake_context);
-    NOTIFY_UPTIME_PROOF::request r;
-	  service_nodes::generate_uptime_proof_request(m_service_node_pubkey, m_service_node_key, r);
-	  bool relayed = get_protocol()->relay_uptime_proof(r, fake_context);
+    NOTIFY_XEQ_DATA::request r;
+    r.data = req.data;
+    r.verifications = req.verifications;
+    r.height = req.height;
+
+    std::cout << r.data << std::endl;
+	  bool relayed = get_protocol()->relay_xeq_data(r, fake_context);
 
 	  if (relayed)
-		  MGINFO("Submitted uptime-proof for service node (yours): " << m_service_node_pubkey);
+		  MGINFO("Submitted xeq-info for service node (yours): " << m_service_node_pubkey);
 	  }
+    return true;
+  }
+  bool core::handle_xeq_data(const NOTIFY_XEQ_DATA::request &pythia_data)
+  {
+    m_blockchain_storage.add_pythia_data(pythia_data);
     return true;
   }
   //-----------------------------------------------------------------------------------------------
@@ -1424,58 +1443,6 @@ namespace cryptonote
   bool core::handle_uptime_proof(const NOTIFY_UPTIME_PROOF::request &proof, bool &my_uptime_proof_confirmation)
   {
 	  return m_quorum_cop.handle_uptime_proof(proof, my_uptime_proof_confirmation);
-  }
-
-  //-----------------------------------------------------------------------------------------------
-  void core::get_oracle_price(const uint64_t &height) {
-    std::stringstream ss;
-
-		cryptonote::oracle_data_to_store data_in;
-		std::string blob;
-
-		m_blockchain_storage.get_db().block_wtxn_start();
-		if (!m_blockchain_storage.get_db().get_oracle_data(blob, height))
-		{
-			m_blockchain_storage.get_db().block_wtxn_stop();
-			return;
-		}
-		m_blockchain_storage.get_db().block_wtxn_stop();
-
-		ss << blob;
-		binary_archive<false> ba(ss);
-		bool r = ::serialization::serialize(ba, data_in);
-    if (!r) 
-    {
-      std::cout << "Unable to get data" << std::endl;
-      return;
-    }
-
-    for (auto price_feed : data_in.price_feed) {
-      std::cout << price_feed.first << " " << price_feed.second << std::endl;
-    }
-  }
-
-  //-----------------------------------------------------------------------------------------------
-  bool core::handle_oracle_data(const NOTIFY_ORACLE_DATA::request &oracle_data)
-  {
-    MGINFO("Handle oracle data");
-    cryptonote::oracle_data_to_store data_to_store;
-
-    data_to_store.price_feed.push_back(std::make_pair(oracle_data.xeq_usd, oracle_data.price_feed));
-    data_to_store.timestamp = time(nullptr);
-
-		std::stringstream ss;
-		binary_archive<true> ba(ss);
-
-		bool r = ::serialization::serialize(ba, data_to_store);
-		CHECK_AND_ASSERT_MES(r, false, "Failed to store oracle_data info: failed to serialize data");
-
-		std::string blob = ss.str();
-    std::cout << blob << std::endl;
-		m_blockchain_storage.get_db().block_wtxn_start();
-		m_blockchain_storage.get_db().set_oracle_data(blob, m_blockchain_storage.get_db().height() - 1);
-		m_blockchain_storage.get_db().block_wtxn_stop();
-    return true;
   }
   //-----------------------------------------------------------------------------------------------
   void core::on_transactions_relayed(const epee::span<const cryptonote::blobdata> tx_blobs, const relay_method tx_relay)

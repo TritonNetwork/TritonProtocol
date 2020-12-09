@@ -133,7 +133,6 @@ namespace cryptonote
     int handle_request_fluffy_missing_tx(int command, NOTIFY_REQUEST_FLUFFY_MISSING_TX::request& arg, cryptonote_connection_context& context);
 		int handle_notify_new_deregister_vote(int command, NOTIFY_NEW_DEREGISTER_VOTE::request& arg, cryptonote_connection_context& context);
 		int handle_uptime_proof(int command, NOTIFY_UPTIME_PROOF::request& arg, cryptonote_connection_context& context);
-		int handle_oracle_data(int command, NOTIFY_ORACLE_DATA::request& arg, cryptonote_connection_context& context);
 
 		int handle_xeq_data(int command, NOTIFY_XEQ_DATA::request& arg, cryptonote_connection_context& context);
 
@@ -172,7 +171,6 @@ namespace cryptonote
 
 		//----------------- uptime proof ---------------------------------------
     virtual bool relay_uptime_proof(NOTIFY_UPTIME_PROOF::request& arg, cryptonote_connection_context& exclude_context);
-    virtual bool relay_oracle_data(NOTIFY_ORACLE_DATA::request& arg, cryptonote_connection_context& exclude_context);
     virtual bool relay_transactions(NOTIFY_NEW_TRANSACTIONS::request& arg, const boost::uuids::uuid& source, epee::net_utils::zone zone, relay_method tx_relay);
     //----------------------------------------------------------------------------------
     //bool get_payload_sync_data(HANDSHAKE_DATA::request& hshd, cryptonote_connection_context& context);

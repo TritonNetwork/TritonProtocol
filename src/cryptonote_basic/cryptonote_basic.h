@@ -52,18 +52,6 @@
 
 namespace cryptonote
 {
-
-  struct pythia_data {
-    uint64_t height;
-    std::vector<std::tuple<crypto::signature, crypto::pubkey, std::string>> data;
-
-    BEGIN_SERIALIZE_OBJECT()
-      FIELD(data)
-      VARINT_FIELD(height)
-    END_SERIALIZE()
-  }
-
-
   typedef std::vector<crypto::signature> ring_signature;
 
 
@@ -585,7 +573,24 @@ namespace cryptonote
     }
   };
   //---------------------------------------------------------------
+  struct pythia_verifications
+  {
+    crypto::hash h;
+    crypto::public_key pubkey;
+    crypto::signature sig;
+    BEGIN_KV_SERIALIZE_MAP()
+      KV_SERIALIZE(h)
+      KV_SERIALIZE(pubkey)
+      KV_SERIALIZE(sig)
+    END_KV_SERIALIZE_MAP()
+  };
 
+  struct pythia_data
+  {
+    size_t height;
+    std::vector<pythia_verifications> verifications;
+    std::string data;
+  };
 }
 
 namespace std {

@@ -3719,9 +3719,9 @@ namespace cryptonote
     return true;
   }
   //------------------------------------------------------------------------------------------------------------------------------
-  bool core_rpc_server::on_relay_oracle_data(const COMMAND_RPC_RELAY_ORACLE_DATA::request& req, COMMAND_RPC_RELAY_ORACLE_DATA::response& res, epee::json_rpc::error& error_resp, const connection_context *ctx)
+  bool core_rpc_server::on_relay_xeq_data(const COMMAND_RPC_RELAY_XEQ_DATA::request& req, COMMAND_RPC_RELAY_XEQ_DATA::response& res, epee::json_rpc::error& error_resp, const connection_context *ctx)
   {
-    if(!m_core.send_oracle_data(req)) {
+    if(!m_core.submit_xeq_data(req)) {
       res.status = CORE_RPC_STATUS_OK;
       return false;
     }
@@ -3729,8 +3729,6 @@ namespace cryptonote
     res.status = CORE_RPC_STATUS_OK;
     return true;
   }
-
-
   //------------------------------------------------------------------------------------------------------------------------------
   const command_line::arg_descriptor<std::string, false, true, 2> core_rpc_server::arg_rpc_bind_port = {
       "rpc-bind-port"
