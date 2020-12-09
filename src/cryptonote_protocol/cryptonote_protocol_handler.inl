@@ -828,8 +828,7 @@ namespace cryptonote
     (void)context;
     if (m_core.handle_xeq_data(arg))
     {
-        cryptonote_connection_context empty_context = {};
-        relay_xeq_data(arg, empty_context);
+      MLOG_P2P_MESSAGE("Handled NOTIFY_XEQ_DATA");
     }
     return 1;
  }
