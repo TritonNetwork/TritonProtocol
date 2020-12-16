@@ -238,8 +238,6 @@ const char* const LMDB_HF_STARTING_HEIGHTS = "hf_starting_heights";
 const char* const LMDB_HF_VERSIONS = "hf_versions";
 const char* const LMDB_SERVICE_NODE_DATA = "service_node_data";
 
-const char* const LMDB_ORACLE_DATA = "oracle_data";
-
 const char* const LMDB_PROPERTIES = "properties";
 
 const char zerokey[8] = {0};
@@ -1427,8 +1425,6 @@ void BlockchainLMDB::open(const std::string& filename, const int db_flags)
   lmdb_db_open(txn, LMDB_HF_VERSIONS, MDB_INTEGERKEY | MDB_CREATE, m_hf_versions, "Failed to open db handle for m_hf_versions");
   lmdb_db_open(txn, LMDB_SERVICE_NODE_DATA, MDB_INTEGERKEY | MDB_CREATE, m_service_node_data, "Failed to open db handle for m_service_node_data");
 
-  lmdb_db_open(txn, LMDB_ORACLE_DATA, MDB_INTEGERKEY | MDB_CREATE, m_oracle_data, "Failed to open db handle for m_oracle_data");
-
 
   lmdb_db_open(txn, LMDB_PROPERTIES, MDB_CREATE, m_properties, "Failed to open db handle for m_properties");
 
@@ -1620,9 +1616,6 @@ void BlockchainLMDB::reset()
 	  throw0(DB_ERROR(lmdb_error("Failed to drop m_service_node_data: ", result).c_str()));
   if (auto result = mdb_drop(txn, m_properties, 0))
     throw0(DB_ERROR(lmdb_error("Failed to drop m_properties: ", result).c_str()));
-  if (auto result = mdb_drop(txn, m_oracle_data, 0))
-	  throw0(DB_ERROR(lmdb_error("Failed to drop m_oracle_data: ", result).c_str()));
-
 
   // init with current version
   MDB_val_str(k, "version");
@@ -5721,71 +5714,5 @@ void BlockchainLMDB::clear_service_node_data()
 	if ((result = mdb_cursor_del(m_cur_service_node_data, 0)))
 		throw1(DB_ERROR(lmdb_error("Failed to add removal of service node data to db transaction: ", result).c_str()));
 }
-
-void BlockchainLMDB::set_oracle_data(const std::string& data, const uint64_t &height)
-{
-	LOG_PRINT_L3("BlockchainLMDB::" << __func__);
-	check_open();
-
-	mdb_txn_cursors *m_cursors = &m_wcursors;
-	CURSOR(oracle_data);
-
-	const uint64_t key = height;
-	MDB_val_set(k, key);
-
-	MDB_val_copy<blobdata> blob(data);
-	int result;
-	result = mdb_cursor_put(m_cur_oracle_data, &k, &blob, 0);
-	if (result)
-		throw0(DB_ERROR(lmdb_error("Failed to add oracle data to db transaction: ", result).c_str()));
-}
-
-bool BlockchainLMDB::get_oracle_data(std::string& data, const uint64_t &height)
-{
-	LOG_PRINT_L3("BlockchainLMDB::" << __func__);
-	check_open();
-
-	TXN_PREFIX_RDONLY();
-
-	RCURSOR(oracle_data);
-
-	const uint64_t key = height;
-	MDB_val_set(k, key);
-	MDB_val v;
-
-	int result;
-	result = mdb_cursor_get(m_cur_oracle_data, &k, &v, MDB_FIRST);
-
-	if (result == MDB_NOTFOUND)
-	{
-		return false;
-	}
-	else if (result)
-	{
-		throw0(DB_ERROR(lmdb_error("DB error attempting to get oracle data", result).c_str()));
-	}
-
-	data.assign(reinterpret_cast<const char*>(v.mv_data), v.mv_size);
-	return true;
-}
-
-void BlockchainLMDB::clear_oracle_data()
-{
-	LOG_PRINT_L3("BlockchainLMDB::" << __func__);
-	check_open();
-
-	mdb_txn_cursors *m_cursors = &m_wcursors;
-	CURSOR(oracle_data);
-
-	const uint64_t key = 1;
-	MDB_val_set(k, key);
-
-	int result;
-	if ((result = mdb_cursor_get(m_cur_oracle_data, &k, NULL, MDB_SET)))
-		return;
-	if ((result = mdb_cursor_del(m_cur_oracle_data, 0)))
-		throw1(DB_ERROR(lmdb_error("Failed to add removal of service node data to db transaction: ", result).c_str()));
-}
-
 
 }  // namespace cryptonote
