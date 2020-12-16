@@ -132,18 +132,7 @@ namespace cryptonote
      */
 	 bool handle_uptime_proof(const NOTIFY_UPTIME_PROOF::request &proof, bool &my_uptime_proof_confirmation);
 
-   bool send_oracle_data(const COMMAND_RPC_RELAY_ORACLE_DATA::request& req);
    void get_oracle_price(const uint64_t &height);
-
-    /*
-      *
-      * @brief handles an incoming oracle data from oracles
-      *
-      * Parses an incoming oracle data
-      *
-      * @return true if we haven't seen it before and thus need to relay.
-    */
-    bool handle_oracle_data(const NOTIFY_ORACLE_DATA::request &oradle_data);
 
 	 /**
       * @brief handles an incoming transaction

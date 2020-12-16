@@ -820,19 +820,6 @@ namespace cryptonote
     }
     return 1;
  }
-   //------------------------------------------------------------------------------------------------------------------------
-  template<class t_core>
-  int t_cryptonote_protocol_handler<t_core>::handle_oracle_data(int command, NOTIFY_ORACLE_DATA::request& arg, cryptonote_connection_context& context)
- {
-    MLOG_P2P_MESSAGE("Received NOTIFY_ORACLE_DATA");
-
-    (void)context;
-    if (m_core.handle_oracle_data(arg))
-    {
-      return 1;
-    }
-    return 1;
- }
  //------------------------------------------------------------------------------------------------------------------------
  template<class t_core>
   int t_cryptonote_protocol_handler<t_core>::handle_request_fluffy_missing_tx(int command, NOTIFY_REQUEST_FLUFFY_MISSING_TX::request& arg, cryptonote_connection_context& context)
@@ -2632,13 +2619,6 @@ skip:
     bool result = relay_to_synchronized_peers<NOTIFY_UPTIME_PROOF>(arg, exclude_context);
     return result;
 }
-
-  template<class t_core>
-  bool t_cryptonote_protocol_handler<t_core>::relay_oracle_data(NOTIFY_ORACLE_DATA::request& arg, cryptonote_connection_context& exclude_context)
-  {
-    bool result = relay_to_synchronized_peers<NOTIFY_ORACLE_DATA>(arg, exclude_context);
-    return result;
-  }
 
  //------------------------------------------------------------------------------------------------------------------------
  template<class t_core>

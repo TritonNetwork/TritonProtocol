@@ -54,19 +54,6 @@ namespace cryptonote
 {
   typedef std::vector<crypto::signature> ring_signature;
 
- /* oracle_data */
-  struct oracle_data_to_store
-  {
-    std::vector<std::pair<uint64_t, std::string>> price_feed;
-    uint64_t timestamp;
-
-    BEGIN_SERIALIZE()
-      FIELD(price_feed)
-      FIELD(timestamp)
-    END_SERIALIZE()
-  };
-
-
   /* outputs */
 
   struct txout_to_script
