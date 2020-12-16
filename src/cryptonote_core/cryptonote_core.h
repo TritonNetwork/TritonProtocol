@@ -132,8 +132,6 @@ namespace cryptonote
      */
 	 bool handle_uptime_proof(const NOTIFY_UPTIME_PROOF::request &proof, bool &my_uptime_proof_confirmation);
 
-   void get_oracle_price(const uint64_t &height);
-
 	 /**
       * @brief handles an incoming transaction
       *

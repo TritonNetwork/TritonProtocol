@@ -1586,8 +1586,6 @@ namespace cryptonote
     block last_block;
     get_block_by_hash(last_block_hash, last_block);
 
-    get_oracle_price(get_block_height(last_block));
-
     karai::handle_block(b, txs, last_block, m_service_node_pubkey, m_service_node_key, m_service_node_list.get_service_nodes_pubkeys());
   }
   //-----------------------------------------------------------------------------------------------
