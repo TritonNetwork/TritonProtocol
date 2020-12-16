@@ -74,12 +74,12 @@ namespace service_nodes
 
 		uint64_t const latest_height = std::max(m_core.get_current_blockchain_height(), m_core.get_target_blockchain_height());
 
-		if (latest_height >= height)
-		{
-			//We do every block divisible by 10 to update governance of Pythia
-			//if (height % 10 == 0)
-				m_core.karai_handler(block, txs, my_pubkey, my_seckey);
-		}
+		// if (latest_height >= height)
+		// {
+		// 	//We do every block divisible by 10 to update governance of Pythia
+		// 	//if (height % 10 == 0)
+		// 		m_core.karai_handler(block, txs, my_pubkey, my_seckey);
+		// }
 
 
 		time_t const now = time(nullptr);

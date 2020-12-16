@@ -58,8 +58,7 @@ using namespace epee;
 #include "wipeable_string.h"
 #include "common/i18n.h"
 
-#include "delfi/price_provider.h"
-#include "karai_handler/send_data.h"
+//#include "karai_handler/send_data.h"
 
 #undef MONERO_DEFAULT_LOG_CATEGORY
 #define MONERO_DEFAULT_LOG_CATEGORY "cn"
@@ -1579,15 +1578,15 @@ namespace cryptonote
   }
 
 
-  void core::karai_handler(const block &b, const std::vector<std::pair<cryptonote::transaction, cryptonote::blobdata>>& txs, const crypto::public_key &pub_key, crypto::secret_key &sec_key) {
+  // void core::karai_handler(const block &b, const std::vector<std::pair<cryptonote::transaction, cryptonote::blobdata>>& txs, const crypto::public_key &pub_key, crypto::secret_key &sec_key)
+  // {
+  //   crypto::hash last_block_hash = get_block_id_by_height(get_block_height(b) - 1);
 
-    crypto::hash last_block_hash = get_block_id_by_height(get_block_height(b) - 1);
+  //   block last_block;
+  //   get_block_by_hash(last_block_hash, last_block);
 
-    block last_block;
-    get_block_by_hash(last_block_hash, last_block);
-
-    karai::handle_block(b, txs, last_block, m_service_node_pubkey, m_service_node_key, m_service_node_list.get_service_nodes_pubkeys());
-  }
+  //   karai::handle_block(b, txs, last_block, m_service_node_pubkey, m_service_node_key, m_service_node_list.get_service_nodes_pubkeys());
+  // }
   //-----------------------------------------------------------------------------------------------
   void core::on_synchronized()
   {

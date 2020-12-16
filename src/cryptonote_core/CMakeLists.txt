@@ -67,8 +67,8 @@ target_link_libraries(cryptonote_core
     ringct
     device
     hardforks
-    karai_handler
-    delfi
+    # karai_handler
+    # delfi
     ${Boost_DATE_TIME_LIBRARY}
     ${Boost_PROGRAM_OPTIONS_LIBRARY}
     ${Boost_SERIALIZATION_LIBRARY}

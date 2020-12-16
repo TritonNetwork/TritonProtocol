@@ -57,7 +57,7 @@ using namespace epee;
 #include "core_rpc_server_error_codes.h"
 #include "p2p/net_node.h"
 #include "version.h"
-#include "karai_handler/send_data.h"
+//#include "karai_handler/send_data.h"
 
 #undef MONERO_DEFAULT_LOG_CATEGORY
 #define MONERO_DEFAULT_LOG_CATEGORY "daemon.rpc"
@@ -3687,7 +3687,8 @@ namespace cryptonote
 		if (!m_core.get_service_node_keys(my_pubkey, my_seckey))
 			return false;    
       
-    crypto::hash data_hash = karai::make_data_hash(my_pubkey, req.message);
+    crypto::hash data_hash;
+    ///data_hash = karai::make_data_hash(my_pubkey, req.message);
 
     crypto::signature signature;
     crypto::generate_signature(data_hash, my_pubkey, my_seckey, signature);
