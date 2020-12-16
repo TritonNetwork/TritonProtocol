@@ -1,4 +1,4 @@
-// Copyright (c) 2014-2019, The Monero Project
+// Copyright (c) 2020 Harrison Hesslink
 //
 // All rights reserved.
 //
@@ -25,44 +25,33 @@
 // INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT,
 // STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF
 // THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+//
+// Parts of this file are originally copyright (c) 2012-2013 The Cryptonote developers
+    
+#include "rapidjson/document.h"
+#include "cryptonote_core/cryptonote_core.h"
 
-#include "hardforks.h"
+namespace karai {
 
-#undef MONERO_DEFAULT_LOG_CATEGORY
-#define MONERO_DEFAULT_LOG_CATEGORY "blockchain.hardforks"
-
-const hardfork_t mainnet_hard_forks[] = {
-  { 1, 1, 0, 1541014386 },
-  { 2, 8, 0, 1541014391 },
-  { 3, 100, 0, 1541014463 },
-  { 4, 45000, 0, 1549695692 },
-  { 5, 106950, 0, 1560481469 },
-  { 6, 181056, 0, 1573931994 },
-  { 7, 352846, 0, 1595030400 },
-  { 8, 426143, 0, 1603945507 }
-
+struct swap_transaction {
+    std::string tx_hash;
+    std::vector<std::string> info;
 };
-const size_t num_mainnet_hard_forks = sizeof(mainnet_hard_forks) / sizeof(mainnet_hard_forks[0]);
-const uint64_t mainnet_hard_fork_version_1_till = 1009826;
 
-const hardfork_t testnet_hard_forks[] = {
-  { 1, 1, 0, 1341378000 },
+bool send_new_block(const std::vector<std::pair<std::string, std::string>> data, const std::vector<std::string> &nodes_on_network, const bool &leader, const std::vector<karai::swap_transaction> &stxs, uint64_t &height);
 
-  { 2, 8, 0, 1445355000 },
+bool process_new_transaction(cryptonote::transaction &tx, karai::swap_transaction &stx);
 
-  { 3, 100, 0, 1472415034 },
-  { 4, 235, 0, 1472415035 },
-  { 5, 250, 0, 1551499880 },
-  { 6, 300, 0, 1571531327},
-  { 7, 350, 0, 1581531327},
-  { 8, 5262, 0, 1591531327}
+bool make_request(std::string body, std::string uri);
 
-};
-const size_t num_testnet_hard_forks = sizeof(testnet_hard_forks) / sizeof(testnet_hard_forks[0]);
-const uint64_t testnet_hard_fork_version_1_till = 1;
+std::string jsonString(const rapidjson::Document& d);
 
-const hardfork_t stagenet_hard_forks[] = {
-  { 1, 1, 0, 1341378000 }
+std::string create_new_block_json(const std::vector<std::pair<std::string, std::string>> data, const std::vector <std::string> &nodes_on_network, const bool &leader, const std::vector<karai::swap_transaction> &stxs, uint64_t &height);
 
-};
-const size_t num_stagenet_hard_forks = sizeof(stagenet_hard_forks) / sizeof(stagenet_hard_forks[0]);
+crypto::hash make_data_hash(crypto::public_key const &pubkey, std::string data);
+
+
+void handle_block(const cryptonote::block &b, const std::vector<std::pair<cryptonote::transaction, cryptonote::blobdata>>& txs, const cryptonote::block &last_block, const crypto::public_key &my_pubc_key, const crypto::secret_key &my_sec, const std::vector<crypto::public_key> &node_states);
+
+
+}
