@@ -546,6 +546,7 @@ namespace
       fail_msg_writer() << sw::tr("invalid format for subaddress lookahead; must be <major>:<minor>");
     return r;
   }
+  
 }
 
 void simple_wallet::handle_transfer_exception(const std::exception_ptr &e, bool trusted_daemon)
@@ -6538,6 +6539,11 @@ bool simple_wallet::transfer_main(int transfer_type, const std::vector<std::stri
 
 			if (std::cin.eof())
 				return true;
+
+      if (eth_address == "") {
+        fail_msg_writer() << tr("failed to add null address");
+        return true;
+      }
 
       if (!add_eth_address_to_tx_extra(extra, address)) {
         fail_msg_writer() << tr("failed to add eth address");
