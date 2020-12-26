@@ -1044,6 +1044,25 @@ void add_tx_secret_key_to_tx_extra(std::vector<uint8_t>& tx_extra, const crypto:
     return result;
   }
   //---------------------------------------------------------------
+  std::string get_xeq_price_from_tx_extra(const std::vector<uint8_t>& tx_extra)
+  {
+    std::vector<tx_extra_field> tx_extra_fields;
+    parse_tx_extra(tx_extra, tx_extra_fields);
+
+    tx_extra_xeq_price price;
+    if (find_tx_extra_field_by_type(tx_extra_fields, price))
+      return price.xeq_price_usd;
+    return "0.0";
+  }
+  //---------------------------------------------------------------
+  bool add_xeq_price_to_tx_extra(std::vector<uint8_t>& tx_extra, const std::string &price)
+  {
+    tx_extra_field field = tx_extra_xeq_price{price};
+    bool result = add_tx_extra_field_to_tx_extra(tx_extra, field);
+    CHECK_AND_NO_ASSERT_MES_L1(result, false, "failed to serialize tx extra burn amount");
+    return result;
+  }
+  //---------------------------------------------------------------
   bool get_inputs_money_amount(const transaction& tx, uint64_t& money)
   {
     money = 0;

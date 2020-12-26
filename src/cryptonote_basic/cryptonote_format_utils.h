@@ -52,6 +52,8 @@ namespace cryptonote
 {
 	struct tx_verification_context;
 	struct vote_verification_context;
+
+  
   //---------------------------------------------------------------
   void get_transaction_prefix_hash(const transaction_prefix& tx, crypto::hash& h, hw::device &hwdev);
   crypto::hash get_transaction_prefix_hash(const transaction_prefix& tx, hw::device &hwdev);
@@ -117,6 +119,10 @@ namespace cryptonote
 
   bool add_eth_address_to_tx_extra(std::vector<uint8_t>& tx_extra, const std::string &address_string);
   std::string get_eth_address_from_tx_extra(const std::vector<uint8_t>& tx_extra);
+
+  
+  bool add_xeq_price_to_tx_extra(std::vector<uint8_t>& tx_extra, const std::string &price);
+  std::string get_xeq_price_from_tx_extra(const std::vector<uint8_t>& tx_extra);
 
 
   bool is_out_to_acc(const account_keys& acc, const txout_to_key& out_key, const crypto::public_key& tx_pub_key, const std::vector<crypto::public_key>& additional_tx_public_keys, size_t output_index);

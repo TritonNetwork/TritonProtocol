@@ -1425,6 +1425,7 @@ namespace cryptonote
 
 	  if (relayed)
 		  MGINFO("Submitted xeq-info for service node (yours): " << m_service_node_pubkey);
+      handle_xeq_data(r);
 	  }
     return true;
   }

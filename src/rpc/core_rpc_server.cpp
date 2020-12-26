@@ -3372,6 +3372,8 @@ namespace cryptonote
       args.push_back("auto");
     }
 
+
+
     uint64_t staking_requirement = service_nodes::get_staking_requirement(m_core.get_nettype(), m_core.get_current_blockchain_height());
 
     {
@@ -3492,7 +3494,15 @@ namespace cryptonote
   bool core_rpc_server::on_get_staking_requirement(const COMMAND_RPC_GET_STAKING_REQUIREMENT::request& req, COMMAND_RPC_GET_STAKING_REQUIREMENT::response& res, epee::json_rpc::error& error_resp, const connection_context *ctx)
   {
 	  PERF_TIMER(on_get_staking_requirement);
-	  res.staking_requirement = service_nodes::get_staking_requirement(nettype(), req.height);
+
+    block last_block;
+    m_core.get_block_by_hash(m_core.get_tail_id(), last_block);
+
+    double price = std::stod(cryptonote::get_xeq_price_from_tx_extra(last_block.miner_tx.extra));
+
+    std::cout << price << std::endl;
+
+	  res.staking_requirement = service_nodes::get_staking_requirement(nettype(), req.height, price);
 	  res.status = CORE_RPC_STATUS_OK;
 	  return true;
   }
@@ -3725,6 +3735,7 @@ namespace cryptonote
       res.status = CORE_RPC_STATUS_OK;
       return false;
     }
+
 
     res.status = CORE_RPC_STATUS_OK;
     return true;
