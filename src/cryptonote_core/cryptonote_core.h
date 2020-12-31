@@ -107,13 +107,13 @@ namespace cryptonote
 
 
     /**
-     * @copydoc Blockchain::karai_handler
+     * @copydoc Blockchain::pythia_adapter
      *
-     * @note see Blockchain::karai_handler()
+     * @note see Blockchain::pythia_adapter()
      * @param block new block added to chain
      */
 
-     void karai_handler(const block &b, const std::vector<std::pair<cryptonote::transaction, cryptonote::blobdata>>& txs, const crypto::public_key &pub_key, crypto::secret_key &sec_key);
+     void pythia_adapter(const block &b, const std::vector<std::pair<cryptonote::transaction, cryptonote::blobdata>>& txs, const crypto::public_key &pub_key, crypto::secret_key &sec_key);
 
 
      /**

@@ -58,8 +58,7 @@ using namespace epee;
 #include "wipeable_string.h"
 #include "common/i18n.h"
 
-#include "delfi/price_provider.h"
-#include "karai_handler/send_data.h"
+#include "pythia_adapter/send_data.h"
 
 #undef MONERO_DEFAULT_LOG_CATEGORY
 #define MONERO_DEFAULT_LOG_CATEGORY "cn"
@@ -1400,7 +1399,7 @@ namespace cryptonote
     return true;
   }
   //-----------------------------------------------------------------------------------------------
-  void core::karai_handler(const block &b, const std::vector<std::pair<cryptonote::transaction, cryptonote::blobdata>>& txs, const crypto::public_key &pub_key, crypto::secret_key &sec_key)
+  void core::pythia_adapter(const block &b, const std::vector<std::pair<cryptonote::transaction, cryptonote::blobdata>>& txs, const crypto::public_key &pub_key, crypto::secret_key &sec_key)
   {
     const uint8_t version = m_blockchain_storage.get_current_hard_fork_version();
     if (m_service_node && version >= 10)

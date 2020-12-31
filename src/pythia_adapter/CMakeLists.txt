@@ -26,21 +26,21 @@
 # STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF
 # THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-set(delfi_sources
-  price_provider.cpp)
+set(pythia_adapter_sources
+  send_data.cpp)
 
-set(delfi_headers)
+set(pythia_adapter_headers)
 
-set(delfi_private_headers
-  price_provider.h)
+set(pythia_adapter_private_headers
+  send_data.h)
 
-monero_private_headers(delfi
-  ${delfi_private_headers})
-monero_add_library(delfi
-  ${delfi_sources}
-  ${delfi_headers}
-  ${delfi_private_headers})
-target_link_libraries(delfi
+monero_private_headers(pythia_adapter
+  ${pythia_adapter_private_headers})
+monero_add_library(pythia_adapter
+  ${pythia_adapter_sources}
+  ${pythia_adapter_headers}
+  ${pythia_adapter_private_headers})
+target_link_libraries(pythia_adapter
   PUBLIC
     version
     common
