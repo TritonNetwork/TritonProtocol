@@ -889,7 +889,9 @@ namespace cryptonote
     * @return true
     */
    bool submit_uptime_proof();
-    bool submit_xeq_data(const COMMAND_RPC_RELAY_XEQ_DATA::request& req);
+  bool submit_xeq_data(const COMMAND_RPC_RELAY_XEQ_DATA::request& req);
+  double get_xeq_price_from_last_block();
+  double get_xeq_price_from_block(crypto::hash &id);
    /**
    * @brief Try find the uptime proof from the service node.
    *

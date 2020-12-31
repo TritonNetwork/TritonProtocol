@@ -194,7 +194,7 @@ namespace cryptonote
      * @param chk_pts the set of checkpoints to assign
      */
     void set_checkpoints(checkpoints&& chk_pts) { m_checkpoints = chk_pts; }
-
+    double get_xeq_price_from_last_block();
     /**
      * @brief get blocks and transactions from blocks based on start height and count
      *

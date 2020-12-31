@@ -9,20 +9,8 @@
 namespace service_nodes {
 
 
-	uint64_t get_staking_requirement(cryptonote::network_type m_nettype, uint64_t height, double price)
+	uint64_t get_staking_requirement(cryptonote::network_type m_nettype, uint64_t height)
 	{
-		if (height >= 12550) {
-
-			//USD req
-			const uint64_t base_req = 5000;
-			uint64_t req = (base_req) / price;
-
-			if (req > 80000)	
-				req = 80000;
-				
-			return req * COIN;
-		}
-
 		if (m_nettype != cryptonote::MAINNET)
 			return COIN * 100;
 
@@ -44,6 +32,18 @@ namespace service_nodes {
 
 		uint64_t result = base + variable;
 		return result;
+	}
+
+	uint64_t get_staking_requirement_v2(const double &price)
+	{
+		//USD req
+		const uint64_t base_req = 5000;
+		uint64_t req = (base_req) / price;
+
+		if (req > 80000)	
+			req = 80000;
+			
+		return req * COIN;
 	}
 
 	uint64_t portions_to_amount(uint64_t portions, uint64_t staking_requirement)

@@ -1982,6 +1982,15 @@ bool Blockchain::handle_alternative_block(const block& b, const crypto::hash& id
 
   return true;
 }
+double Blockchain::get_xeq_price_from_last_block()
+{
+  block last_block;
+  get_block_by_hash(get_tail_id(), last_block);
+
+  double price = std::stod(cryptonote::get_xeq_price_from_tx_extra(last_block.miner_tx.extra));
+
+  return price;
+}
 //------------------------------------------------------------------
 bool Blockchain::get_blocks(uint64_t start_offset, size_t count, std::vector<std::pair<cryptonote::blobdata,block>>& blocks, std::vector<cryptonote::blobdata>& txs) const
 {

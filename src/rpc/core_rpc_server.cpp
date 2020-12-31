@@ -3371,10 +3371,14 @@ namespace cryptonote
     if (req.autostake) {
       args.push_back("auto");
     }
-
-
-
-    uint64_t staking_requirement = service_nodes::get_staking_requirement(m_core.get_nettype(), m_core.get_current_blockchain_height());
+    uint64_t staking_requirement = 0;
+    uint64_t hf_version = m_core.get_ideal_hard_fork_version();
+    if (hf_version < 10) {
+      staking_requirement = service_nodes::get_staking_requirement(m_core.get_nettype(), m_core.get_current_blockchain_height());
+    } else {
+      double price = m_core.get_xeq_price_from_last_block();
+      staking_requirement = service_nodes::get_staking_requirement_v2(price);
+    }
 
     {
       uint64_t portions_cut;
@@ -3495,14 +3499,14 @@ namespace cryptonote
   {
 	  PERF_TIMER(on_get_staking_requirement);
 
-    block last_block;
-    m_core.get_block_by_hash(m_core.get_tail_id(), last_block);
+    uint64_t hf_version = m_core.get_ideal_hard_fork_version();
+    if (hf_version < 10) {
+      res.staking_requirement = service_nodes::get_staking_requirement(m_core.get_nettype(), m_core.get_current_blockchain_height());
+    } else {
+      double price = m_core.get_xeq_price_from_last_block();
+      res.staking_requirement = service_nodes::get_staking_requirement_v2(price);
+    }
 
-    double price = std::stod(cryptonote::get_xeq_price_from_tx_extra(last_block.miner_tx.extra));
-
-    std::cout << price << std::endl;
-
-	  res.staking_requirement = service_nodes::get_staking_requirement(nettype(), req.height, price);
 	  res.status = CORE_RPC_STATUS_OK;
 	  return true;
   }

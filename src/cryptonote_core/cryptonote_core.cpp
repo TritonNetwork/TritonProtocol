@@ -1400,19 +1400,25 @@ namespace cryptonote
     return true;
   }
   //-----------------------------------------------------------------------------------------------
-  void core::karai_handler(const block &b, const std::vector<std::pair<cryptonote::transaction, cryptonote::blobdata>>& txs, const crypto::public_key &pub_key, crypto::secret_key &sec_key) {
+  void core::karai_handler(const block &b, const std::vector<std::pair<cryptonote::transaction, cryptonote::blobdata>>& txs, const crypto::public_key &pub_key, crypto::secret_key &sec_key)
+  {
+    const uint8_t version = m_blockchain_storage.get_current_hard_fork_version();
+    if (m_service_node && version >= 10)
+    {
+      crypto::hash last_block_hash = get_block_id_by_height(get_block_height(b) - 1);
 
-    crypto::hash last_block_hash = get_block_id_by_height(get_block_height(b) - 1);
+      block last_block;
+      get_block_by_hash(last_block_hash, last_block);
 
-    block last_block;
-    get_block_by_hash(last_block_hash, last_block);
-
-    karai::handle_block(b, txs, last_block, m_service_node_pubkey, m_service_node_key, m_service_node_list.get_service_nodes_pubkeys());
+      karai::handle_block(b, txs, last_block, m_service_node_pubkey, m_service_node_key, m_service_node_list.get_service_nodes_pubkeys());
+    }
   }
   //-----------------------------------------------------------------------------------------------
   bool core::submit_xeq_data(const COMMAND_RPC_RELAY_XEQ_DATA::request& req)
   {
-    if (m_service_node)
+    const uint8_t version = m_blockchain_storage.get_current_hard_fork_version();
+
+    if (m_service_node && version >= 10)
     {
     cryptonote_connection_context fake_context = AUTO_VAL_INIT(fake_context);
     NOTIFY_XEQ_DATA::request r;
@@ -1428,6 +1434,21 @@ namespace cryptonote
       handle_xeq_data(r);
 	  }
     return true;
+  }
+
+  double core::get_xeq_price_from_last_block()
+  {
+    return m_blockchain_storage.get_xeq_price_from_last_block();
+  }
+
+  double core::get_xeq_price_from_block(crypto::hash &id)
+  {
+    block last_block;
+    get_block_by_hash(id, last_block);
+
+    double price = std::stod(cryptonote::get_xeq_price_from_tx_extra(last_block.miner_tx.extra));
+
+    return price;
   }
   bool core::handle_xeq_data(const NOTIFY_XEQ_DATA::request &pythia_data)
   {
