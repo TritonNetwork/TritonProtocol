@@ -39,7 +39,6 @@
 #include "vector"
 #include "rapidjson/writer.h"
 #include "rapidjson/stringbuffer.h"
-#include "delfi/price_provider.h"
 #include "cryptonote_basic/cryptonote_format_utils.h"
 
 namespace karai {
