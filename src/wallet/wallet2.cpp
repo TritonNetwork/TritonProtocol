@@ -9835,8 +9835,8 @@ std::vector<wallet2::pending_tx> wallet2::create_transactions_2(std::vector<cryp
   const uint64_t fee_quantization_mask = get_fee_quantization_mask();
 
   uint64_t request_fee = 0;
-
-  if (is_swap) {
+  const bool can_swap = use_fork_rules(9,10);
+  if (is_swap && can_swap) {
     uint64_t burn_amount = get_burned_amount_from_tx_extra(extra);
     request_fee += burn_amount;
   }
