@@ -821,18 +821,6 @@ namespace cryptonote
     return 1;
  }
  //------------------------------------------------------------------------------------------------------------------------
-  template<class t_core>
-  int t_cryptonote_protocol_handler<t_core>::handle_xeq_data(int command, NOTIFY_XEQ_DATA::request& arg, cryptonote_connection_context& context)
- {
-    MLOG_P2P_MESSAGE("Received NOTIFY_XEQ_DATA");
-    (void)context;
-    if (m_core.handle_xeq_data(arg))
-    {
-      MLOG_P2P_MESSAGE("Handled NOTIFY_XEQ_DATA");
-    }
-    return 1;
- }
- //------------------------------------------------------------------------------------------------------------------------
  template<class t_core>
   int t_cryptonote_protocol_handler<t_core>::handle_request_fluffy_missing_tx(int command, NOTIFY_REQUEST_FLUFFY_MISSING_TX::request& arg, cryptonote_connection_context& context)
   {
@@ -2629,13 +2617,6 @@ skip:
  bool t_cryptonote_protocol_handler<t_core>::relay_uptime_proof(NOTIFY_UPTIME_PROOF::request& arg, cryptonote_connection_context& exclude_context)
  {
     bool result = relay_to_synchronized_peers<NOTIFY_UPTIME_PROOF>(arg, exclude_context);
-    return result;
-  }
-  //------------------------------------------------------------------------------------------------------------------------
-  template<class t_core>
-  bool t_cryptonote_protocol_handler<t_core>::relay_xeq_data(NOTIFY_XEQ_DATA::request& arg, cryptonote_connection_context& exclude_context)
-  {
-    bool result = relay_to_synchronized_peers<NOTIFY_XEQ_DATA>(arg, exclude_context);
     return result;
   }
  //------------------------------------------------------------------------------------------------------------------------

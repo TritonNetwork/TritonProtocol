@@ -194,7 +194,6 @@ namespace cryptonote
      * @param chk_pts the set of checkpoints to assign
      */
     void set_checkpoints(checkpoints&& chk_pts) { m_checkpoints = chk_pts; }
-    double get_xeq_price_from_last_block();
     /**
      * @brief get blocks and transactions from blocks based on start height and count
      *
@@ -1111,11 +1110,6 @@ namespace cryptonote
      */
     void flush_invalid_blocks();
 
-    /**
-     * @brief add pythia data to put into blocks
-     */
-    void add_pythia_data(const NOTIFY_XEQ_DATA::request &pythia_data);
-
 
 #ifndef IN_UNIT_TESTS
   private:
@@ -1215,9 +1209,6 @@ namespace cryptonote
 
     std::shared_ptr<tools::Notify> m_block_notify;
     std::shared_ptr<tools::Notify> m_reorg_notify;
-
-    //pythia
-    std::vector<cryptonote::pythia_data> m_pythia_data;
     
     // for prepare_handle_incoming_blocks
     uint64_t m_prepare_height;

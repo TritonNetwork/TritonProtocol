@@ -1412,48 +1412,7 @@ namespace cryptonote
       karai::handle_block(b, txs, last_block, m_service_node_pubkey, m_service_node_key, m_service_node_list.get_service_nodes_pubkeys());
     }
   }
-  //-----------------------------------------------------------------------------------------------
-  bool core::submit_xeq_data(const COMMAND_RPC_RELAY_XEQ_DATA::request& req)
-  {
-    const uint8_t version = m_blockchain_storage.get_current_hard_fork_version();
 
-    if (m_service_node && version >= 10)
-    {
-    cryptonote_connection_context fake_context = AUTO_VAL_INIT(fake_context);
-    NOTIFY_XEQ_DATA::request r;
-    r.data = req.data;
-    r.verifications = req.verifications;
-    r.height = req.height;
-
-    std::cout << r.data << std::endl;
-	  bool relayed = get_protocol()->relay_xeq_data(r, fake_context);
-
-	  if (relayed)
-		  MGINFO("Submitted xeq-info for service node (yours): " << m_service_node_pubkey);
-      handle_xeq_data(r);
-	  }
-    return true;
-  }
-
-  double core::get_xeq_price_from_last_block()
-  {
-    return m_blockchain_storage.get_xeq_price_from_last_block();
-  }
-
-  double core::get_xeq_price_from_block(crypto::hash &id)
-  {
-    block last_block;
-    get_block_by_hash(id, last_block);
-
-    double price = std::stod(cryptonote::get_xeq_price_from_tx_extra(last_block.miner_tx.extra));
-
-    return price;
-  }
-  bool core::handle_xeq_data(const NOTIFY_XEQ_DATA::request &pythia_data)
-  {
-    m_blockchain_storage.add_pythia_data(pythia_data);
-    return true;
-  }
   //-----------------------------------------------------------------------------------------------
   uint64_t core::get_uptime_proof(const crypto::public_key &key) const
   {

@@ -71,16 +71,6 @@ namespace karai {
             }
         }
 
-        std::string contract_address = cryptonote::get_contract_address_from_tx_extra(tx.extra);
-        if (contract_address != "") {
-            //swap transaction
-            contract_transaction cts; 
-            std::string tx_hash = epee::string_tools::pod_to_hex(tx.hash);
-            cts.info.push_back(contract_address);
-            cts.info.push_back(tx_hash);
-            tts.cts.push_back(cts);
-        }
-
         return true;
     }
 

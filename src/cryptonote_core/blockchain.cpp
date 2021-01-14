@@ -1614,22 +1614,6 @@ bool Blockchain::create_block_template(block& b, const crypto::hash *from_block,
   m_service_node_list.get_winner_addresses_and_portions(b.prev_id));
 
   bool r = construct_miner_tx(height, median_weight, already_generated_coins, txs_weight, fee, miner_address, b.miner_tx, ex_nonce, hf_version, miner_context);
-  if (m_pythia_data.size() > 0) {
-    add_xeq_price_to_tx_extra(b.miner_tx.extra, m_pythia_data[m_pythia_data.size() - 1].data);
-
-    block last_block;
-    get_block_by_hash(b.prev_id, last_block);
-
-    std::string last_block_price = get_xeq_price_from_tx_extra(last_block.miner_tx.extra);
-
-    std::string price_in_block = get_xeq_price_from_tx_extra(b.miner_tx.extra);
-  } else {
-    block last_block;
-    get_block_by_hash(b.prev_id, last_block);
-
-    std::string last_block_price = get_xeq_price_from_tx_extra(last_block.miner_tx.extra);
-    add_xeq_price_to_tx_extra(b.miner_tx.extra, last_block_price);
-  }
 
   CHECK_AND_ASSERT_MES(r, false, "Failed to construct miner tx, first chance");
   size_t cumulative_weight = txs_weight + get_transaction_weight(b.miner_tx);
@@ -1637,23 +1621,7 @@ bool Blockchain::create_block_template(block& b, const crypto::hash *from_block,
   for (size_t try_count = 0; try_count != 10; ++try_count)
   {
     r = construct_miner_tx(height, median_weight, already_generated_coins, cumulative_weight, fee, miner_address, b.miner_tx, ex_nonce, hf_version, miner_context);
-    std::cout << m_pythia_data.size() << std::endl;
-    if (m_pythia_data.size() > 0) {
-      add_xeq_price_to_tx_extra(b.miner_tx.extra, m_pythia_data[m_pythia_data.size() - 1].data);
 
-      block last_block;
-      get_block_by_hash(b.prev_id, last_block);
-
-      std::string last_block_price = get_xeq_price_from_tx_extra(last_block.miner_tx.extra);
-
-      std::string price_in_block = get_xeq_price_from_tx_extra(b.miner_tx.extra);
-    } else {
-      block last_block;
-      get_block_by_hash(b.prev_id, last_block);
-
-      std::string last_block_price = get_xeq_price_from_tx_extra(last_block.miner_tx.extra);
-      add_xeq_price_to_tx_extra(b.miner_tx.extra, last_block_price);
-    }
     CHECK_AND_ASSERT_MES(r, false, "Failed to construct miner tx, second chance");
     size_t coinbase_weight = get_transaction_weight(b.miner_tx);
     if (coinbase_weight > cumulative_weight - txs_weight)
@@ -1981,15 +1949,6 @@ bool Blockchain::handle_alternative_block(const block& b, const crypto::hash& id
   }
 
   return true;
-}
-double Blockchain::get_xeq_price_from_last_block()
-{
-  block last_block;
-  get_block_by_hash(get_tail_id(), last_block);
-
-  double price = std::stod(cryptonote::get_xeq_price_from_tx_extra(last_block.miner_tx.extra));
-
-  return price;
 }
 //------------------------------------------------------------------
 bool Blockchain::get_blocks(uint64_t start_offset, size_t count, std::vector<std::pair<cryptonote::blobdata,block>>& blocks, std::vector<cryptonote::blobdata>& txs) const
@@ -3182,15 +3141,6 @@ bool Blockchain::check_tx_outputs(const transaction& tx, tx_verification_context
         tvc.m_invalid_output = true;
         return false;
       }
-    }
-  }
-
-  if (hf_version > HF_VERSION_FEE_BURNING)  
-  {
-    if (!check_burned_amount_from_tx_extra(tx.extra))
-    {
-        tvc.m_invalid_output = true;
-        return false;
     }
   }
 
@@ -4515,15 +4465,6 @@ leave:
   }
 
   return true;
-}
-//------------------------------------------------------------------
-void Blockchain::add_pythia_data(const NOTIFY_XEQ_DATA::request &rpc_data)
-{
-  uint64_t height = get_current_blockchain_height();
-  cryptonote::pythia_data pythia_to_store{rpc_data.height, rpc_data.verifications, rpc_data.data};
-  std::cout << pythia_to_store.data << std::endl;
-
-  m_pythia_data.push_back(pythia_to_store);
 }
 //------------------------------------------------------------------
 bool Blockchain::prune_blockchain(uint32_t pruning_seed)

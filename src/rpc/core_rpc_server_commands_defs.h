@@ -3362,28 +3362,4 @@ namespace cryptonote
     typedef epee::misc_utils::struct_init<response_t> response;
   };
 
-   struct COMMAND_RPC_RELAY_XEQ_DATA
-  {
-    struct request_t: public rpc_request_base
-    {
-      uint64_t height;
-      std::vector<pythia_verifications> verifications;
-      std::string data;
-
-      BEGIN_KV_SERIALIZE_MAP()
-        KV_SERIALIZE(height)
-        KV_SERIALIZE_CONTAINER_POD_AS_BLOB(verifications)
-        KV_SERIALIZE(data)
-      END_KV_SERIALIZE_MAP()
-    };
-    typedef epee::misc_utils::struct_init<request_t> request;
-
-    struct response_t: public rpc_response_base
-    {
-
-    };
-    typedef epee::misc_utils::struct_init<response_t> response;
-
-  };
-
 }

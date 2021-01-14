@@ -3373,12 +3373,7 @@ namespace cryptonote
     }
     uint64_t staking_requirement = 0;
     uint64_t hf_version = m_core.get_ideal_hard_fork_version();
-    if (hf_version < 10) {
-      staking_requirement = service_nodes::get_staking_requirement(m_core.get_nettype(), m_core.get_current_blockchain_height());
-    } else {
-      double price = m_core.get_xeq_price_from_last_block();
-      staking_requirement = service_nodes::get_staking_requirement_v2(price);
-    }
+    staking_requirement = service_nodes::get_staking_requirement(m_core.get_nettype(), m_core.get_current_blockchain_height());
 
     {
       uint64_t portions_cut;
@@ -3500,13 +3495,8 @@ namespace cryptonote
 	  PERF_TIMER(on_get_staking_requirement);
 
     uint64_t hf_version = m_core.get_ideal_hard_fork_version();
-    if (hf_version < 10) {
-      res.staking_requirement = service_nodes::get_staking_requirement(m_core.get_nettype(), m_core.get_current_blockchain_height());
-    } else {
-      double price = m_core.get_xeq_price_from_last_block();
-      res.staking_requirement = service_nodes::get_staking_requirement_v2(price);
-    }
-
+    res.staking_requirement = service_nodes::get_staking_requirement(m_core.get_nettype(), m_core.get_current_blockchain_height());
+ 
 	  res.status = CORE_RPC_STATUS_OK;
 	  return true;
   }
@@ -3729,18 +3719,6 @@ namespace cryptonote
     }
 
     res.good_signature = crypto::check_signature(data_hash, pub_key, signature);
-    res.status = CORE_RPC_STATUS_OK;
-    return true;
-  }
-  //------------------------------------------------------------------------------------------------------------------------------
-  bool core_rpc_server::on_relay_xeq_data(const COMMAND_RPC_RELAY_XEQ_DATA::request& req, COMMAND_RPC_RELAY_XEQ_DATA::response& res, epee::json_rpc::error& error_resp, const connection_context *ctx)
-  {
-    if(!m_core.submit_xeq_data(req)) {
-      res.status = CORE_RPC_STATUS_OK;
-      return false;
-    }
-
-
     res.status = CORE_RPC_STATUS_OK;
     return true;
   }

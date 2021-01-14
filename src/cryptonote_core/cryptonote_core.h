@@ -133,8 +133,6 @@ namespace cryptonote
      */
 	  bool handle_uptime_proof(const NOTIFY_UPTIME_PROOF::request &proof, bool &my_uptime_proof_confirmation);
       
-    bool handle_xeq_data(const NOTIFY_XEQ_DATA::request &pythia_data);
-
 	 /**
       * @brief handles an incoming transaction
       *
@@ -889,9 +887,7 @@ namespace cryptonote
     * @return true
     */
    bool submit_uptime_proof();
-  bool submit_xeq_data(const COMMAND_RPC_RELAY_XEQ_DATA::request& req);
-  double get_xeq_price_from_last_block();
-  double get_xeq_price_from_block(crypto::hash &id);
+
    /**
    * @brief Try find the uptime proof from the service node.
    *

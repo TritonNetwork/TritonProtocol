@@ -95,7 +95,6 @@ namespace cryptonote
       HANDLE_NOTIFY_T2(NOTIFY_NEW_FLUFFY_BLOCK, &cryptonote_protocol_handler::handle_notify_new_fluffy_block)			
       HANDLE_NOTIFY_T2(NOTIFY_REQUEST_FLUFFY_MISSING_TX, &cryptonote_protocol_handler::handle_request_fluffy_missing_tx)						
       HANDLE_NOTIFY_T2(NOTIFY_GET_TXPOOL_COMPLEMENT, &cryptonote_protocol_handler::handle_notify_get_txpool_complement)
-      HANDLE_NOTIFY_T2(NOTIFY_XEQ_DATA, &cryptonote_protocol_handler::handle_xeq_data)
 
     END_INVOKE_MAP2()
 
@@ -133,8 +132,6 @@ namespace cryptonote
     int handle_request_fluffy_missing_tx(int command, NOTIFY_REQUEST_FLUFFY_MISSING_TX::request& arg, cryptonote_connection_context& context);
 		int handle_notify_new_deregister_vote(int command, NOTIFY_NEW_DEREGISTER_VOTE::request& arg, cryptonote_connection_context& context);
 		int handle_uptime_proof(int command, NOTIFY_UPTIME_PROOF::request& arg, cryptonote_connection_context& context);
-
-		int handle_xeq_data(int command, NOTIFY_XEQ_DATA::request& arg, cryptonote_connection_context& context);
 
 
     int handle_notify_get_txpool_complement(int command, NOTIFY_GET_TXPOOL_COMPLEMENT::request& arg, cryptonote_connection_context& context);
@@ -189,10 +186,6 @@ namespace cryptonote
     void notify_new_stripe(cryptonote_connection_context &context, uint32_t stripe);
     void skip_unneeded_hashes(cryptonote_connection_context& context, bool check_block_queue) const;
     bool request_txpool_complement(cryptonote_connection_context &context);
-
-    //pythia - should probably make the generic relay channel
-    virtual bool relay_xeq_data(NOTIFY_XEQ_DATA::request& arg, cryptonote_connection_context& exclude_context);
-
 
     t_core& m_core;
 

@@ -572,26 +572,8 @@ namespace cryptonote
       return k;
     }
   };
-  //---------------------------------------------------------------
-  struct pythia_verifications
-  {
-    crypto::hash h;
-    crypto::public_key pubkey;
-    crypto::signature sig;
-    BEGIN_KV_SERIALIZE_MAP()
-      KV_SERIALIZE(h)
-      KV_SERIALIZE(pubkey)
-      KV_SERIALIZE(sig)
-    END_KV_SERIALIZE_MAP()
-  };
-
-  struct pythia_data
-  {
-    size_t height;
-    std::vector<pythia_verifications> verifications;
-    std::string data;
-  };
 }
+
 
 namespace std {
   template <>

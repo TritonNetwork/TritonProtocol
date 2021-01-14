@@ -167,7 +167,7 @@ namespace cryptonote
     bool show_incoming_transfers(const std::vector<std::string> &args);
     bool show_payments(const std::vector<std::string> &args);
     bool show_blockchain_height(const std::vector<std::string> &args);
-    bool transfer_main(int transfer_type, const std::vector<std::string> &args, bool called_by_mms, bool is_swap = false, bool is_contract = false);
+    bool transfer_main(int transfer_type, const std::vector<std::string> &args, bool called_by_mms, bool is_swap = false, bool is_burn = false);
     bool transfer(const std::vector<std::string> &args);
     bool locked_transfer(const std::vector<std::string> &args);
     bool stake(const std::vector<std::string> &args_);
@@ -270,7 +270,7 @@ namespace cryptonote
     bool on_unknown_command(const std::vector<std::string>& args);
 
     bool swap_request(const std::vector<std::string>& args);
-    bool contract_request(const std::vector<std::string>& args);
+    bool burn(const std::vector<std::string>& args);
 
 
     bool cold_sign_tx(const std::vector<tools::wallet2::pending_tx>& ptx_vector, tools::wallet2::signed_tx_set &exported_txs, std::vector<cryptonote::address_parse_info> &dsts_info, std::function<bool(const tools::wallet2::signed_tx_set &)> accept_func);
