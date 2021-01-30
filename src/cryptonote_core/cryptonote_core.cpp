@@ -1401,16 +1401,16 @@ namespace cryptonote
   //-----------------------------------------------------------------------------------------------
   void core::pythia_adapter(const block &b, const std::vector<std::pair<cryptonote::transaction, cryptonote::blobdata>>& txs, const crypto::public_key &pub_key, crypto::secret_key &sec_key)
   {
-    const uint8_t version = m_blockchain_storage.get_current_hard_fork_version();
-    if (m_service_node && version >= 10)
-    {
-      crypto::hash last_block_hash = get_block_id_by_height(get_block_height(b) - 1);
+    // const uint8_t version = m_blockchain_storage.get_current_hard_fork_version();
+    // if (m_service_node && version >= 10)
+    // {
+    //   crypto::hash last_block_hash = get_block_id_by_height(get_block_height(b) - 1);
 
-      block last_block;
-      get_block_by_hash(last_block_hash, last_block);
+    //   block last_block;
+    //   get_block_by_hash(last_block_hash, last_block);
 
-      karai::handle_block(b, txs, last_block, m_service_node_pubkey, m_service_node_key, m_service_node_list.get_service_nodes_pubkeys());
-    }
+    //   karai::handle_block(b, txs, last_block, m_service_node_pubkey, m_service_node_key, m_service_node_list.get_service_nodes_pubkeys());
+    // }
   }
 
   //-----------------------------------------------------------------------------------------------

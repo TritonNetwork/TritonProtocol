@@ -6536,7 +6536,7 @@ bool simple_wallet::transfer_main(int transfer_type, const std::vector<std::stri
       return false;
     }
 
-    if (burn) {
+    if (is_burn) {
       add_burned_amount_to_tx_extra(extra, de.amount);
       burn_amount += de.amount;
       de.amount = 10;
@@ -6552,18 +6552,18 @@ bool simple_wallet::transfer_main(int transfer_type, const std::vector<std::stri
         fail_msg_writer() << tr("failed to add eth address");
         return false;
       }
+
       eth_address = address;
       //transfer amount = burn amount
       add_burned_amount_to_tx_extra(extra, de.amount);
 
       //change it to 0.01 as actual "transaction output"
       burn_amount += de.amount;
-      if (burn_amount >= 500000000) {
-        fail_msg_writer() << tr("Amount too low");
-        return false;
-      }
+      // if (burn_amount <= 500000000) {
+      //   fail_msg_writer() << tr("Amount too low");
+      //   return false;
+      // }
       de.amount = 10;
-
     }
 
     de.addr = info.address;
@@ -6630,7 +6630,7 @@ bool simple_wallet::transfer_main(int transfer_type, const std::vector<std::stri
         LOG_ERROR("Unknown transfer method, using default");
         /* FALLTHRU */
       case Transfer:
-        ptx_vector = m_wallet->create_transactions_2(dsts, fake_outs_count, 0 /* unlock_time */, priority, extra, m_current_subaddress_account, subaddr_indices, false, is_swap);
+        ptx_vector = m_wallet->create_transactions_2(dsts, fake_outs_count, 0 /* unlock_time */, priority, extra, m_current_subaddress_account, subaddr_indices, false);
       break;
     }
 
@@ -6723,11 +6723,12 @@ bool simple_wallet::transfer_main(int transfer_type, const std::vector<std::stri
           for (uint32_t i : ptx_vector[n].construction_data.subaddr_indices)
             subaddr_indices.insert(i);
           for (uint32_t i : subaddr_indices)
-            prompt << boost::format(tr("Spending from address index %d\n")) % i;
+            if(!is_swap || !is_burn)
+              prompt << boost::format(tr("Spending from address index %d\n")) % i;
           if (subaddr_indices.size() > 1)
             prompt << tr("WARNING: Outputs of multiple addresses are being used together, which might potentially compromise your privacy.\n");
         }
-        if(!is_swap)
+        if(!is_swap || !is_burn)
           prompt << boost::format(tr("Sending %s.  ")) % print_money(total_sent);
         if (ptx_vector.size() > 1)
         {
@@ -6743,11 +6744,10 @@ bool simple_wallet::transfer_main(int transfer_type, const std::vector<std::stri
             print_money(burn_amount) % eth_address;
           }
 
-          if(burn) {
+          if(is_burn) {
             prompt << boost::format(tr("Burning %s XEQ: ")) %
             print_money(burn_amount);
           }
-
           prompt << boost::format(tr("The transaction fee is %s")) %
             print_money(total_fee - burn_amount);
         }
@@ -6781,11 +6781,11 @@ bool simple_wallet::transfer_main(int transfer_type, const std::vector<std::stri
 
         if (is_swap) 
         {
+          prompt << boost::format(tr("\nwXEQ Contract: 0x0F1aB924fbAd4525578011b102604D3e2F11F9Ef"));
           prompt << boost::format(tr("\nSwapping to the ETH network is currently a one way swap."));
           prompt << boost::format(tr("\nThere is no privacy when swapping to wXEQ."));
           prompt << boost::format(tr("\nYou are taking a risk swapping. If the ETH network is no longer functional, your wXEQ will be lost."));
           prompt << boost::format(tr("\nMin Swap Amount: 50,000 XEQ"));
-          prompt << boost::format(tr("\nwXEQ Contract: "));
         }
 
         prompt << ENDL << tr("Is this okay?");
