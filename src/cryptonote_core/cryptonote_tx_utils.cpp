@@ -206,6 +206,10 @@ namespace cryptonote
       {
         return 1000000 * COIN;
       }
+      else if(height == 500000))
+      { //wXEQ + extra wXEQ 1M LP rewards!
+        return 11000000 * COIN;
+      }
     }
     else if (nettype == STAGENET)
     {
