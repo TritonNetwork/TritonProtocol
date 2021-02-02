@@ -170,8 +170,8 @@ namespace cryptonote
         return 1000000 * COIN;
       } else if(height == 491431)
       {
-        //wXEQ pre-sale, will be burnt on height 491492
-        return 110000000 * COIN;
+        //wXEQ pre-sale, will be burnt on height 500100
+        return 11000000 * COIN;
       }
 
     }
