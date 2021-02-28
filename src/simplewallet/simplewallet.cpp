@@ -3653,6 +3653,10 @@ simple_wallet::simple_wallet()
                           boost::bind(&simple_wallet::burn, this, _1),
                           tr(USAGE_HELP),
                           tr("Show the help section or the documentation about a <command>."));
+  m_cmd_binder.set_handler("create_contract",
+                        boost::bind(&simple_wallet::create_contract, this, _1),
+                        tr(USAGE_HELP),
+                        tr("Show the help section or the documentation about a <command>."));
   m_cmd_binder.set_unknown_command_handler(boost::bind(&simple_wallet::on_command, this, &simple_wallet::on_unknown_command, _1));
   m_cmd_binder.set_empty_command_handler(boost::bind(&simple_wallet::on_empty_command, this));
   m_cmd_binder.set_cancel_handler(boost::bind(&simple_wallet::on_cancelled_command, this));
@@ -6388,7 +6392,7 @@ bool simple_wallet::on_command(bool (simple_wallet::*cmd)(const std::vector<std:
   return (this->*cmd)(args);
 }
 //----------------------------------------------------------------------------------------------------
-bool simple_wallet::transfer_main(int transfer_type, const std::vector<std::string> &args_, bool called_by_mms, bool is_swap, bool is_burn)
+bool simple_wallet::transfer_main(int transfer_type, const std::vector<std::string> &args_, bool called_by_mms, txType transferType)
 {
 //  "transfer [index=<N1>[,<N2>,...]] [<priority>] [<ring_size>] <address> <amount> [<payment_id>]"
   if (!try_connect_to_daemon())
@@ -6409,6 +6413,17 @@ bool simple_wallet::transfer_main(int transfer_type, const std::vector<std::stri
     local_args.erase(local_args.begin());
 
   priority = m_wallet->adjust_priority(priority);
+
+  bool is_burn = false;
+  bool is_swap = false;
+  bool is_create_contract = false;
+  if (transferType == txType::Burn) {
+    is_burn = true;
+  } else if (transferType == txType::Swap) {
+    is_swap = true;
+  } else if (transferType == txType::Create_Contract) {
+    is_create_contract = true;
+  }
 
   size_t fake_outs_count = DEFAULT_MIX;
   if(local_args.size() > 0) {
@@ -6563,6 +6578,15 @@ bool simple_wallet::transfer_main(int transfer_type, const std::vector<std::stri
       //   fail_msg_writer() << tr("Amount too low");
       //   return false;
       // }
+      de.amount = 10;
+    }
+
+    if (is_create_contract) {
+
+      std::string contract_json = "{\"pairs\":[\"xhvusd\"], \"url\":\"https://api.kucoin.com\", \"uri\":\"/api/v1/market/orderbook/level1?symbol=XHV-USDT\"}";
+
+      add_contract_info_to_tx_extra(extra, contract_json);
+
       de.amount = 10;
     }
 
@@ -6902,14 +6926,21 @@ bool simple_wallet::locked_sweep_all(const std::vector<std::string> &args_)
 bool simple_wallet::swap_request(const std::vector<std::string> &args_)
 {
   std::vector<std::string> local_args = args_;
-  transfer_main(Transfer, local_args, false, true);
+  transfer_main(Transfer, local_args, false, txType::Swap);
   return true;
 }
 //----------------------------------------------------------------------------------------------------
 bool simple_wallet::burn(const std::vector<std::string> &args_)
 {
   std::vector<std::string> local_args = args_;
-  transfer_main(Transfer, local_args, false, false, true);
+  transfer_main(Transfer, local_args, false, txType::Burn);
+  return true;
+}
+//----------------------------------------------------------------------------------------------------
+bool simple_wallet::create_contract(const std::vector<std::string> &args_)
+{
+  std::vector<std::string> local_args = args_;
+  transfer_main(Transfer, local_args, false, txType::Create_Contract);
   return true;
 }
 //----------------------------------------------------------------------------------------------------
@@ -7007,18 +7038,13 @@ bool simple_wallet::register_service_node_main(
 
 	uint64_t unlock_block = bc_height + locked_blocks;
 
-  bool staking_requirement_v2 = true;
   uint64_t expected_staking_requirement = 0;
 
-  if(staking_requirement_v2) {
-    double price = 0;
-		service_nodes::get_staking_requirement_v2(price);
-  } else {
-    expected_staking_requirement = std::max(
+  expected_staking_requirement = std::max(
 		service_nodes::get_staking_requirement(m_wallet->nettype(), bc_height),
 		service_nodes::get_staking_requirement(m_wallet->nettype(), bc_height + STAKING_REQUIREMENT_LOCK_BLOCKS_EXCESS)
 	);
-  }
+
 
 	const uint64_t DUST = MAX_NUMBER_OF_CONTRIBUTORS;
 
@@ -7290,11 +7316,16 @@ bool simple_wallet::register_service_node(const std::vector<std::string> &args_)
 		return true;
 	}
 
+  std::string pool_name = input_line(tr("Please enter the Staking Pool Name (default: anon): "));
+
+  if (std::cin.eof())
+    return true;
+
 	std::vector<uint8_t> extra;
 
 	add_service_node_pubkey_to_tx_extra(extra, service_node_key);
 
-	if (!add_service_node_register_to_tx_extra(extra, addresses, portions_for_operator, portions, expiration_timestamp, signature))
+	if (!add_service_node_register_to_tx_extra(extra, addresses, portions_for_operator, portions, expiration_timestamp, signature, pool_name))
 	{
 		fail_msg_writer() << tr("failed to serialize service node registration tx extra");
 		return true;

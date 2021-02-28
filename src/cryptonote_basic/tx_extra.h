@@ -49,6 +49,7 @@
 
 #define TX_EXTRA_TAG_BURN                     0x76
 #define TX_EXTRA_ETH_ADDRESS                  0x77
+#define TX_EXTRA_CONTRACT_INFO                0x78
 
 
 #define TX_EXTRA_NONCE_PAYMENT_ID             0x00
@@ -207,19 +208,21 @@ namespace cryptonote
  struct tx_extra_service_node_register
   {
     std::vector<crypto::public_key> m_public_spend_keys;
-   std::vector<crypto::public_key> m_public_view_keys;
-   uint64_t  m_portions_for_operator;
-   std::vector<uint64_t > m_portions;
-   uint64_t m_expiration_timestamp;
-   crypto::signature m_service_node_signature;
+    std::vector<crypto::public_key> m_public_view_keys;
+    uint64_t  m_portions_for_operator;
+    std::vector<uint64_t > m_portions;
+    uint64_t m_expiration_timestamp;
+    crypto::signature m_service_node_signature;
+    std::string m_pool_name;
 
     BEGIN_SERIALIZE()
       FIELD(m_public_spend_keys)
       FIELD(m_public_view_keys)
-	  FIELD(m_portions_for_operator)
+	    FIELD(m_portions_for_operator)
       FIELD(m_portions)
       FIELD(m_expiration_timestamp)
       FIELD(m_service_node_signature)
+      FIELD(m_pool_name)
     END_SERIALIZE()
 };
 struct tx_extra_service_node_contributor
@@ -277,6 +280,15 @@ struct tx_extra_service_node_deregister
     END_SERIALIZE()
   };
 
+  struct tx_extra_contract_info
+  {
+    std::string contract_json;
+
+    BEGIN_SERIALIZE()
+      FIELD(contract_json)
+    END_SERIALIZE()
+  };
+
   // tx_extra_field format, except tx_extra_padding and tx_extra_pub_key:
   //   varint tag;
   //   varint size;
@@ -294,7 +306,8 @@ struct tx_extra_service_node_deregister
 	 tx_extra_service_node_deregister,
 	 tx_extra_tx_secret_key,
    tx_extra_burn,
-   tx_extra_eth_address> tx_extra_field;
+   tx_extra_eth_address,
+   tx_extra_contract_info> tx_extra_field;
   }
   BLOB_SERIALIZER(cryptonote::tx_extra_service_node_deregister::vote);
 
@@ -312,3 +325,5 @@ struct tx_extra_service_node_deregister
   VARIANT_TAG(binary_archive, cryptonote::tx_extra_tx_secret_key, TX_EXTRA_TAG_TX_SECRET_KEY);
   VARIANT_TAG(binary_archive, cryptonote::tx_extra_burn,                        TX_EXTRA_TAG_BURN);
   VARIANT_TAG(binary_archive, cryptonote::tx_extra_eth_address,                        TX_EXTRA_ETH_ADDRESS);
+  VARIANT_TAG(binary_archive, cryptonote::tx_extra_contract_info,                        TX_EXTRA_CONTRACT_INFO);
+

@@ -149,11 +149,8 @@ namespace service_nodes
 
 	bool quorum_cop::handle_uptime_proof(const cryptonote::NOTIFY_UPTIME_PROOF::request &proof, bool &my_uptime_proof_confirmation)
 	{
-
 		crypto::public_key my_pubkey;
 		crypto::secret_key my_seckey;
-		if (!m_core.get_service_node_keys(my_pubkey, my_seckey))
-			return false;
 
 		uint64_t now = time(nullptr);
 

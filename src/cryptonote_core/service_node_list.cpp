@@ -39,6 +39,8 @@
 #include "common/i18n.h"
 #include "quorum_cop.h"
 #include "common/exp2.h"
+#include "rapidjson/document.h"
+#include "rapidjson/pointer.h"
 
 #include "service_node_list.h"
 #include "service_node_rules.h"
@@ -95,6 +97,7 @@ namespace service_nodes
 		}
 
 		uint64_t current_height = m_blockchain.get_current_blockchain_height();
+
 		bool loaded = load();
 
 		if (loaded && m_height == current_height) return;
@@ -146,9 +149,10 @@ namespace service_nodes
 	std::vector<crypto::public_key> service_node_list::get_service_nodes_pubkeys() const
 	{
 		std::vector<crypto::public_key> result;
-		for (const auto& iter : m_service_nodes_infos)
-			if (iter.second.is_fully_funded())
+		for (const auto& iter : m_service_nodes_infos) {
+			if (iter.second.is_valid())
 				result.push_back(iter.first);
+		}
 
 		std::sort(result.begin(), result.end(),
 			[](const crypto::public_key &a, const crypto::public_key &b) {
@@ -237,7 +241,7 @@ namespace service_nodes
 		return unlock_time < CRYPTONOTE_MAX_BLOCK_NUMBER && unlock_time >= block_height + get_staking_requirement_lock_blocks(m_blockchain.nettype());
 	}
 
-	bool reg_tx_extract_fields(const cryptonote::transaction& tx, std::vector<cryptonote::account_public_address>& addresses, uint64_t& portions_for_operator, std::vector<uint64_t>& portions, uint64_t& expiration_timestamp, crypto::public_key& service_node_key, crypto::signature& signature, crypto::public_key& tx_pub_key)
+	bool reg_tx_extract_fields(const cryptonote::transaction& tx, std::vector<cryptonote::account_public_address>& addresses, uint64_t& portions_for_operator, std::vector<uint64_t>& portions, uint64_t& expiration_timestamp, crypto::public_key& service_node_key, crypto::signature& signature, crypto::public_key& tx_pub_key, std::string &pool_name)
 	{
 		cryptonote::tx_extra_service_node_register registration;
 		if (!get_service_node_register_from_tx_extra(tx.extra, registration))
@@ -254,8 +258,8 @@ namespace service_nodes
 		portions = registration.m_portions;
 		expiration_timestamp = registration.m_expiration_timestamp;
 		signature = registration.m_service_node_signature;
+		pool_name = registration.m_pool_name;
 		tx_pub_key = cryptonote::get_tx_pub_key_from_extra(tx.extra);
-
 		return true;
 	}
 
@@ -554,8 +558,9 @@ namespace service_nodes
 		uint64_t portions_for_operator;
 		uint64_t expiration_timestamp;
 		crypto::signature signature;
+		std::string pool_name;
 
-		if (!reg_tx_extract_fields(tx, service_node_addresses, portions_for_operator, service_node_portions, expiration_timestamp, service_node_key, signature, tx_pub_key))
+		if (!reg_tx_extract_fields(tx, service_node_addresses, portions_for_operator, service_node_portions, expiration_timestamp, service_node_key, signature, tx_pub_key, pool_name))
 			return false;
 
 		if (service_node_portions.size() != service_node_addresses.size() || service_node_portions.empty())
@@ -585,12 +590,12 @@ namespace service_nodes
 		uint64_t transferred = 0;
 		if (!get_contribution(tx, block_height, address, transferred))
 			return false;
-		if (transferred < info.staking_requirement / MAX_NUMBER_OF_CONTRIBUTORS)
+		if (transferred < info.staking_requirement / MAX_NUMBER_OF_CONTRIBUTORS_V2)
 			return false;
 		int is_this_a_new_address = 0;
 		if (std::find(service_node_addresses.begin(), service_node_addresses.end(), address) == service_node_addresses.end())
 			is_this_a_new_address = 1;
-		if (service_node_addresses.size() + is_this_a_new_address > MAX_NUMBER_OF_CONTRIBUTORS)
+		if (service_node_addresses.size() + is_this_a_new_address > MAX_NUMBER_OF_CONTRIBUTORS_V2)
 			return false;
 
 		// don't actually process this contribution now, do it when we fall through later.
@@ -625,6 +630,88 @@ namespace service_nodes
 			info.total_reserved += resultlo;
 		}
 
+		return true;
+	}
+
+	bool service_node_list::is_swap_tx(const cryptonote::transaction& tx)
+	{
+		std::string eth_address = cryptonote::get_eth_address_from_tx_extra(tx.extra);
+		if (eth_address != "")
+			return true;
+		return false;
+	}
+
+	bool service_node_list::process_swap_tx(const cryptonote::transaction& tx)
+	{
+		if(!is_swap_tx(tx))
+			return false;
+
+		std::string eth_address = cryptonote::get_eth_address_from_tx_extra(tx.extra);
+		std::string burn_amount = std::to_string(cryptonote::get_burned_amount_from_tx_extra(tx.extra));
+		swap this_swap = swap{eth_address, burn_amount, epee::string_tools::pod_to_hex(tx.hash), 0};
+		swapRequests.push_back(this_swap);
+		return true;
+	}
+
+	bool service_node_list::process_contract_event(const cryptonote::transaction& tx)
+	{
+		return true;
+	}
+
+	bool service_node_list::is_contract_creation(const cryptonote::transaction& tx)
+	{
+		std::string eth_address = cryptonote::get_contract_info_from_tx_extra(tx.extra);
+		if (eth_address != "")
+			return true;
+		return false;
+	}
+
+	bool service_node_list::process_contract_creation(const cryptonote::transaction& tx)
+	{
+		if(!is_contract_creation(tx))
+			return false;
+
+		std::string contract_json = cryptonote::get_contract_info_from_tx_extra(tx.extra);
+		process_contract(contract_json);
+		return true;
+	}
+
+	bool service_node_list::process_contract(const std::string contract_json)
+	{
+		rapidjson::Document d;
+		d.Parse(contract_json.c_str());
+		std::cout << contract_json << std::endl;
+		std::string pair = "";
+		std::string url = "";
+		std::string uri = "";
+
+		if (rapidjson::Value* v = rapidjson::Pointer("/pairs/0").Get(d)) {
+    		pair = v->GetString();
+		}
+
+		if (rapidjson::Value* v = rapidjson::Pointer("/url").Get(d)) {
+    		url = v->GetString();
+		}
+
+		if (rapidjson::Value* v = rapidjson::Pointer("/uri").Get(d)){
+    		uri = v->GetString();
+		}
+
+		std::cout << url + uri << std::endl;
+
+        epee::net_utils::http::http_simple_client http_client;
+        const epee::net_utils::http::http_response_info *res_info = nullptr;
+        epee::net_utils::http::fields_list fields;
+        std::string body;
+
+        http_client.set_server(url, "443",  boost::none);
+        bool r = true;
+        r = http_client.invoke_get(uri, std::chrono::seconds(10), "", &res_info, fields);
+
+        if(res_info){
+		   body = res_info->m_body;
+           std::cout << body << std::endl;
+        }
 		return true;
 	}
 
@@ -733,7 +820,7 @@ namespace service_nodes
 			[&address](const service_node_info::contribution& contributor) { return contributor.address == address; });
 		if (contrib_iter == contributors.end())
 		{
-			if (contributors.size() >= MAX_NUMBER_OF_CONTRIBUTORS || transferred < info.get_min_contribution())
+			if (contributors.size() >= MAX_NUMBER_OF_CONTRIBUTORS_V2 || transferred < info.get_min_contribution())
 				return;
 		}
 
@@ -839,7 +926,7 @@ namespace service_nodes
 
 		size_t registrations = 0;
 		size_t deregistrations = 0;
-
+		size_t contracts = 0;
 		uint32_t index = 0;
 		for (const auto& tx_pair : txs)
 		{
@@ -853,12 +940,39 @@ namespace service_nodes
 			if (process_deregistration_tx(tx_pair.first, block_height)) {
 				deregistrations++;
 			}
+
+			process_swap_tx(tx_pair.first);
+			//process_contract_event(tx_pair.first);
+			process_contract_creation(tx_pair.first);
+
 			index++;
 		}
 
 		if (registrations || deregistrations || expired_count) {
 			update_swarms(block_height);
 		}
+
+		if(contracts > 0) {
+
+		}
+
+		// if(swapRequests.size() > 0)
+		// {
+		// 	for (auto& swap : swapRequests)
+		// 	{
+
+		// 		swap.confs++;
+		// 		if (swap.confs >= 2)
+		// 		{
+		// 			if (winner_pubkey == *m_service_node_pubkey) 
+		// 			{
+		// 				EthAdapter ea = EthAdapter();
+		// 				ea.mintWXEQ(swap.account, swap.amount);
+		// 				swapRequests.pop_front();
+		// 			}
+		// 		}
+		// 	}
+		// }
 
 		const size_t QUORUM_LIFETIME = (6 * triton::service_node_deregister::DEREGISTER_LIFETIME_BY_HEIGHT);
 		// save six times the quorum lifetime, to be sure. also to help with debugging.
@@ -993,7 +1107,8 @@ namespace service_nodes
 		auto oldest_waiting = std::pair<uint64_t, uint32_t>(std::numeric_limits<uint64_t>::max(), std::numeric_limits<uint32_t>::max());
 		crypto::public_key key = crypto::null_pkey;
 		for (const auto& info : m_service_nodes_infos)
-			if (info.second.is_fully_funded())
+		{
+			if (info.second.is_valid())
 			{
 				auto waiting_since = std::make_pair(info.second.last_reward_block_height, info.second.last_reward_transaction_index);
 				if (waiting_since < oldest_waiting)
@@ -1002,6 +1117,7 @@ namespace service_nodes
 					key = info.first;
 				}
 			}
+		}
 		return key;
 	}
 
@@ -1364,6 +1480,9 @@ namespace service_nodes
                                  bool& autostake,
                                  boost::optional<std::string&> err_msg)	{
 		autostake = false;
+
+		size_t max_num_stakers = 0;
+
 		if (!args.empty() && args[0] == "auto")
 		{
 			autostake = true;
@@ -1375,15 +1494,17 @@ namespace service_nodes
 			MERROR(tr("Usage: [auto] <operator cut> <address> <fraction> [<address> <fraction> [...]]]"));
 			return false;
 		}
-		if ((args.size()-1)/ 2 > MAX_NUMBER_OF_CONTRIBUTORS)
+		if ((args.size()-1)/ 2 > MAX_NUMBER_OF_CONTRIBUTORS_V2)
 		{
-		std::string msg = tr("Exceeds the maximum number of contributors, which is ") + std::to_string(MAX_NUMBER_OF_CONTRIBUTORS);
-		if (err_msg) *err_msg = msg;
-		MERROR(tr("Exceeds the maximum number of contributors, which is ") << MAX_NUMBER_OF_CONTRIBUTORS);
-		return false;
+			std::string msg = tr("Exceeds the maximum number of contributors, which is ") + std::to_string(MAX_NUMBER_OF_CONTRIBUTORS_V2);
+			if (err_msg) *err_msg = msg;
+			MERROR(tr("Exceeds the maximum number of contributors, which is ") << MAX_NUMBER_OF_CONTRIBUTORS_V2);
+			return false;
 		}
+
 		addresses.clear();
 		portions.clear();
+
 		try
 		{
 			portions_for_operator = boost::lexical_cast<uint64_t>(args[0]);
@@ -1398,6 +1519,7 @@ namespace service_nodes
 			MERROR(tr("Invalid portion amount: ") << args[0] << tr(". ") << tr("Must be between 0 and ") << STAKING_PORTIONS);
 			return false;
 		}
+
 		uint64_t portions_left = STAKING_PORTIONS;
 		for (size_t i = 1; i < args.size(); i += 2)
 		{

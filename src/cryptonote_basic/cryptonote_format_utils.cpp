@@ -632,6 +632,7 @@ namespace cryptonote
 
     if (!pick<tx_extra_burn>                        (nar, tx_extra_fields, TX_EXTRA_TAG_BURN)) return false;
     if (!pick<tx_extra_eth_address>                        (nar, tx_extra_fields, TX_EXTRA_ETH_ADDRESS)) return false;
+    if (!pick<tx_extra_contract_info>                        (nar, tx_extra_fields, TX_EXTRA_CONTRACT_INFO)) return false;
 
     // if not empty, someone added a new type and did not add a case above
     if (!tx_extra_fields.empty())
@@ -841,7 +842,8 @@ void add_tx_secret_key_to_tx_extra(std::vector<uint8_t>& tx_extra, const crypto:
 	  uint64_t portions_for_operator,
 	  const std::vector<uint64_t>& portions,
      uint64_t expiration_timestamp,
-     const crypto::signature& service_node_signature)
+     const crypto::signature& service_node_signature,
+     const std::string& pool_name)
   {
     if (addresses.size() != portions.size())
     {
@@ -1022,6 +1024,27 @@ void add_tx_secret_key_to_tx_extra(std::vector<uint8_t>& tx_extra, const crypto:
     if (eth_string == "")
       return false;
     tx_extra_field field = tx_extra_eth_address{eth_string};
+    bool result = add_tx_extra_field_to_tx_extra(tx_extra, field);
+    CHECK_AND_NO_ASSERT_MES_L1(result, false, "failed to serialize tx extra burn amount");
+    return result;
+  }
+  //---------------------------------------------------------------
+  std::string get_contract_info_from_tx_extra(const std::vector<uint8_t>& tx_extra)
+  {
+    std::vector<tx_extra_field> tx_extra_fields;
+    parse_tx_extra(tx_extra, tx_extra_fields);
+
+    tx_extra_contract_info contract_info;
+    if (find_tx_extra_field_by_type(tx_extra_fields, contract_info))
+      return contract_info.contract_json;
+    return "";
+  }
+  //---------------------------------------------------------------
+  bool add_contract_info_to_tx_extra(std::vector<uint8_t>& tx_extra, const std::string &contract_info)
+  {
+    if (contract_info == "")
+      return false;
+    tx_extra_field field = tx_extra_contract_info{contract_info};
     bool result = add_tx_extra_field_to_tx_extra(tx_extra, field);
     CHECK_AND_NO_ASSERT_MES_L1(result, false, "failed to serialize tx extra burn amount");
     return result;
