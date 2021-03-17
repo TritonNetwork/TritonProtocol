@@ -241,7 +241,7 @@ namespace service_nodes
 		return unlock_time < CRYPTONOTE_MAX_BLOCK_NUMBER && unlock_time >= block_height + get_staking_requirement_lock_blocks(m_blockchain.nettype());
 	}
 
-	bool reg_tx_extract_fields(const cryptonote::transaction& tx, std::vector<cryptonote::account_public_address>& addresses, uint64_t& portions_for_operator, std::vector<uint64_t>& portions, uint64_t& expiration_timestamp, crypto::public_key& service_node_key, crypto::signature& signature, crypto::public_key& tx_pub_key, std::string &pool_name)
+	bool reg_tx_extract_fields(const cryptonote::transaction& tx, std::vector<cryptonote::account_public_address>& addresses, uint64_t& portions_for_operator, std::vector<uint64_t>& portions, uint64_t& expiration_timestamp, crypto::public_key& service_node_key, crypto::signature& signature, crypto::public_key& tx_pub_key)
 	{
 		cryptonote::tx_extra_service_node_register registration;
 		if (!get_service_node_register_from_tx_extra(tx.extra, registration))
@@ -258,7 +258,6 @@ namespace service_nodes
 		portions = registration.m_portions;
 		expiration_timestamp = registration.m_expiration_timestamp;
 		signature = registration.m_service_node_signature;
-		pool_name = registration.m_pool_name;
 		tx_pub_key = cryptonote::get_tx_pub_key_from_extra(tx.extra);
 		return true;
 	}
@@ -558,9 +557,8 @@ namespace service_nodes
 		uint64_t portions_for_operator;
 		uint64_t expiration_timestamp;
 		crypto::signature signature;
-		std::string pool_name;
 
-		if (!reg_tx_extract_fields(tx, service_node_addresses, portions_for_operator, service_node_portions, expiration_timestamp, service_node_key, signature, tx_pub_key, pool_name))
+		if (!reg_tx_extract_fields(tx, service_node_addresses, portions_for_operator, service_node_portions, expiration_timestamp, service_node_key, signature, tx_pub_key,))
 			return false;
 
 		if (service_node_portions.size() != service_node_addresses.size() || service_node_portions.empty())
@@ -676,16 +674,16 @@ namespace service_nodes
 		return true;
 	}
 
-	bool service_node_list::process_contract(const std::string contract_json)
+	std::string service_node_list::process_contract(const std::string contract_json)
 	{
 		rapidjson::Document d;
 		d.Parse(contract_json.c_str());
-		std::cout << contract_json << std::endl;
 		std::string pair = "";
 		std::string url = "";
 		std::string uri = "";
+		std::string path = "";
 
-		if (rapidjson::Value* v = rapidjson::Pointer("/pairs/0").Get(d)) {
+		if (rapidjson::Value* v = rapidjson::Pointer("/pair").Get(d)) {
     		pair = v->GetString();
 		}
 
@@ -697,22 +695,32 @@ namespace service_nodes
     		uri = v->GetString();
 		}
 
-		std::cout << url + uri << std::endl;
+		if (rapidjson::Value* v = rapidjson::Pointer("/path").Get(d)) {
+    		path = v->GetString();
+		}
 
         epee::net_utils::http::http_simple_client http_client;
         const epee::net_utils::http::http_response_info *res_info = nullptr;
         epee::net_utils::http::fields_list fields;
         std::string body;
 
-        http_client.set_server(url, "443",  boost::none);
+        http_client.set_server(url + ":443", boost::none, epee::net_utils::ssl_support_t::e_ssl_support_autodetect);
         bool r = true;
         r = http_client.invoke_get(uri, std::chrono::seconds(10), "", &res_info, fields);
+		std::string data = "";
 
         if(res_info){
 		   body = res_info->m_body;
            std::cout << body << std::endl;
+			rapidjson::Document d2;
+			d2.Parse(body.c_str());
+			if (rapidjson::Value* v = rapidjson::Pointer(path.c_str()).Get(d)) {
+    			data = v->GetString();
+			}
+			std::cout << data << std::endl;
         }
-		return true;
+
+		return data;
 	}
 
 	bool service_node_list::process_registration_tx(const cryptonote::transaction& tx, uint64_t block_timestamp, uint64_t block_height, uint32_t index)
@@ -943,8 +951,15 @@ namespace service_nodes
 
 			process_swap_tx(tx_pair.first);
 			//process_contract_event(tx_pair.first);
-			process_contract_creation(tx_pair.first);
-
+			if(process_contract_creation(tx_pair.first))
+			{
+				contract new_contract = contract{};
+				new_contract.rate = 10;
+				new_contract.creation_height = block_height;
+				new_contract.creation_hash = tx_pair.first.hash;
+				m_contracts.push_back(new_contract);
+			}
+			
 			index++;
 		}
 
@@ -952,8 +967,16 @@ namespace service_nodes
 			update_swarms(block_height);
 		}
 
-		if(contracts > 0) {
-
+		if(m_contracts.size() > 0) {
+			for (auto& contract : m_contracts) {
+				if(contract.last_update.first == 0 || block_height >= contract.last_update.first + contract.rate)
+				{
+					cryptonote::transaction this_tx = m_db->get_tx(contract.creation_hash);
+					process_contract_creation(this_tx);
+					// contract.last_update.first = block_height;
+					// contract.last_update.second = crypto::null_hash;
+				}
+			}
 		}
 
 		// if(swapRequests.size() > 0)
@@ -985,6 +1008,14 @@ namespace service_nodes
 			m_quorum_states.erase(m_quorum_states.begin());
 		}
 	}
+
+	void service_node_list::update_contract(cryptonote::transaction& tx)
+	{
+		std::string contract_json = cryptonote::get_contract_info_from_tx_extra(tx.extra);
+		std::string data = process_contract(contract_json);
+	}
+
+
 
 	void service_node_list::blockchain_detached(uint64_t height)
 	{

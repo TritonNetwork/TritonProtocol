@@ -2369,13 +2369,6 @@ static void print_service_node_list_state(cryptonote::network_type nettype, int 
 		{
 			tools::msg_writer(color) << indent1 << "[" << i << "] Oracle Node: " << entry.service_node_pubkey;
 
-      if (entry.contributors.size() > 1)
-      {
-        tools::msg_writer(console_color_red) << indent1 << "Oracle Node Pool: " << entry.pool_name;
-        tools::msg_writer() << "";
-			  tools::msg_writer() << "";
-      }
-
 			tools::msg_writer() << indent2 << "Total Contributed/Staking Requirement: " << cryptonote::print_money(entry.total_contributed) << "/" << cryptonote::print_money(entry.staking_requirement);
 			tools::msg_writer() << indent2 << "Total Reserved: " << cryptonote::print_money(entry.total_reserved);
 		}

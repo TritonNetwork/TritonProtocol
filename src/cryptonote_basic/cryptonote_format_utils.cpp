@@ -837,19 +837,19 @@ void add_tx_secret_key_to_tx_extra(std::vector<uint8_t>& tx_extra, const crypto:
   }
   //---------------------------------------------------------------
   bool add_service_node_register_to_tx_extra(
-     std::vector<uint8_t>& tx_extra,
-     const std::vector<cryptonote::account_public_address>& addresses,
-	  uint64_t portions_for_operator,
-	  const std::vector<uint64_t>& portions,
-     uint64_t expiration_timestamp,
-     const crypto::signature& service_node_signature,
-     const std::string& pool_name)
+    std::vector<uint8_t>& tx_extra,
+    const std::vector<cryptonote::account_public_address>& addresses,
+    uint64_t portions_for_operator,
+    const std::vector<uint64_t>& portions,
+    uint64_t expiration_timestamp,
+    const crypto::signature& service_node_signature)
   {
     if (addresses.size() != portions.size())
     {
       LOG_ERROR("Tried to serialize registration with more addresses than portions, this should never happen");
       return false;
     }
+    
     std::vector<crypto::public_key> public_view_keys(addresses.size());
     std::vector<crypto::public_key> public_spend_keys(addresses.size());
     for (size_t i = 0; i < addresses.size(); i++)
@@ -862,7 +862,7 @@ void add_tx_secret_key_to_tx_extra(std::vector<uint8_t>& tx_extra, const crypto:
       tx_extra_service_node_register{
         public_spend_keys,
         public_view_keys,
-		portions_for_operator,
+		    portions_for_operator,
         portions,
         expiration_timestamp,
         service_node_signature

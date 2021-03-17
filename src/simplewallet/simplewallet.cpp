@@ -73,6 +73,8 @@
 #include "crypto/crypto.h"  // for crypto::secret_key definition
 #include "mnemonics/electrum-words.h"
 #include "rapidjson/document.h"
+#include "rapidjson/writer.h"
+#include "rapidjson/stringbuffer.h"
 #include "common/json_util.h"
 #include "ringct/rctSigs.h"
 #include "multisig/multisig.h"
@@ -6391,6 +6393,16 @@ bool simple_wallet::on_command(bool (simple_wallet::*cmd)(const std::vector<std:
   check_for_inactivity_lock(false);
   return (this->*cmd)(args);
 }
+
+std::string jsonString(const rapidjson::Document& d)
+{
+    rapidjson::StringBuffer strbuf;
+    rapidjson::Writer<rapidjson::StringBuffer> writer(strbuf);
+    d.Accept(writer);
+
+    return strbuf.GetString();
+}
+
 //----------------------------------------------------------------------------------------------------
 bool simple_wallet::transfer_main(int transfer_type, const std::vector<std::string> &args_, bool called_by_mms, txType transferType)
 {
@@ -6583,9 +6595,54 @@ bool simple_wallet::transfer_main(int transfer_type, const std::vector<std::stri
 
     if (is_create_contract) {
 
-      std::string contract_json = "{\"pairs\":[\"xhvusd\"], \"url\":\"https://api.kucoin.com\", \"uri\":\"/api/v1/market/orderbook/level1?symbol=XHV-USDT\"}";
+      std::string pair_name = input_line(tr("Please enter the pair name (example: XEQ/USD): "));
+      std::string url = input_line(tr("Please enter the url name (example: https://api.kucoin.com): "));
+      std::string uri = input_line(tr("Please enter the url name (example: /api/v1/market/orderbook/level1?symbol=BTC-USDT): "));
+      std::string data_path_needed = input_line(tr("Please enter the json path for written data (example: /data/price): "));
+      std::string type = input_line(tr("Please select type: (example: aggergate/cross-aggergate): "));
 
-      add_contract_info_to_tx_extra(extra, contract_json);
+      std::string cross_contract_hash = "";
+      if(type == "cross-aggergate")
+      {
+        cross_contract_hash = input_line(tr("Please enter the cross-currency contract hash (example: XEQ/BTC can use BTC/USD to create XEQ/USD): "));
+      }
+
+      rapidjson::Document d;
+
+      d.SetObject();
+      rapidjson::Document::AllocatorType& a = d.GetAllocator();
+
+      rapidjson::Value pairs_;
+      pairs_.SetString(pair_name.c_str(), a);
+      d.AddMember("pair", pairs_, a);
+
+      rapidjson::Value url_;
+      url_.SetString(url.c_str(), a);
+      d.AddMember("url", url_, a);
+
+      rapidjson::Value uri_;
+      uri_.SetString(uri.c_str(), a);
+      d.AddMember("uri", uri_, a);
+
+      rapidjson::Value data_path_;
+      data_path_.SetString(data_path_needed.c_str(), a);
+      d.AddMember("path", data_path_, a);
+
+      rapidjson::Value type_;
+      type_.SetString(type.c_str(), a);
+      d.AddMember("type", type_, a);
+
+      if(type == "cross-aggergate") 
+      {
+        rapidjson::Value cross_contract_hash_;
+        cross_contract_hash_.SetString(cross_contract_hash.c_str(), a);
+        d.AddMember("cross_currency_hash", cross_contract_hash_, a);
+      }
+
+      //std::string contract_json = "{\"pairs\":[\"xhvusd\"], \"url\":\"https://api.kucoin.com\", \"uri\":\"/api/v1/market/orderbook/level1?symbol=XHV-USDT\"}";
+      std::cout << jsonString(d) << std::endl;
+
+      add_contract_info_to_tx_extra(extra, jsonString(d));
 
       de.amount = 10;
     }
@@ -7315,17 +7372,12 @@ bool simple_wallet::register_service_node(const std::vector<std::string> &args_)
 		fail_msg_writer() << tr("failed to parse service node signature");
 		return true;
 	}
-
-  std::string pool_name = input_line(tr("Please enter the Staking Pool Name (default: anon): "));
-
-  if (std::cin.eof())
-    return true;
-
+  
 	std::vector<uint8_t> extra;
 
 	add_service_node_pubkey_to_tx_extra(extra, service_node_key);
 
-	if (!add_service_node_register_to_tx_extra(extra, addresses, portions_for_operator, portions, expiration_timestamp, signature, pool_name))
+	if (!add_service_node_register_to_tx_extra(extra, addresses, portions_for_operator, portions, expiration_timestamp, signature))
 	{
 		fail_msg_writer() << tr("failed to serialize service node registration tx extra");
 		return true;

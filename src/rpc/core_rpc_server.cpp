@@ -3466,7 +3466,8 @@ namespace cryptonote
 		  entry.last_reward_block_height = pubkey_info.info.last_reward_block_height;
 		  entry.last_reward_transaction_index = pubkey_info.info.last_reward_transaction_index;
 		  entry.last_uptime_proof = m_core.get_uptime_proof(pubkey_info.pubkey);
-      entry.pool_name = pubkey_info.info.pool_name;
+      entry.is_pool = entry.contributors.size() > 0;
+      
 
 		  entry.contributors.reserve(pubkey_info.info.contributors.size());
 		  for (service_nodes::service_node_info::contribution const &contributor : pubkey_info.info.contributors)

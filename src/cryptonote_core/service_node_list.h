@@ -64,17 +64,17 @@ namespace service_nodes
 
 	using swarm_id_t = uint64_t;
 
-	struct contract_info
+	struct contract
 	{
 		struct payment 
 		{
 			uint64_t amount;
 		};
 
-		uint64_t registration_height;
-		crypto::hash contractPointer;
-
-		std::string contract_json;
+		uint64_t creation_height;
+		crypto::hash creation_hash;
+		std::pair<uint64_t, crypto::hash> last_update;
+		uint64_t rate;
 	};
 
 	struct service_node_info // registration information
@@ -116,7 +116,6 @@ namespace service_nodes
 		uint64_t portions_for_operator;
 		swarm_id_t swarm_id;
 		cryptonote::account_public_address operator_address;
-		std::string pool_name = "anon";
 
 		bool is_valid() const { return total_contributed >= total_reserved; }
 		bool is_fully_funded() const { return total_contributed >= staking_requirement; }
@@ -138,10 +137,6 @@ namespace service_nodes
 			VARINT_FIELD(portions_for_operator)
 			if (version >= service_node_info::version_1_swarms) {
 				VARINT_FIELD(swarm_id)
-			}
-			if (version >= service_node_info::version_pool_upgrade)
-			{
-				FIELD(pool_name)
 			}
 		    FIELD(operator_address)
 		END_SERIALIZE()
@@ -317,12 +312,14 @@ namespace service_nodes
 		{
 			uint64_t height; //register height
 			crypto::hash registerHash; //register hash;
-			uint64_t balance; //balance of contract
-
+			uint64_t balance; //balance of contract for payments
+			std::pair<uint64_t, std::string> last_data; //index of last data submission / data
+			
 			BEGIN_SERIALIZE()
 				FIELD(height)
 				FIELD(registerHash)
 				FIELD(balance)
+				FIELD(last_data)
 			END_SERIALIZE()		
 		};
 
@@ -340,6 +337,7 @@ namespace service_nodes
 				FIELD(quorum_states)
 				FIELD(infos)
 				FIELD(events)
+				FIELD(contracts)
 				FIELD(height)
 			END_SERIALIZE()
 		};
@@ -355,7 +353,8 @@ namespace service_nodes
 		bool process_swap_tx(const cryptonote::transaction& tx);
 		bool process_contract_event(const cryptonote::transaction& tx);
 		bool process_contract_creation(const cryptonote::transaction& tx);
-		bool process_contract(const std::string contract_jso);
+		std::string process_contract(const std::string contract_jso);
+	    void update_contract(cryptonote::transaction& tx);
 
 		void block_added_generic(const cryptonote::block& blck, const std::vector<std::pair<cryptonote::transaction, cryptonote::blobdata>>& txs);
 
@@ -387,10 +386,12 @@ namespace service_nodes
 		cryptonote::BlockchainDB* m_db;
 
 		std::map<block_height, std::shared_ptr<const quorum_state>> m_quorum_states;
+
+		std::vector<contract> m_contracts;
 	};
 
 	uint64_t get_reg_tx_staking_output_contribution(const cryptonote::transaction& tx, int i, crypto::key_derivation derivation, hw::device& hwdev);
-	bool reg_tx_extract_fields(const cryptonote::transaction& tx, std::vector<cryptonote::account_public_address>& addresses, uint64_t& portions_for_operator, std::vector<uint64_t>& portions, uint64_t& expiration_timestamp, crypto::public_key& service_node_key, crypto::signature& signature, crypto::public_key& tx_pub_key, std::string &pool_name);
+	bool reg_tx_extract_fields(const cryptonote::transaction& tx, std::vector<cryptonote::account_public_address>& addresses, uint64_t& portions_for_operator, std::vector<uint64_t>& portions, uint64_t& expiration_timestamp, crypto::public_key& service_node_key, crypto::signature& signature, crypto::public_key& tx_pub_key);
 
   	bool convert_registration_args(cryptonote::network_type nettype, std::vector<std::string> args, std::vector<cryptonote::account_public_address>& addresses, std::vector<uint64_t>& portions, uint64_t& portions_for_operator, bool& autostake, boost::optional<std::string&> err_msg);
 	bool make_registration_cmd(cryptonote::network_type nettype, const std::vector<std::string> args, const crypto::public_key& service_node_pubkey,

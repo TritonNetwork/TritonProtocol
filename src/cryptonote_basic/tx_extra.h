@@ -50,7 +50,8 @@
 #define TX_EXTRA_TAG_BURN                     0x76
 #define TX_EXTRA_ETH_ADDRESS                  0x77
 #define TX_EXTRA_CONTRACT_INFO                0x78
-
+#define TX_EXTRA_CONTRACT_STATE               0x79
+#define TX_EXTRA_CONTRACT_INTERACTION         0x80
 
 #define TX_EXTRA_NONCE_PAYMENT_ID             0x00
 #define TX_EXTRA_NONCE_ENCRYPTED_PAYMENT_ID   0x01
@@ -213,7 +214,6 @@ namespace cryptonote
     std::vector<uint64_t > m_portions;
     uint64_t m_expiration_timestamp;
     crypto::signature m_service_node_signature;
-    std::string m_pool_name;
 
     BEGIN_SERIALIZE()
       FIELD(m_public_spend_keys)
@@ -222,7 +222,6 @@ namespace cryptonote
       FIELD(m_portions)
       FIELD(m_expiration_timestamp)
       FIELD(m_service_node_signature)
-      FIELD(m_pool_name)
     END_SERIALIZE()
 };
 struct tx_extra_service_node_contributor

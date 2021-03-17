@@ -3185,7 +3185,7 @@ namespace cryptonote
 			  uint64_t                           staking_requirement;
 			  uint64_t                           portions_for_operator;
 			  std::string                        operator_address;
-			  std::string                        pool_name;
+        bool                               is_pool;
 
 			  BEGIN_KV_SERIALIZE_MAP()
 				  KV_SERIALIZE(service_node_pubkey)
@@ -3199,7 +3199,7 @@ namespace cryptonote
 				  KV_SERIALIZE(staking_requirement)
 				  KV_SERIALIZE(portions_for_operator)
 				  KV_SERIALIZE(operator_address)
-          KV_SERIALIZE(pool_name)
+          KV_SERIALIZE(is_pool)
 			  END_KV_SERIALIZE_MAP()
 		  };
 
