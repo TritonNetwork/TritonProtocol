@@ -148,9 +148,11 @@ namespace service_nodes
 
 	std::vector<crypto::public_key> service_node_list::get_service_nodes_pubkeys() const
 	{
+		int hard_fork_version = m_blockchain.get_hard_fork_version(m_height);
 		std::vector<crypto::public_key> result;
 		for (const auto& iter : m_service_nodes_infos) {
-			if (iter.second.is_valid())
+			//if(iter.second.is_valid())
+			if ((iter.second.is_valid() && hard_fork_version > 9) || (iter.second.is_fully_funded() && hard_fork_version <= 9))
 				result.push_back(iter.first);
 		}
 
@@ -558,7 +560,7 @@ namespace service_nodes
 		uint64_t expiration_timestamp;
 		crypto::signature signature;
 
-		if (!reg_tx_extract_fields(tx, service_node_addresses, portions_for_operator, service_node_portions, expiration_timestamp, service_node_key, signature, tx_pub_key,))
+		if (!reg_tx_extract_fields(tx, service_node_addresses, portions_for_operator, service_node_portions, expiration_timestamp, service_node_key, signature, tx_pub_key))
 			return false;
 
 		if (service_node_portions.size() != service_node_addresses.size() || service_node_portions.empty())
@@ -1134,12 +1136,13 @@ namespace service_nodes
 
 	crypto::public_key service_node_list::select_winner(const crypto::hash& prev_id) const
 	{
+		int hard_fork_version = m_blockchain.get_hard_fork_version(m_height);
 		std::lock_guard<boost::recursive_mutex> lock(m_sn_mutex);
 		auto oldest_waiting = std::pair<uint64_t, uint32_t>(std::numeric_limits<uint64_t>::max(), std::numeric_limits<uint32_t>::max());
 		crypto::public_key key = crypto::null_pkey;
 		for (const auto& info : m_service_nodes_infos)
 		{
-			if (info.second.is_valid())
+			if ((info.second.is_valid() && hard_fork_version > 9) || (info.second.is_fully_funded() && hard_fork_version <= 9))
 			{
 				auto waiting_since = std::make_pair(info.second.last_reward_block_height, info.second.last_reward_transaction_index);
 				if (waiting_since < oldest_waiting)
