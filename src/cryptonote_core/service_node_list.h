@@ -32,7 +32,7 @@
 #include <boost/variant.hpp>
 #include "serialization/serialization.h"
 #include "cryptonote_core/service_node_rules.h"
-#include "eth_adapter/eth_adapter.h"
+// #include "eth_adapter/eth_adapter.h"
 #include <list>
 namespace service_nodes
 {
