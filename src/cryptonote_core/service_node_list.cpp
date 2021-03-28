@@ -58,9 +58,9 @@ namespace service_nodes
 		return  x / (secureMax / n);
 	}
 
-	uint64_t service_node_info::get_min_contribution() const
+	uint64_t service_node_info::get_min_contribution(uint64_t hf_version) const
 	{
-		uint64_t result = get_min_node_contribution(staking_requirement, total_reserved);
+		uint64_t result = get_min_node_contribution(hf_version, staking_requirement, total_reserved);
 		return result;
 	}
 
@@ -830,7 +830,7 @@ namespace service_nodes
 			[&address](const service_node_info::contribution& contributor) { return contributor.address == address; });
 		if (contrib_iter == contributors.end())
 		{
-			if (contributors.size() >= MAX_NUMBER_OF_CONTRIBUTORS_V2 || transferred < info.get_min_contribution())
+			if (contributors.size() >= MAX_NUMBER_OF_CONTRIBUTORS_V2 || transferred < info.get_min_contribution(m_blockchain.get_hard_fork_version(block_height)))
 				return;
 		}
 

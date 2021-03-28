@@ -7508,18 +7508,20 @@ bool simple_wallet::stake_main(
     }
 
     const auto& snode_info = response.service_node_states.front();
-    const uint64_t DUST = MAX_NUMBER_OF_CONTRIBUTORS;
+    const uint64_t DUST = m_wallet->use_fork_rules(10, 0) ? MAX_NUMBER_OF_CONTRIBUTORS_V2 : MAX_NUMBER_OF_CONTRIBUTORS;
 
     if (amount == 0)
       amount = snode_info.staking_requirement * amount_fraction;
 
-    const bool full = snode_info.contributors.size() >= MAX_NUMBER_OF_CONTRIBUTORS;
+
+
+    const bool full = m_wallet->use_fork_rules(10, 0) ? snode_info.contributors.size() >= MAX_NUMBER_OF_CONTRIBUTORS_V2 : snode_info.contributors.size() >= MAX_NUMBER_OF_CONTRIBUTORS;
     uint64_t can_contrib_total = 0;
     uint64_t must_contrib_total = 0;
     if (!full)
     {
       can_contrib_total = snode_info.staking_requirement - snode_info.total_reserved;
-      must_contrib_total = service_nodes::get_min_node_contribution(snode_info.staking_requirement, snode_info.total_reserved);
+      must_contrib_total = m_wallet->use_fork_rules(10, 0) ? std::min(snode_info.staking_requirement - snode_info.total_reserved, snode_info.staking_requirement / MAX_NUMBER_OF_CONTRIBUTORS_V2) : std::min(snode_info.staking_requirement - snode_info.total_reserved, snode_info.staking_requirement / MAX_NUMBER_OF_CONTRIBUTORS);
     }
 
     bool is_preexisting_contributor = false;

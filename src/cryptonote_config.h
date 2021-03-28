@@ -94,7 +94,6 @@ static_assert(STAKING_PORTIONS % 3 == 0, "Use a multiple of three, so that it di
 //LongTermWeight
 #define CRYPTONOTE_LONG_TERM_BLOCK_WEIGHT_WINDOW_SIZE   100000 // size in blocks of the long term block weight median window
 #define CRYPTONOTE_SHORT_TERM_BLOCK_WEIGHT_SURGE_FACTOR 50
-#define HF_VERSION_LONG_TERM_BLOCK_WEIGHT       10
 
 // COIN - number of smallest units in one coin
 #define COIN                                            ((uint64_t)10000) // pow(10, 12)
@@ -198,16 +197,16 @@ static_assert(STAKING_PORTIONS % 3 == 0, "Use a multiple of three, so that it di
 
 #define THREAD_STACK_SIZE                       5 * 1024 * 1024
 
-#define HF_VERSION_DYNAMIC_FEE                  10
+#define HF_VERSION_DYNAMIC_FEE                  11
 #define HF_VERSION_MIN_MIXIN_4                  4
-#define HF_VERSION_MIN_MIXIN_6                  10
-#define HF_VERSION_MIN_MIXIN_10                 10
+#define HF_VERSION_MIN_MIXIN_6                  11
+#define HF_VERSION_MIN_MIXIN_10                 11
 #define HF_VERSION_MIN_MIXIN_15                 6
 #define HF_VERSION_ENFORCE_RCT                  4
-#define HF_VERSION_PER_BYTE_FEE                 10
+#define HF_VERSION_PER_BYTE_FEE                 11
 #define HF_VERSION_SMALLER_BP                   6
 
-#define HF_VERSION_LONG_TERM_BLOCK_WEIGHT       10
+#define HF_VERSION_LONG_TERM_BLOCK_WEIGHT       11
 #define HF_VERSION_MIN_2_OUTPUTS                12
 #define HF_VERSION_MIN_V2_COINBASE_TX           12
 #define HF_VERSION_SAME_MIXIN                   12

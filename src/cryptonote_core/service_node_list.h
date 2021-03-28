@@ -121,7 +121,7 @@ namespace service_nodes
 		bool is_fully_funded() const { return total_contributed >= staking_requirement; }
 
 		// the minimum contribution to start a new contributor
-		uint64_t get_min_contribution() const;
+		uint64_t get_min_contribution(uint64_t hf_version) const;
 
 		service_node_info() = default;
 
