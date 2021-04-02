@@ -586,7 +586,7 @@ namespace service_nodes
 		const auto hf_version = m_blockchain.get_hard_fork_version(block_height);
 		info.staking_requirement = get_staking_requirement(m_blockchain.nettype(), block_height);
 	
-		const auto max_contribs = hf_version > 9 ? MAX_NUMBER_OF_CONTRIBUTORS_V2 : MAX_NUMBER_OF_CONTRIBUTORS;
+		const auto max_contribs = MAX_NUMBER_OF_CONTRIBUTORS;
 
 		cryptonote::account_public_address address;
 		uint64_t transferred = 0;
@@ -1457,7 +1457,7 @@ namespace service_nodes
 				if (num_portions < min_portions || num_portions > portions_left)
 				{
 					if (err_msg) *err_msg = "invalid amount for contributor " + args[i];
-					MERROR(tr("Invalid portion amount: ") << args[i + 1] << tr(". ") << tr("The contributors must each have at least 25%, except for the last contributor which may have the remaining amount"));
+					MERROR(tr("Invalid portion amount: ") << args[i + 1] << tr(". ") << tr("The operator must contribute at least 25%, all other contributors can have any amount open."));
 					return false;
 				}
 				portions_left -= num_portions;
@@ -1466,7 +1466,7 @@ namespace service_nodes
 			catch (const std::exception &e)
 			{
 				if (err_msg) *err_msg = "invalid amount for contributor " + args[i];
-				MERROR(tr("Invalid portion amount: ") << args[i + 1] << tr(". ") << tr("The contributors must each have at least 25%, except for the last contributor which may have the remaining amount"));
+				MERROR(tr("Invalid portion amount: ") << args[i + 1] << tr(". ") << tr("The operator must contribute at least 25%, all other contributors can have any amount open."));
 				return false;
 			}
 		}
