@@ -102,7 +102,7 @@ namespace service_nodes
 			END_SERIALIZE()
 		};
 
-		uint8_t  version = service_node_info::version_pool_upgrade;
+		uint8_t  version = service_node_info::version_0;
 		uint64_t registration_height;
 
 		// block_height and transaction_index are to record when the service node last received a reward.
