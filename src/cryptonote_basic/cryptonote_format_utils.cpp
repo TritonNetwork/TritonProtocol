@@ -904,6 +904,26 @@ void add_tx_secret_key_to_tx_extra(std::vector<uint8_t>& tx_extra, const crypto:
     return crypto::null_pkey;
   return winner.m_service_node_key;
 }
+  //---------------------------------------------------------------
+  bool get_memo_from_tx_extra(const std::vector<uint8_t>& tx_extra, cryptonote::tx_extra_memo& memo)
+  {
+    std::vector<tx_extra_field> tx_extra_fields;
+    parse_tx_extra(tx_extra, tx_extra_fields);
+    return find_tx_extra_field_by_type(tx_extra_fields, memo);
+  }
+  //---------------------------------------------------------------
+  bool add_memo_to_tx_extra(std::vector<uint8_t>& tx_extra, cryptonote::tx_extra_memo& extra_memo)
+  {
+    size_t start_pos = tx_extra.size();
+    tx_extra.resize(tx_extra.size() + 2 + extra_memo.data.size());
+    tx_extra[start_pos] = TX_EXTRA_TAG_MEMO;
+    ++start_pos;
+    tx_extra[start_pos] = static_cast<uint8_t>(extra_memo.data.size());
+    ++start_pos;
+    memcpy(&tx_extra[start_pos], reinterpret_cast<const char*>(extra_memo.data.data()), extra_memo.data.size());
+    return true;
+  }
+
 //---------------------------------------------------------------
   bool remove_field_from_tx_extra(std::vector<uint8_t>& tx_extra, const std::type_info &type)
   {
