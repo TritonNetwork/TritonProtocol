@@ -82,11 +82,14 @@ namespace service_nodes
 			return;
 		}
 
+	  	const size_t hf_version = m_core.get_hard_fork_version(height);
+    	const auto vote_lifetime = hf_version >= 8 ? triton::service_node_deregister::VOTE_LIFETIME_BY_HEIGHT_V2 : triton::service_node_deregister::VOTE_LIFETIME_BY_HEIGHT;
 
-		if (latest_height < triton::service_node_deregister::VOTE_LIFETIME_BY_HEIGHT)
+
+		if (latest_height < vote_lifetime)
 			return;
 
-		uint64_t const execute_justice_from_height = latest_height - triton::service_node_deregister::VOTE_LIFETIME_BY_HEIGHT;
+		uint64_t const execute_justice_from_height = latest_height - vote_lifetime;
 		if (height < execute_justice_from_height)
 			return;
 

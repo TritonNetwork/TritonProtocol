@@ -152,7 +152,7 @@ namespace service_nodes
 		std::vector<crypto::public_key> result;
 		for (const auto& iter : m_service_nodes_infos) {
 			//if(iter.second.is_valid())
-			if ((iter.second.is_valid() && hard_fork_version > 9) || (iter.second.is_fully_funded() && hard_fork_version <= 9))
+			if ((iter.second.is_valid() && hard_fork_version > 9) || iter.second.is_fully_funded())
 				result.push_back(iter.first);
 		}
 
@@ -586,16 +586,18 @@ namespace service_nodes
 		const auto hf_version = m_blockchain.get_hard_fork_version(block_height);
 		info.staking_requirement = get_staking_requirement(m_blockchain.nettype(), block_height);
 	
+		const auto max_contribs = hf_version > 9 ? MAX_NUMBER_OF_CONTRIBUTORS_V2 : MAX_NUMBER_OF_CONTRIBUTORS;
+
 		cryptonote::account_public_address address;
 		uint64_t transferred = 0;
 		if (!get_contribution(tx, block_height, address, transferred))
 			return false;
-		if (transferred < info.staking_requirement / MAX_NUMBER_OF_CONTRIBUTORS_V2)
+		if (transferred < info.staking_requirement / max_contribs)
 			return false;
 		int is_this_a_new_address = 0;
 		if (std::find(service_node_addresses.begin(), service_node_addresses.end(), address) == service_node_addresses.end())
 			is_this_a_new_address = 1;
-		if (service_node_addresses.size() + is_this_a_new_address > MAX_NUMBER_OF_CONTRIBUTORS_V2)
+		if (service_node_addresses.size() + is_this_a_new_address > max_contribs)
 			return false;
 
 		// don't actually process this contribution now, do it when we fall through later.
@@ -823,6 +825,8 @@ namespace service_nodes
 			return;
 
 		auto& contributors = info.contributors;
+		const auto hf_version = m_blockchain.get_hard_fork_version(block_height);
+		const auto max_contribs = hf_version > 9 ? MAX_NUMBER_OF_CONTRIBUTORS_V2 : MAX_NUMBER_OF_CONTRIBUTORS;
 
 		// Only create a new contributor if they stake at least a quarter
 		// and if we don't already have the maximum
@@ -830,7 +834,7 @@ namespace service_nodes
 			[&address](const service_node_info::contribution& contributor) { return contributor.address == address; });
 		if (contrib_iter == contributors.end())
 		{
-			if (contributors.size() >= MAX_NUMBER_OF_CONTRIBUTORS_V2 || transferred < info.get_min_contribution(m_blockchain.get_hard_fork_version(block_height)))
+			if (contributors.size() >= max_contribs || transferred < info.get_min_contribution(m_blockchain.get_hard_fork_version(block_height)))
 				return;
 		}
 
@@ -951,16 +955,16 @@ namespace service_nodes
 				deregistrations++;
 			}
 
-			process_swap_tx(tx_pair.first);
+			//process_swap_tx(tx_pair.first);
 			//process_contract_event(tx_pair.first);
-			if(process_contract_creation(tx_pair.first))
-			{
-				contract new_contract = contract{};
-				new_contract.rate = 10;
-				new_contract.creation_height = block_height;
-				new_contract.creation_hash = tx_pair.first.hash;
-				m_contracts.push_back(new_contract);
-			}
+			// if(process_contract_creation(tx_pair.first))
+			// {
+			// 	contract new_contract = contract{};
+			// 	new_contract.rate = 10;
+			// 	new_contract.creation_height = block_height;
+			// 	new_contract.creation_hash = tx_pair.first.hash;
+			// 	m_contracts.push_back(new_contract);
+			// }
 			
 			index++;
 		}
@@ -969,17 +973,17 @@ namespace service_nodes
 			update_swarms(block_height);
 		}
 
-		if(m_contracts.size() > 0) {
-			for (auto& contract : m_contracts) {
-				if(contract.last_update.first == 0 || block_height >= contract.last_update.first + contract.rate)
-				{
-					cryptonote::transaction this_tx = m_db->get_tx(contract.creation_hash);
-					process_contract_creation(this_tx);
-					// contract.last_update.first = block_height;
-					// contract.last_update.second = crypto::null_hash;
-				}
-			}
-		}
+		// if(m_contracts.size() > 0) {
+		// 	for (auto& contract : m_contracts) {
+		// 		if(contract.last_update.first == 0 || block_height >= contract.last_update.first + contract.rate)
+		// 		{
+		// 			cryptonote::transaction this_tx = m_db->get_tx(contract.creation_hash);
+		// 			process_contract_creation(this_tx);
+		// 			// contract.last_update.first = block_height;
+		// 			// contract.last_update.second = crypto::null_hash;
+		// 		}
+		// 	}
+		// }
 
 		// if(swapRequests.size() > 0)
 		// {
@@ -999,7 +1003,9 @@ namespace service_nodes
 		// 	}
 		// }
 
-		const size_t QUORUM_LIFETIME = (6 * triton::service_node_deregister::DEREGISTER_LIFETIME_BY_HEIGHT);
+    	const auto deregister_lifetime = hard_fork_version >= 9 ? triton::service_node_deregister::DEREGISTER_LIFETIME_BY_HEIGHT_V2 : triton::service_node_deregister::DEREGISTER_LIFETIME_BY_HEIGHT;
+
+		const size_t QUORUM_LIFETIME = (6 * deregister_lifetime);
 		// save six times the quorum lifetime, to be sure. also to help with debugging.
 		const size_t cache_state_from_height = (block_height < QUORUM_LIFETIME) ? 0 : block_height - QUORUM_LIFETIME;
 
@@ -1016,8 +1022,6 @@ namespace service_nodes
 		std::string contract_json = cryptonote::get_contract_info_from_tx_extra(tx.extra);
 		std::string data = process_contract(contract_json);
 	}
-
-
 
 	void service_node_list::blockchain_detached(uint64_t height)
 	{
@@ -1142,7 +1146,7 @@ namespace service_nodes
 		crypto::public_key key = crypto::null_pkey;
 		for (const auto& info : m_service_nodes_infos)
 		{
-			if ((info.second.is_valid() && hard_fork_version > 9) || (info.second.is_fully_funded() && hard_fork_version <= 9))
+			if ((info.second.is_valid() && hard_fork_version > 9) || info.second.is_fully_funded())
 			{
 				auto waiting_since = std::make_pair(info.second.last_reward_block_height, info.second.last_reward_transaction_index);
 				if (waiting_since < oldest_waiting)

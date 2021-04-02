@@ -2159,11 +2159,14 @@ namespace cryptonote
 	  uint64_t latest_block_height = std::max(get_current_blockchain_height(), get_target_blockchain_height());
 	  uint64_t delta_height = latest_block_height - vote.block_height;
 
-	  if (vote.block_height < latest_block_height && delta_height >= triton::service_node_deregister::VOTE_LIFETIME_BY_HEIGHT)
+    const size_t hf_version = m_blockchain_storage.get_current_hard_fork_version();
+    const auto vote_lifetime = hf_version >= 8 ? triton::service_node_deregister::VOTE_LIFETIME_BY_HEIGHT_V2 : triton::service_node_deregister::VOTE_LIFETIME_BY_HEIGHT;
+
+	  if (vote.block_height < latest_block_height && delta_height >= vote_lifetime)
 	  {
 		  LOG_PRINT_L1("Received vote for height: " << vote.block_height
 			  << " and service node: " << vote.service_node_index
-			  << ", is older than: " << triton::service_node_deregister::VOTE_LIFETIME_BY_HEIGHT
+			  << ", is older than: " << vote_lifetime
 			  << " blocks and has been rejected.");
 		  vvc.m_invalid_block_height = true;
 	  }
