@@ -635,97 +635,6 @@ namespace service_nodes
 		return true;
 	}
 
-	bool service_node_list::is_swap_tx(const cryptonote::transaction& tx)
-	{
-		std::string eth_address = cryptonote::get_eth_address_from_tx_extra(tx.extra);
-		if (eth_address != "")
-			return true;
-		return false;
-	}
-
-	bool service_node_list::process_swap_tx(const cryptonote::transaction& tx)
-	{
-		if(!is_swap_tx(tx))
-			return false;
-
-		std::string eth_address = cryptonote::get_eth_address_from_tx_extra(tx.extra);
-		std::string burn_amount = std::to_string(cryptonote::get_burned_amount_from_tx_extra(tx.extra));
-		swap this_swap = swap{eth_address, burn_amount, epee::string_tools::pod_to_hex(tx.hash), 0};
-		swapRequests.push_back(this_swap);
-		return true;
-	}
-
-	bool service_node_list::process_contract_event(const cryptonote::transaction& tx)
-	{
-		return true;
-	}
-
-	bool service_node_list::is_contract_creation(const cryptonote::transaction& tx)
-	{
-		std::string eth_address = cryptonote::get_contract_info_from_tx_extra(tx.extra);
-		if (eth_address != "")
-			return true;
-		return false;
-	}
-
-	bool service_node_list::process_contract_creation(const cryptonote::transaction& tx)
-	{
-		if(!is_contract_creation(tx))
-			return false;
-
-		std::string contract_json = cryptonote::get_contract_info_from_tx_extra(tx.extra);
-		process_contract(contract_json);
-		return true;
-	}
-
-	std::string service_node_list::process_contract(const std::string contract_json)
-	{
-		rapidjson::Document d;
-		d.Parse(contract_json.c_str());
-		std::string pair = "";
-		std::string url = "";
-		std::string uri = "";
-		std::string path = "";
-
-		if (rapidjson::Value* v = rapidjson::Pointer("/pair").Get(d)) {
-    		pair = v->GetString();
-		}
-
-		if (rapidjson::Value* v = rapidjson::Pointer("/url").Get(d)) {
-    		url = v->GetString();
-		}
-
-		if (rapidjson::Value* v = rapidjson::Pointer("/uri").Get(d)){
-    		uri = v->GetString();
-		}
-
-		if (rapidjson::Value* v = rapidjson::Pointer("/path").Get(d)) {
-    		path = v->GetString();
-		}
-
-        epee::net_utils::http::http_simple_client http_client;
-        const epee::net_utils::http::http_response_info *res_info = nullptr;
-        epee::net_utils::http::fields_list fields;
-        std::string body;
-
-        http_client.set_server(url + ":443", boost::none, epee::net_utils::ssl_support_t::e_ssl_support_autodetect);
-        bool r = true;
-        r = http_client.invoke_get(uri, std::chrono::seconds(10), "", &res_info, fields);
-		std::string data = "";
-
-        if(res_info){
-		   body = res_info->m_body;
-           std::cout << body << std::endl;
-			rapidjson::Document d2;
-			d2.Parse(body.c_str());
-			if (rapidjson::Value* v = rapidjson::Pointer(path.c_str()).Get(d)) {
-    			data = v->GetString();
-			}
-			std::cout << data << std::endl;
-        }
-
-		return data;
-	}
 
 	bool service_node_list::process_registration_tx(const cryptonote::transaction& tx, uint64_t block_timestamp, uint64_t block_height, uint32_t index)
 	{
@@ -955,53 +864,12 @@ namespace service_nodes
 				deregistrations++;
 			}
 
-			//process_swap_tx(tx_pair.first);
-			//process_contract_event(tx_pair.first);
-			// if(process_contract_creation(tx_pair.first))
-			// {
-			// 	contract new_contract = contract{};
-			// 	new_contract.rate = 10;
-			// 	new_contract.creation_height = block_height;
-			// 	new_contract.creation_hash = tx_pair.first.hash;
-			// 	m_contracts.push_back(new_contract);
-			// }
-			
 			index++;
 		}
 
 		if (registrations || deregistrations || expired_count) {
 			update_swarms(block_height);
 		}
-
-		// if(m_contracts.size() > 0) {
-		// 	for (auto& contract : m_contracts) {
-		// 		if(contract.last_update.first == 0 || block_height >= contract.last_update.first + contract.rate)
-		// 		{
-		// 			cryptonote::transaction this_tx = m_db->get_tx(contract.creation_hash);
-		// 			process_contract_creation(this_tx);
-		// 			// contract.last_update.first = block_height;
-		// 			// contract.last_update.second = crypto::null_hash;
-		// 		}
-		// 	}
-		// }
-
-		// if(swapRequests.size() > 0)
-		// {
-		// 	for (auto& swap : swapRequests)
-		// 	{
-
-		// 		swap.confs++;
-		// 		if (swap.confs >= 2)
-		// 		{
-		// 			if (winner_pubkey == *m_service_node_pubkey) 
-		// 			{
-		// 				EthAdapter ea = EthAdapter();
-		// 				ea.mintWXEQ(swap.account, swap.amount);
-		// 				swapRequests.pop_front();
-		// 			}
-		// 		}
-		// 	}
-		// }
 
     	const auto deregister_lifetime = hard_fork_version >= 9 ? triton::service_node_deregister::DEREGISTER_LIFETIME_BY_HEIGHT_V2 : triton::service_node_deregister::DEREGISTER_LIFETIME_BY_HEIGHT;
 
@@ -1015,12 +883,6 @@ namespace service_nodes
 		{
 			m_quorum_states.erase(m_quorum_states.begin());
 		}
-	}
-
-	void service_node_list::update_contract(cryptonote::transaction& tx)
-	{
-		std::string contract_json = cryptonote::get_contract_info_from_tx_extra(tx.extra);
-		std::string data = process_contract(contract_json);
 	}
 
 	void service_node_list::blockchain_detached(uint64_t height)

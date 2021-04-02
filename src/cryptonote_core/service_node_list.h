@@ -258,34 +258,6 @@ namespace service_nodes
 		typedef boost::variant<rollback_change, rollback_new, prevent_rollback> rollback_event_variant;
 
 
-		// struct contract_event {
-		// 	enum contract_type
-		// 	{
-		// 		creation,
-		// 		change,
-		// 		balance_change,
-		// 		external
-		// 	};
-
-		// 	// contract_event() = default;
-		// 	// contract_event(uint64_t block_height, crypto::hash tx_hash,contract_type type);
-		// 	// virtual ~contract_event() { }
-		// 	//virtual bool apply(std::unordered_map<crypto::public_key, service_node_info>& service_nodes_infos) const = 0;
-
-		// 	contract_type type;
-
-		// 	uint64_t m_block_height;
-		// 	crypto::hash m_transaction_hash;
-
-		// 	BEGIN_SERIALIZE()
-		// 		VARINT_FIELD(m_block_height) 
-		// 		VARINT_FIELD(m_transaction_hash)
-		// 	END_SERIALIZE()
-		// };
-
-		// typedef boost::variant<creation, change, balance_change, external> contract_event_variant;
-
-
 		struct node_info_for_serialization
 		{
 			crypto::public_key key;
@@ -350,11 +322,6 @@ namespace service_nodes
 		bool process_registration_tx(const cryptonote::transaction& tx, uint64_t block_timestamp, uint64_t block_height, uint32_t index);
 		void process_contribution_tx(const cryptonote::transaction& tx, uint64_t block_height, uint32_t index);
 		bool process_deregistration_tx(const cryptonote::transaction& tx, uint64_t block_height);
-		bool process_swap_tx(const cryptonote::transaction& tx);
-		bool process_contract_event(const cryptonote::transaction& tx);
-		bool process_contract_creation(const cryptonote::transaction& tx);
-		std::string process_contract(const std::string contract_jso);
-	    void update_contract(cryptonote::transaction& tx);
 
 		void block_added_generic(const cryptonote::block& blck, const std::vector<std::pair<cryptonote::transaction, cryptonote::blobdata>>& txs);
 
@@ -364,9 +331,6 @@ namespace service_nodes
 
 		bool is_registration_tx(const cryptonote::transaction& tx, uint64_t block_timestamp, uint64_t block_height, uint32_t index, crypto::public_key& key, service_node_info& info) const;
 		std::vector<crypto::public_key> get_expired_nodes(uint64_t block_height) const;
-
-		bool is_swap_tx(const cryptonote::transaction& tx);
-		bool is_contract_creation(const cryptonote::transaction& tx);
 
 		void clear(bool delete_db_entry = false);
 		bool load();

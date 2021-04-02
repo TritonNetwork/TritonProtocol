@@ -1173,13 +1173,6 @@ namespace tools
       return false;
     }
 
-    // add the memo data to tx
-    if (req.memo.size() > 0) {
-      cryptonote::tx_extra_memo memo;
-      memo.data = req.memo;
-      cryptonote::add_memo_to_tx_extra(extra, memo);
-    }
-
     // validate the transfer requested and populate dsts & extra
     if (!validate_swap(req.destinations, req.payment_id, dsts, extra, true, er))
     {
@@ -1594,13 +1587,6 @@ namespace tools
       return false;
     }
 
-    // add the memo data to tx
-    if (req.memo.size() > 0) {
-      cryptonote::tx_extra_memo memo;
-      memo.data = req.memo;
-      cryptonote::add_memo_to_tx_extra(extra, memo);
-    }
-
     // validate the transfer requested and populate dsts & extra
     std::list<wallet_rpc::transfer_destination> destination;
     destination.push_back(wallet_rpc::transfer_destination());
@@ -1664,20 +1650,6 @@ namespace tools
       er.code = WALLET_RPC_ERROR_CODE_TX_NOT_POSSIBLE;
       er.message = "Amount of outputs should be greater than 0.";
       return  false;
-    }
-
-    // add the memo data to tx
-    if (req.memo.size() > 0) {
-      cryptonote::tx_extra_memo memo;
-      memo.data = req.memo;
-      cryptonote::add_memo_to_tx_extra(extra, memo);
-    }
-
-    // add the memo data to tx
-    if (req.memo.size() > 0) {
-      cryptonote::tx_extra_memo memo;
-      memo.data = req.memo;
-      cryptonote::add_memo_to_tx_extra(extra, memo);
     }
 
     // validate the transfer requested and populate dsts & extra
