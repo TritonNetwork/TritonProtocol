@@ -46,7 +46,7 @@
 #define TX_EXTRA_TAG_SERVICE_NODE_CONTRIBUTOR 0x73
 #define TX_EXTRA_TAG_SERVICE_NODE_PUBKEY      0x74
 #define TX_EXTRA_TAG_TX_SECRET_KEY            0x75
-#define TX_EXTRA_TAG_MEMO                     0x76
+#define TX_EXTRA_TAG_MEMO                     0x81
 #define TX_EXTRA_MYSTERIOUS_MINERGATE_TAG     0xDE
 
 #define TX_EXTRA_TAG_BURN                     0x76
