@@ -627,7 +627,9 @@ namespace cryptonote
     if (!pick<tx_extra_service_node_deregister>(nar, tx_extra_fields, TX_EXTRA_TAG_SERVICE_NODE_DEREGISTER)) return false;
     if (!pick<tx_extra_service_node_winner>(nar, tx_extra_fields, TX_EXTRA_TAG_SERVICE_NODE_WINNER)) return false;
     if (!pick<tx_extra_service_node_contributor>(nar, tx_extra_fields, TX_EXTRA_TAG_SERVICE_NODE_CONTRIBUTOR)) return false;
-    if (!pick<tx_extra_service_node_reregister>(nar, tx_extra_fields, TX_EXTRA_TAG_SERVICE_NODE_CONTRIBUTOR)) return false;
+    if (!pick<tx_extra_service_node_reregister>(nar, tx_extra_fields, TX_EXTRA_TAG_SERVICE_NODE_REREGISTER)) return false;
+        if (!pick<tx_extra_service_node_reregister>(nar, tx_extra_fields, TX_EXTRA_TAG_SERVICE_NODE_RECONTRIBUTION)) return false;
+
     if (!pick<tx_extra_service_node_pubkey>(nar, tx_extra_fields, TX_EXTRA_TAG_SERVICE_NODE_PUBKEY)) return false;
     if (!pick<tx_extra_tx_secret_key>(nar, tx_extra_fields, TX_EXTRA_TAG_TX_SECRET_KEY)) return false;
 
