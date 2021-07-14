@@ -690,6 +690,103 @@ namespace service_nodes
 		return true;
 	}
 
+	bool service_node_list::process_reregistration(const cryptonote::transaction& tx, uint64_t block_timestamp, uint64_t block_height, uint32_t index)
+	{
+		//reregister data
+		cryptonote::block stake_block;
+		crypto::hash stake_hash;
+		uint64_t stake_height;
+		cryptonote::transaction stake_tx;
+
+		//get data from reregister tx
+		if(!cryptonote::get_service_node_reregister_from_tx_extra(tx.extra, stake_hash, stake_height))
+			return false;
+
+		const crypto::hash block_hash = m_blockchain.get_block_id_by_height(stake_height);
+		//get stake block data
+		if(!m_blockchain.get_block_by_hash(block_hash, stake_block))
+			return false;
+
+		//get transactions from stake block height
+		std::vector<cryptonote::transaction> txs;
+		std::vector<crypto::hash> missed_txs;
+		if (!m_blockchain.get_transactions(stake_block.tx_hashes, txs, missed_txs))
+		{
+			LOG_ERROR("Unable to get transactions for block " << stake_block.hash);
+			return false;
+		}
+
+
+		uint32_t _index = 0;
+		//loop through every tx in block until stake tx is found
+		for(auto tx : txs)
+		{
+			if(tx.hash == stake_hash)
+			{
+				stake_tx = tx;
+				break;
+			}
+			_index++;
+		}
+
+		//pass tx to process_contributuon_tx with the new node key
+		process_registration_tx(stake_tx, block_timestamp, stake_height, _index);
+
+		return true;
+	}
+
+
+	bool service_node_list::process_recontribution(const cryptonote::transaction& tx, uint64_t block_height, uint32_t index)
+	{
+		//reregister data
+		cryptonote::block stake_block;
+		crypto::hash stake_hash;
+		uint64_t stake_height;
+		crypto::public_key new_pubkey;
+		cryptonote::transaction stake_tx;
+
+		//actual stake transaction
+		cryptonote::account_public_address address;
+		uint64_t transferred;
+
+		//get data from reregister tx
+		if(!cryptonote::get_service_node_recontribution_from_tx_extra(tx.extra, stake_hash, stake_height, new_pubkey))
+			return false;
+
+
+		const crypto::hash block_hash = m_blockchain.get_block_id_by_height(stake_height);
+		//get stake block data
+		if(!m_blockchain.get_block_by_hash(block_hash, stake_block))
+			return false;
+
+		//get transactions from stake block height
+		std::vector<cryptonote::transaction> txs;
+		std::vector<crypto::hash> missed_txs;
+		if (!m_blockchain.get_transactions(stake_block.tx_hashes, txs, missed_txs))
+		{
+			LOG_ERROR("Unable to get transactions for block " << stake_block.hash);
+			return false;
+		}
+
+
+		uint32_t _index = 0;
+		//loop through every tx in block until stake tx is found
+		for(auto tx : txs)
+		{
+			if(tx.hash == stake_hash)
+			{
+				stake_tx = tx;
+				break;
+			}
+			_index++;
+		}
+
+		//pass tx to process_contributuon_tx with the new node key
+		process_contribution_tx(stake_tx, stake_height, _index, new_pubkey);
+
+		return true;
+	}
+
 	bool service_node_list::get_contribution(const cryptonote::transaction& tx, uint64_t block_height, cryptonote::account_public_address& address, uint64_t& transferred) const
 	{
 		crypto::secret_key tx_key;
@@ -713,7 +810,7 @@ namespace service_nodes
 		return true;
 	}
 
-	void service_node_list::process_contribution_tx(const cryptonote::transaction& tx, uint64_t block_height, uint32_t index)
+	void service_node_list::process_contribution_tx(const cryptonote::transaction& tx, uint64_t block_height, uint32_t index, const crypto::public_key &new_pubkey)
 	{
 		crypto::public_key pubkey;
 		cryptonote::account_public_address address;
@@ -721,16 +818,34 @@ namespace service_nodes
 
 		if (!cryptonote::get_service_node_pubkey_from_tx_extra(tx.extra, pubkey))
 			return;
-		if (!get_contribution(tx, block_height, address, transferred))
-			return;
 
+		if(new_pubkey != crypto::null_pkey)
+		{
+			//check if new pubkey and old pubkey aren't the same (shouldn't happen)
+			if(pubkey == new_pubkey)
+				return;
+		}
+
+		//this checks that pubkey is valid and set info.
 		auto iter = m_service_nodes_infos.find(pubkey);
 		if (iter == m_service_nodes_infos.end())
-			return;
+		{
+			//run check for if new pubkey
+			if(new_pubkey != crypto::null_pkey)
+			{
+				//second lopp through to set new pubkey and check if valid;
+				iter = m_service_nodes_infos.find(new_pubkey);
+				if(iter == m_service_nodes_infos.end())
+					return;
+			}
+		}
 
 		service_node_info& info = iter->second;
 
 		if (info.is_fully_funded())
+			return;
+
+		if (!get_contribution(tx, info.registration_height, address, transferred))
 			return;
 
 		auto& contributors = info.contributors;
