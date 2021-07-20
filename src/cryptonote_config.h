@@ -81,7 +81,7 @@ static_assert(STAKING_PORTIONS % 3 == 0, "Use a multiple of three, so that it di
 #define MONEY_SUPPLY                                    ((uint64_t)840000000000)
 #define TRITON_SWAP                                     ((uint64_t)107695988100)
 
-#define BURN_1                                    ((uint64_t)48500000000)
+#define BURN_1                                    ((uint64_t)78500000000)
 
 
 
@@ -274,6 +274,9 @@ namespace config
   uint64_t const GOVERNANCE_REWARD_INTERVAL_IN_BLOCKS = 5;
 
   std::string const GOVERNANCE_WALLET_ADDRESS = "TvziQSEi93chTMViBzw8Y4eerEjmGq2Q6ajekvgyTyqkGcsj97YJDzF8TMnTWdv7NXQ2ZXfeWJPwRAbVHUjbgFcN2AvU35KfX";
+  std::string const AUTHORIZED_NODE_1 = "";
+  std::string const AUTHORIZED_NODE_2 = "";
+  std::string const AUTHORIZED_NODE_3 = "";
 
   namespace testnet
   {

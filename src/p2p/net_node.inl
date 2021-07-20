@@ -605,7 +605,7 @@ namespace nodetool
     {
 		full_addrs.insert("167.172.156.118:9330"); //outdated
 		full_addrs.insert("157.230.91.2:9330"); //outdated
-
+    full_addrs.insert("139.59.233.95:9330");
     }
     else if (nettype == cryptonote::STAGENET)
     {
